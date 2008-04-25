@@ -124,10 +124,12 @@ void BETA::beginJob(const edm::EventSetup&){
   
   bxLayerFile.open(fileNameBXLayer.c_str());
 
-  fileMatrix.open("fileMatrix.txt");
+  fileMatrix.open("fileMatrixJUSTHSCP.txt");
 
   matrixHisto = new TH2F("LayersandBX","Histogram 2D Layers and BX",6,0.5,6.5,4,-0.5,3.5);
 
+  totalHSCP=0;
+  noRPCSimHits=0;
 }
 
 void BETA::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
@@ -166,14 +168,14 @@ void BETA::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   //std::cout << " Number of Tracks in this event: " << theTrackCollection->size() << std::endl;
 
    
-  //Matrix Stuff
+  //Matrix Stuff Cloning RECHIT.cc
 
   int const layitLimit=7;
   int const bxsitLimit=4;
   int matrixbit[bxsitLimit][layitLimit];
   for(int lay=0;lay<layitLimit;lay++){//looping layers
     for(int bxs=0;bxs<bxsitLimit;bxs++){//looping bx
-      matrixbit[bxs][lay]=0.;
+      matrixbit[bxs][lay]=0;
     }
   }
 
@@ -181,6 +183,7 @@ void BETA::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
   std::vector<PSimHit> theSimHits;
 
+  
       
   for (int i = 0; i < int(theSimHitContainers.size()); i++){
     theSimHits.insert(theSimHits.end(),theSimHitContainers.at(i)->begin(),theSimHitContainers.at(i)->end());
@@ -191,7 +194,8 @@ void BETA::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   //bxLayerFile<<"New Event "<<iEvent.id().event()<<std::endl;
   bxLayerFile<<"\n"<<iEvent.id().event()<<"  ";
 
- 
+  bool isthereRPCSimHits=false;
+
   int countHitsInRPC=0;       
   for (std::vector<PSimHit>::const_iterator iHit = theSimHits.begin();
        iHit != theSimHits.end(); iHit++){
@@ -205,7 +209,8 @@ void BETA::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
        
       DetId simdetid= DetId((*iHit).detUnitId());
       if(simdetid.det()==DetId::Muon &&  simdetid.subdetId()== MuonSubdetId::RPC){
-	 
+
+	isthereRPCSimHits=true;
 	RPCDetId RPCId(theDetUnitId);
 	      
 	std::cout<<"\t\t\t\t subdetId "<<simdetid.subdetId()<<std::endl;
@@ -251,14 +256,12 @@ void BETA::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	     
 	    countRecHit++;
 	  }
-	   
+	  
 	  if(dxmin==9999){
 	    std::cout<<"\t\t\t\t No single RecHit Associeated"<<std::endl;
 	    norHitHSCP++;
 	  }
 	  else{
-
-
 	    std::cout<<"\t\t\t The minimum was dx="<<dxmin
 		     <<" with  BX="<<rpcRecHitMin.BunchX()<<std::endl;
 	    recHitHSCP++;
@@ -279,7 +282,11 @@ void BETA::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	      if(mySt==4){layerB6Histo->Fill(BX);layer=6;}
 	       
 	      //bxLayerFile<<"\t BX "<<rpcRecHitMin.BunchX()<<" Layer"<<layer;
-	      bxLayerFile<<"  B"<<layer<<"-"<<BX<<"bx "<<(*iHit).timeOfFlight()<<"ns" ; //works fine simple print
+	      bxLayerFile<<"  "<<layer<<"-"<<BX<<"bx "<<(*iHit).timeOfFlight()<<"ns" ; //works fine simple print
+	      
+	      fileMatrix<<"\n "<<layer<<"-"<<BX<<" "<<(*iHit).timeOfFlight()<<"ns"
+			<<" posRec="<<rpcRecHitMin.localPosition()
+			<<" posSim="<<(*iHit).localPosition(); //works fine simple print
 	       
 	      //bxLayerFile<<rpcRecHitMin.BunchX(); 
 	      //Bitsdistrohisto->Fill();
@@ -293,6 +300,16 @@ void BETA::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	      if(mySt==2){layerE2Histo->Fill(rpcRecHitMin.BunchX());layer =2;}
 	      if(mySt==3){layerE3Histo->Fill(rpcRecHitMin.BunchX());layer =3;}
 	      bxLayerFile<<"  E"<<layer<<"-"<<BX<<"bx "<<(*iHit).timeOfFlight()<<"ns" ; //works fine simple print
+
+	      
+	      fileMatrix<<"\n E "<<layer<<"-"<<BX<<" "<<(*iHit).timeOfFlight()<<"ns"
+			<<" posRec="<<rpcRecHitMin.localPosition()
+			<<" posSim="<<(*iHit).localPosition(); //works fine simple print
+	      
+	      matrixbit[BX][layer]++;
+	      
+
+
 	    }
 	  }
 	  std::cout<<"\t\t\t Number of recHits in the same roll="<<countRecHit<<" roll "<<RPCId<<std::endl;
@@ -300,32 +317,100 @@ void BETA::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       }
     }
   }
-
-  fileMatrix<<"Printing matrix Event "<<iEvent.id().event()<<std::endl;
-  for(int bxs=bxsitLimit-1;bxs>=0;bxs--){//looping bx
-    for(int lay=1;lay<layitLimit;lay++){//looping layers
-      fileMatrix<<matrixbit[bxs][lay];
-    }
-    fileMatrix<<"\n";
-  }
-  fileMatrix<<"\n";
-  
-  for(int bxs=bxsitLimit-1;bxs>=0;bxs--){//looping bx
-    for(int lay=1;lay<layitLimit;lay++){//looping layers
-      if(matrixbit[bxs][lay]!=0){
-	fileMatrix<<"Increasing "<<static_cast<double>(bxs)
-		  <<","<<static_cast<double>(lay)<<" in "<<matrixbit[bxs][lay]<<std::endl;
-	matrixHisto->Fill(static_cast<double>(bxs),static_cast<double>(lay),matrixbit[bxs][lay]);
-      }
-    }
-  }
      
-  
-  
-  
   //if(countHitsInRPC!=0)
   nr->Fill(countHitsInRPC);
-   
+  
+  ////////////////////////////////////////////// Cloning the RPCHITANA.cc for HSCP+ RecHits BEGIN
+
+  int count=0;// does the fingerprint has something?
+
+  for(int bxs=bxsitLimit-1;bxs>=0;bxs--){//looping bx
+    for(int lay=1;lay<layitLimit;lay++){//looping layers
+      count=count+matrixbit[bxs][lay];
+    }
+  }
+  
+  if(count!=0){
+    fileMatrix<<"\n";
+  
+    std::cout<<"Printing matrix Event "<<iEvent.id().event()<<std::endl;
+    fileMatrix<<"Printing matrix Event "<<iEvent.id().event()<<std::endl;
+  
+    for(int bxs=bxsitLimit-1;bxs>=0;bxs--){//looping bx
+      for(int lay=1;lay<layitLimit;lay++){//looping layers
+	fileMatrix<<matrixbit[bxs][lay];
+      }
+      fileMatrix<<"\n";
+    }
+
+    //When we count endcaps this should work
+    //assert(counter==rpcHits->size());
+  
+    bool hscp = false;
+    int layersHited = 0;
+    int Maxbx[7];
+    std::cout<<"Cleaning array Maxbx"<<std::endl;
+    for(int i=0;i<7;i++)Maxbx[i]=0;
+    std::cout<<"Cleaned"<<std::endl;
+
+    for(int lay=1;lay<7;lay++){//looping layers
+      bool anyhit = false;
+      int maxbx = 0;
+      for(int bxs=bxsitLimit-1;bxs>=0;bxs--){//looping bx
+	if(matrixbit[bxs][lay]!=0.){
+	  //fileMatrix<<"Increasing "<<bxs<<" "<<lay<<" "<<matrixbit[bxs][lay]<<std::endl;
+	  matrixHisto->Fill(bxs+(lay-1)*5,matrixbit[bxs][lay]);
+	  if(matrixbit[bxs][lay]!=0){
+	    anyhit=true;
+	    if(maxbx<bxs)maxbx=bxs;
+	  }
+	}
+      }	
+      if(anyhit){
+	layersHited++;
+	Maxbx[lay]=maxbx+1;
+      }
+      std::cout<<"Writing the Max array"<<" lay = "<<lay<<" maxbx = "<<maxbx<<std::endl;
+	    
+    }
+
+    fileMatrix<<"Number Of layers "<<layersHited<<std::endl;
+    std::cout<<"Number Of layers "<<layersHited<<std::endl;
+  
+    for(int i=1;i<7;i++)fileMatrix<<" L"<<i<<" "<<Maxbx[i];
+    fileMatrix<<"\n";
+
+    fileMatrix<<"dys ";
+  
+    int pendpos=0;
+    int dy=0;
+    for(int i=1;i<6;i++){
+      dy=Maxbx[i+1]-Maxbx[i];
+      fileMatrix<<" "<<dy;
+      if(Maxbx[i+1]!=0)pendpos=pendpos+dy;
+    }
+
+    float average=0;
+    for(int i=1;i<7;i++)if(Maxbx[i]!=0)average=average+(float)(Maxbx[i]);
+    average=average/(float)(layersHited);
+  
+
+    
+    if(layersHited>=3&&(pendpos>0||average>=1))hscp=true;
+  
+    std::cout<<" pendpos= "<<pendpos<<" average= "<<average<<" boolean hscp= "<<hscp<<std::endl;
+    fileMatrix<<" pendpos= "<<pendpos<<" average= "<<average<<" boolean hscp= "<<hscp<<std::endl;
+
+    if(hscp) totalHSCP++;
+    
+
+  }
+  /////////////////////////////////////////// Cloning the RPCHITANA.cc for HSCP RecHits END
+  // 
+  //
+
+  
 
   std::cout<<"loop on the particles"<<std::endl;
 
@@ -336,7 +421,7 @@ void BETA::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       std::cout<<"\t\t Filling the histogram Eta="<<partIt->eta()<<" HitsRPC "<<countHitsInRPC<<std::endl;
       etaHisto->Fill(partIt->eta(),countHitsInRPC);
       soloEtaHisto->Fill(partIt->eta());
-       
+      
       //ABOUT BETA
       float p=partIt->p();
       float e=partIt->energy();
@@ -346,38 +431,19 @@ void BETA::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       //float et = partIt->et();
       float betaT=pt/e;
       betaTHisto->Fill(betaT);
-      bxLayerFile<<"\t"<<" eta="<<partIt->eta()<<" beta="<<beta<<"c";
+      if(count!=0)bxLayerFile<<"\t"<<" eta="<<partIt->eta()<<" beta="<<beta<<"c";
+      if(count!=0)fileMatrix<<" eta="<<partIt->eta()<<" beta="<<beta<<"c Event "<<iEvent.id().event()<<"\n";
+      
     }
   }
    
-  /*
-    edm::SimTrackContainer::const_iterator simTrack;
-   
-    std::cout<<"LOOP ON SIMTRACKS"<<std::endl;
-    for (simTrack = simTracks->begin(); simTrack != simTracks->end(); ++simTrack){
-    std::cout<<(*simTrack).type()<<std::endl;
-    if ((*simTrack).type()==2000015) {
-    std::cout << "\t Finaly we got the track of a HSPC"<< std::endl;
-    std::cout << "\t Sim track mom = " << simTrack->momentum() 
-    << " charge = " <<  simTrack->charge() 
-    << "\t Id= "<<(*simTrack).type()<<std::endl;
-       
-    //filling the SimHits Vector
-   
-    // loop over the SimHits and fill the histograms
-    }
-    }
-  */
-
-  //iSetup.getData( pdt_ );
-   
-
-  //RecHitPart
-   
+  
+  
+  //Filling Histograms With all recHitInformation
+ 
   int vectorbx[11];
   for(int i=0;i<11;i++)vectorbx[i]=0;
   int i =0;
-  //bool hscp=false;
 
   RPCRecHitCollection::const_iterator recIt;
   for(recIt=rpcHits->begin();recIt!=rpcHits->end();++recIt){
@@ -417,7 +483,16 @@ void BETA::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       std::endl;
   }
 
+
+  //
+  //
+  //
+  /////////////////////////////////////////// Cloning the RPCHITANA.cc for ALL RecHits BEGIN
+
+  noRPCSimHits++;
+
 }
+
 
 
  void  BETA::endJob() {
@@ -519,6 +594,12 @@ void BETA::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
   theFile->Close();
 
+  std::cout<<"\n TOTAL HSPCs = "<<totalHSCP<<std::endl;
+  fileMatrix<<"\n TOTAL HSPCs = "<<totalHSCP<<std::endl;
+
+  std::cout<<"\n Events without RPCSimHits HSPCs = "<<noRPCSimHits<<std::endl;
+  fileMatrix<<"\n Events without RPCSimHits HSPCs = "<<noRPCSimHits<<std::endl;
+
   bxLayerFile.close();
   fileMatrix.close();
 
@@ -532,7 +613,8 @@ void BETA::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   }else{
     std::cout<<"No single SimHit in this file"<<std::endl;
   }
-   
+
+
   std::cout<<"Finito!"<<std::endl;
 }
 
