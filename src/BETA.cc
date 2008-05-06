@@ -98,12 +98,20 @@ void BETA::beginJob(const edm::EventSetup&){
   theFile = new TFile(file.c_str(), "RECREATE");
   theFile->cd();
   bx = new TH1F("Times_BX_RecHit","Distribution of BX for HSCP",11,-5,5);
-  betaHisto = new TH1F("Beta","1/Beta Distribution",200,0,2);
+
+  betaHisto = new TH1F("BetaMC","Beta Distribution",100,0,1);
+  betaMyHisto = new TH1F("BetaMy","Beta Identified Distribution",100,0,1);
+  effInBetaHisto = new TH1F("BetaEff","Beta Efficiency",100,0,1);
+
   betaTHisto= new TH1F("BetaT","BetaT Distribution",100,0,1);
   NumRecHits = new TH1F("BX","Number of RecHits With the same BX",15,0,15);
   nr = new TH1F("nr","Number of SimHits",10,0,10);
-  etaHisto = new TH1F("Eta Vs RecHits","Number of RPCSimHits in a given Eta",100,-3,3);
-  soloEtaHisto = new TH1F("Eta Distribution for HSPC-","Number of Particles for a given Eta",100,-10,10);
+  etaHisto = new TH1F("EtaRecHits","Number of RPCSimHits in a given Eta",100,-3,3);
+
+  soloEtaHisto = new TH1F("EtaMC","Number of Particles for a given Eta",100,-10,10);
+  soloEtaMyHisto = new TH1F("EtaMy","Number of Particles Identified for a given Eta",100,-10,10);
+  effInEtaHisto = new TH1F("EtaEff","Eta Efficiency",100,-10,10);
+
   residualRecSimHisto = new TH1F("RecSim","Residual dx Rec Sim for HSCP",100,-20,20);
   //bitsDistroHisto = new TH1F("BitsDistro","",64,0,63);
 
@@ -121,15 +129,17 @@ void BETA::beginJob(const edm::EventSetup&){
   simHitHSCP=0;
   norHitHSCP=0;
   recHitHSCP=0;
+  etaout=0;
   
   bxLayerFile.open(fileNameBXLayer.c_str());
 
   fileMatrix.open("fileMatrixJUSTHSCP.txt");
 
-  matrixHisto = new TH2F("LayersandBX","Histogram 2D Layers and BX",6,0.5,6.5,4,-0.5,3.5);
-
+  matrixHisto = new TH1F("LayersandBX","Histogram 2D Layers and BX",30,-0.5,29.5);
+  
   totalHSCP=0;
-  noRPCSimHits=0;
+  
+  eventsWithRPCSimHits=0;
 }
 
 void BETA::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
@@ -137,36 +147,18 @@ void BETA::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   edm::Handle<RPCRecHitCollection> rpcHits;
   iEvent.getByLabel("rpcRecHits",rpcHits);
 
-  //edm::Handle<RPCDigiCollection> rpcDigis;
-  //iEvent.getByLabel("muonRPCDigis",rpcDigis);
-  
   edm::ESHandle<RPCGeometry> rpcGeo;
   iSetup.get<MuonGeometryRecord>().get(rpcGeo);
 
   edm::Handle<reco::CandidateCollection> genParticles;
   iEvent.getByLabel(partLabel,genParticles );
 
-  //edm::ESHandle<MagneticField> theMGField;
-  //iSetup.get<IdealMagneticFieldRecord>().get(theMGField);
-   
-  //edm::ESHandle<GlobalTrackingGeometry> theTrackingGeometry;
-  //iSetup.get<GlobalTrackingGeometryRecord>().get(theTrackingGeometry);
-
-  //edm::Handle<reco::TrackCollection> theTrackCollection;
-  //iEvent.getByLabel(trackLabel, theTrackCollection);
-
-  //edm::Handle<std::vector<SimTrack> > theSimTracks;
-  //iEvent.getByLabel("famosSimHits",theSimTracks); 
-
-  //edm::Handle<edm::SimTrackContainer> simTracks;
-  //iEvent.getByLabel("g4SimHits",simTracks);
-  
   std::vector<edm::Handle<edm::PSimHitContainer> > theSimHitContainers;
   iEvent.getManyByType(theSimHitContainers);
 
   std::cout << " Number of Particles in this event: " << genParticles->size() << std::endl;
-  //std::cout << " Number of Tracks in this event: " << theTrackCollection->size() << std::endl;
 
+  hscp = false;
    
   //Matrix Stuff Cloning RECHIT.cc
 
@@ -257,7 +249,7 @@ void BETA::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	    countRecHit++;
 	  }
 	  
-	  if(dxmin==9999){
+	  if(dxmin==9999.){
 	    std::cout<<"\t\t\t\t No single RecHit Associeated"<<std::endl;
 	    norHitHSCP++;
 	  }
@@ -268,7 +260,8 @@ void BETA::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	    residualRecSimHisto->Fill(dxmin);
 	    std::cout<<"\t\t\t Filling the bx histogram with="<<rpcRecHitMin.BunchX()<<std::endl;
 	    bx->Fill(rpcRecHitMin.BunchX());
-	    //print the bx of the RecHit in a file
+
+
 	    int BX = rpcRecHitMin.BunchX();
 	    if(RPCId.region()==0){
 	      int mySt = RPCId.station();
@@ -281,15 +274,12 @@ void BETA::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	      if(mySt==3){layerB5Histo->Fill(BX);layer=5;}
 	      if(mySt==4){layerB6Histo->Fill(BX);layer=6;}
 	       
-	      //bxLayerFile<<"\t BX "<<rpcRecHitMin.BunchX()<<" Layer"<<layer;
-	      bxLayerFile<<"  "<<layer<<"-"<<BX<<"bx "<<(*iHit).timeOfFlight()<<"ns" ; //works fine simple print
+	      bxLayerFile<<"  "<<layer<<"-"<<BX<<"bx "<<(*iHit).timeOfFlight()<<"ns" ; 
+	      //works fine simple print
 	      
 	      fileMatrix<<"\n "<<layer<<"-"<<BX<<" "<<(*iHit).timeOfFlight()<<"ns"
 			<<" posRec="<<rpcRecHitMin.localPosition()
 			<<" posSim="<<(*iHit).localPosition(); //works fine simple print
-	       
-	      //bxLayerFile<<rpcRecHitMin.BunchX(); 
-	      //Bitsdistrohisto->Fill();
 	       
 	      matrixbit[BX][layer]++;
 	       
@@ -319,6 +309,8 @@ void BETA::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   }
      
   //if(countHitsInRPC!=0)
+
+
   nr->Fill(countHitsInRPC);
   
   ////////////////////////////////////////////// Cloning the RPCHITANA.cc for HSCP+ RecHits BEGIN
@@ -330,7 +322,7 @@ void BETA::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       count=count+matrixbit[bxs][lay];
     }
   }
-  
+
   if(count!=0){
     fileMatrix<<"\n";
   
@@ -347,7 +339,7 @@ void BETA::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     //When we count endcaps this should work
     //assert(counter==rpcHits->size());
   
-    bool hscp = false;
+
     int layersHited = 0;
     int Maxbx[7];
     std::cout<<"Cleaning array Maxbx"<<std::endl;
@@ -369,7 +361,7 @@ void BETA::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       }	
       if(anyhit){
 	layersHited++;
-	Maxbx[lay]=maxbx+1;
+	Maxbx[lay]=maxbx;
       }
       std::cout<<"Writing the Max array"<<" lay = "<<lay<<" maxbx = "<<maxbx<<std::endl;
 	    
@@ -397,14 +389,13 @@ void BETA::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   
 
     
-    if(layersHited>=3&&(pendpos>0||average>=1))hscp=true;
-  
+    if(layersHited>=2&&(pendpos>0||average>=1))hscp=true; //important if
+    
     std::cout<<" pendpos= "<<pendpos<<" average= "<<average<<" boolean hscp= "<<hscp<<std::endl;
     fileMatrix<<" pendpos= "<<pendpos<<" average= "<<average<<" boolean hscp= "<<hscp<<std::endl;
-
+    
     if(hscp) totalHSCP++;
     
-
   }
   /////////////////////////////////////////// Cloning the RPCHITANA.cc for HSCP RecHits END
   // 
@@ -421,23 +412,24 @@ void BETA::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       std::cout<<"\t\t Filling the histogram Eta="<<partIt->eta()<<" HitsRPC "<<countHitsInRPC<<std::endl;
       etaHisto->Fill(partIt->eta(),countHitsInRPC);
       soloEtaHisto->Fill(partIt->eta());
-      
+      if(hscp)soloEtaMyHisto->Fill(partIt->eta());
       //ABOUT BETA
       float p=partIt->p();
       float e=partIt->energy();
       float beta=p/e;
-      betaHisto->Fill(1/beta);
+      betaHisto->Fill(beta);
+      if(hscp)betaMyHisto->Fill(beta);
       float pt = partIt->pt();
       //float et = partIt->et();
       float betaT=pt/e;
       betaTHisto->Fill(betaT);
       if(count!=0)bxLayerFile<<"\t"<<" eta="<<partIt->eta()<<" beta="<<beta<<"c";
       if(count!=0)fileMatrix<<" eta="<<partIt->eta()<<" beta="<<beta<<"c Event "<<iEvent.id().event()<<"\n";
+      if(fabs(partIt->eta()>1.8))etaout++;
       
     }
   }
-   
-  
+     
   
   //Filling Histograms With all recHitInformation
  
@@ -489,7 +481,7 @@ void BETA::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   //
   /////////////////////////////////////////// Cloning the RPCHITANA.cc for ALL RecHits BEGIN
 
-  noRPCSimHits++;
+  if(isthereRPCSimHits)eventsWithRPCSimHits++;
 
 }
 
@@ -501,6 +493,41 @@ void BETA::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     std::cout<<simHitHSCP<<"!="<<recHitHSCP+norHitHSCP<<std::endl;
   
   assert(simHitHSCP==recHitHSCP+norHitHSCP);
+
+
+
+    //Building Efficiencies
+  
+  for(int i=1;i<=100;i++){
+    std::cout<<betaHisto->GetBinContent(i)<<"\t";
+    std::cout<<betaMyHisto->GetBinContent(i)<<"\t \t";
+
+    std::cout<<soloEtaHisto->GetBinContent(i)<<"\t";
+    std::cout<<soloEtaMyHisto->GetBinContent(i)<<std::endl;
+
+    if(betaHisto->GetBinContent(i)!=0){
+      float eff= (float)(betaMyHisto->GetBinContent(i))/(float)(betaHisto->GetBinContent(i));
+      effInBetaHisto->SetBinContent(i,eff*100.);
+      float err=sqrt(eff*(1-eff)/(float)(betaHisto->GetBinContent(i)));
+      effInBetaHisto->SetBinError(i,err*100.);
+      
+    }
+  
+    if(soloEtaHisto->GetBinContent(i)!=0){
+      float eff= (float)(soloEtaMyHisto->GetBinContent(i))/(float)(soloEtaHisto->GetBinContent(i));
+      effInEtaHisto->SetBinContent(i,eff*100.);
+      float err=sqrt(eff*(1-eff)/(float)(soloEtaHisto->GetBinContent(i)));
+      effInEtaHisto->SetBinError(i,err*100.);
+    }
+  }
+
+
+
+
+
+
+
+
 
 
   std::cout<<"Creating Canvas"<<std::endl;
@@ -548,7 +575,7 @@ void BETA::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
   std::cout<<"Creating betaHisto"<<std::endl;
   betaHisto->Draw();
-  betaHisto->GetXaxis()->SetTitle("#betainv");
+  betaHisto->GetXaxis()->SetTitle("#beta");
   Ca1->SaveAs(beta.c_str());
    
   Ca1->Clear();
@@ -560,10 +587,40 @@ void BETA::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
   Ca1->Clear();
  
-  //std::cout<<"Creating bitsHisto"<<std::endl;
-  //betaTHisto->Draw();
-  //betaTHisto->bitsDistroHisto->SetTitle("binary number");
-  //Ca1->SaveAs(bitsDistroName.c_str());
+  std::cout<<"Creating betaMyHisto"<<std::endl;
+  betaMyHisto->Draw();
+  betaMyHisto->GetXaxis()->SetTitle("#beta_my");
+  Ca1->SaveAs("MyBeta.jpg");
+
+  
+  Ca1->Clear();
+ 
+  std::cout<<"Creating soloEtaMyHisto"<<std::endl;
+  soloEtaMyHisto->Draw();
+  soloEtaMyHisto->GetXaxis()->SetTitle("#eta_my");
+  Ca1->SaveAs("soloEtaMy.jpg");
+
+  Ca1->Clear();
+ 
+  std::cout<<"Creating effInBeta"<<std::endl;
+  effInBetaHisto->Draw();
+  effInBetaHisto->GetXaxis()->SetTitle("#beta");
+  Ca1->SaveAs("EffBeta.jpg");
+
+  Ca1->Clear();
+ 
+  std::cout<<"Creating effInEta"<<std::endl;
+  effInEtaHisto->Draw();
+  effInEtaHisto->GetXaxis()->SetTitle("#beta");
+  Ca1->SaveAs("EffEta.jpg");
+
+  Ca1->Clear();
+ 
+  std::cout<<"Creating matrixHisto"<<std::endl;
+  matrixHisto->Draw();
+  matrixHisto->GetXaxis()->SetTitle("#BX and Layer");
+  Ca1->SaveAs("MatrixHisto.jpg");
+
 
   std::cout<<"cd the file"<<std::endl;
 
@@ -571,12 +628,20 @@ void BETA::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
   std::cout<<"Writing the histos"<<std::endl;
   bx->Write();
+  
   betaHisto->Write();
+  betaMyHisto->Write();
+  effInBetaHisto->Write();
+  
   betaTHisto->Write();
   NumRecHits->Write();
   nr->Write();
   etaHisto->Write();
+  
   soloEtaHisto->Write();
+  soloEtaMyHisto->Write();
+  effInEtaHisto->Write();
+  
   residualRecSimHisto->Write();
 
   layerB1Histo->Write();
@@ -594,14 +659,18 @@ void BETA::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
   theFile->Close();
 
-  std::cout<<"\n TOTAL HSPCs = "<<totalHSCP<<std::endl;
-  fileMatrix<<"\n TOTAL HSPCs = "<<totalHSCP<<std::endl;
+  std::cout<<"\n TOTAL bool HSPCs = "<<totalHSCP<<std::endl;
+  fileMatrix<<"\n TOTAL bool HSPCs = "<<totalHSCP<<std::endl;
 
-  std::cout<<"\n Events without RPCSimHits HSPCs = "<<noRPCSimHits<<std::endl;
-  fileMatrix<<"\n Events without RPCSimHits HSPCs = "<<noRPCSimHits<<std::endl;
+  std::cout<<"\n HSCP with Eta > 1.8 = "<<etaout<<std::endl;
+  fileMatrix<<"\n HSCP with Eta > 1.8 = "<<etaout<<std::endl;
+
+
+  std::cout<<"\n Events with RPCSimHits HSPCs = "<<eventsWithRPCSimHits<<std::endl;
+  fileMatrix<<"\n Events with RPCSimHits HSPCs = "<<eventsWithRPCSimHits<<std::endl;
 
   bxLayerFile.close();
-  fileMatrix.close();
+ fileMatrix.close();
 
   float recHitHSCPf = float(recHitHSCP);
   float simHitHSCPf = float(simHitHSCP);
