@@ -34,6 +34,8 @@
 #include <Geometry/CommonDetUnit/interface/GeomDet.h>
 #include <Geometry/Records/interface/MuonGeometryRecord.h>
 #include "FWCore/Framework/interface/ESHandle.h"
+#include<string>
+#include<fstream>
 
 //Root
 #include "TFile.h"
@@ -74,9 +76,18 @@ class LASTEFF : public edm::EDAnalyzer {
       virtual void analyze(const edm::Event&, const edm::EventSetup&);
       virtual void endJob() ;
       std::string file;
-
+      std::string fileOut;
+      std::ofstream rpcInfo;
+      std::ofstream rpcNames;
+      std::ofstream rollsWithData;
+      std::ofstream rollsWithOutData;
+      std::ofstream rollsBarrel;
+      std::ofstream rollsEndCap;
+      std::ofstream rollsPointedForASegment;
+      std::ofstream rollsNotPointedForASegment;
   
-      // ----------member data ---------------------------
+      
+  // ----------member data ---------------------------
 };
 
 //
@@ -95,9 +106,9 @@ LASTEFF::LASTEFF(const edm::ParameterSet& iConfig)
 {
    //now do what ever initialization is needed
 
-
   file=iConfig.getUntrackedParameter<std::string>("fileName");
-
+  fileOut=iConfig.getUntrackedParameter<std::string>("fileOut");
+  
 
 }
 
@@ -110,20 +121,34 @@ void
 LASTEFF::beginJob(const edm::EventSetup&)
 {
   theFile = new TFile(file.c_str());
-  theFileout = new TFile("output.root", "RECREATE");
+  theFileout = new TFile(fileOut.c_str(), "RECREATE");
+  rpcInfo.open("RPCInfo.txt");
+  rpcNames.open("RPCNames.txt");
+  rollsWithOutData.open("rollsWithOutData.txt");
+  rollsWithData.open("rollsWithData.txt");
+  rollsBarrel.open("rollsBarrel.txt");
+  rollsEndCap.open("rollsEndCap.txt");
+  rollsPointedForASegment.open("rollsPointedForASegment.txt");
+  rollsNotPointedForASegment.open("rollsNotPointedForASegment.txt");
 }
 
 
 void
 LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
 
-  
-  //   Read Tree named "T" in memory. Tree pointer is assigned the same name
-
   bool first=false;
   std::cout <<"\t Getting the RPC Geometry"<<std::endl;
   edm::ESHandle<RPCGeometry> rpcGeo;
   iSetup.get<MuonGeometryRecord>().get(rpcGeo);
+
+  int CanvaSizeX = 800;
+  int CanvaSizeY = 600;
+
+  TCanvas * Ca1;
+  
+  Ca1 = new TCanvas("Ca1","EfficiencyW0",CanvaSizeX,CanvaSizeY);
+
+  
   for (TrackingGeometry::DetContainer::const_iterator it=rpcGeo->dets().begin();it<rpcGeo->dets().end();it++){
     if( dynamic_cast< RPCChamber* >( *it ) != 0 ){
       RPCChamber* ch = dynamic_cast< RPCChamber* >( *it ); 
@@ -131,9 +156,15 @@ LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
       for(std::vector<const RPCRoll*>::const_iterator r = roles.begin();r != roles.end(); ++r){
 	RPCDetId rpcId = (*r)->id();
 	RPCGeomServ rpcsrv(rpcId);
-
-	if(rpcId.region()==0&&rpcId.ring()==0&&rpcId.sector()==1){
 	
+	
+	rpcInfo<<rpcId<<"\t"<<rpcsrv.name()<<"\t No Strips="<<(*r)->nstrips()<<std::endl;
+	rpcNames<<rpcsrv.name()<<std::endl;
+
+	if(rpcId.region()==0){
+
+	  rollsBarrel<<rpcsrv.name()<<std::endl;
+	  
 	  char detUnitLabel[128];
 
 	  char meIdRPC [128];
@@ -144,7 +175,9 @@ LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
 	
 	  char effIdRPC_DT [128];
 	  char effIdRPC_DT_2D [128];
-	
+
+	  char namefile1D [128];
+	  char namefile2D [128];
 
 	  std::string regionName;
 	  std::string ringType;
@@ -173,32 +206,36 @@ LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
 	  sprintf(effIdRPC_DT,"%s/EfficienyFromDTExtrapolation_%s",folder,detUnitLabel);
 	  sprintf(effIdRPC_DT_2D,"%s/EfficienyFromDT2DExtrapolation_%s",folder,detUnitLabel);
 
+	  std::cout<<folder<<std::endl;
+	  
+	  histoRPC= (TH1F*)theFile->Get(meIdRPC);
+	  histoDT= (TH1F*)theFile->Get(meIdDT);
+	  histoRPC_2D= (TH1F*)theFile->Get(meIdRPC_2D);
+	  histoDT_2D= (TH1F*)theFile->Get(meIdDT_2D);
+	  histoeffIdRPC_DT_2D= (TH1F*)theFile->Get(effIdRPC_DT_2D);
+	  histoeffIdRPC_DT = (TH1F*)theFile->Get(effIdRPC_DT);
 
 	  std::cout<<"Before If..."<<std::endl;
-	  if(histoRPC!=0  &&  histoDT!=0 && histoRPC_2D!=0 && histoDT_2D!=0 && histoeffIdRPC_DT_2D!=0 && histoeffIdRPC_DT!=0){
-	  //if(!theFile->cd(folder)){
+
+	  if(histoRPC && histoDT && histoRPC_2D && histoDT_2D && histoeffIdRPC_DT_2D && histoeffIdRPC_DT){
+	    
 	    std::cout<<"No empty Histogram"<<std::endl;
-	    std::cout<<folder<<std::endl;
 	    
-	    histoRPC= (TH1F*)theFile->Get(meIdRPC);
-	    histoDT= (TH1F*)theFile->Get(meIdDT);
-	    histoRPC_2D= (TH1F*)theFile->Get(meIdRPC_2D);
-	    histoDT_2D= (TH1F*)theFile->Get(meIdDT_2D);
-	    histoeffIdRPC_DT_2D= (TH1F*)theFile->Get(effIdRPC_DT_2D);
-	    histoeffIdRPC_DT = (TH1F*)theFile->Get(effIdRPC_DT);
+	    bool somenthing1D = false;
 	    
-	  
-	  
-	    for(unsigned int i=1;i<=100;++i){
+  	    for(unsigned int i=1;i<=100;++i){
 	      if(histoDT->GetBinContent(i) != 0){
 		float eff = histoRPC->GetBinContent(i)/histoDT->GetBinContent(i);
 		float erreff = sqrt(eff*(1-eff)/histoDT->GetBinContent(i));
 		histoeffIdRPC_DT->SetBinContent(i,eff*100.);
 		histoeffIdRPC_DT->SetBinError(i,erreff*100.);
+		somenthing1D = true;
 		std::cout<<"Bin Content"<<histoDT->GetBinContent(i)<<std::endl;
 	      }
 	    }
-	
+	    
+	    bool somenthing2D = false;
+
 	    for(unsigned int i=1;i<=100;++i){
 	      for(unsigned int j=1;j<=200;++j){
 		if(histoDT_2D->GetBinContent(i,j) != 0){
@@ -206,28 +243,64 @@ LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
 		  float erreff = sqrt(eff*(1-eff)/histoDT_2D->GetBinContent(i,j));
 		  histoeffIdRPC_DT_2D->SetBinContent(i,j,eff*100.);
 		  histoeffIdRPC_DT_2D->SetBinError(i,j,erreff*100.);
+		  somenthing2D = true;
 		}
 	      }
 	    }
-
-	    std::cout<<"cd outputfile folder"<<std::endl;
+	    
 	    if(first){
+	      std::cout<<"cd outputfile folder just first time"<<std::endl;
 	      theFileout->cd();
 	      first=false;
 	    }
-	    histoRPC->Write();
-	    histoDT->Write();
-	    histoRPC_2D->Write();
-	    histoDT_2D->Write();
-	    histoeffIdRPC_DT_2D->Write();
-	    histoeffIdRPC_DT->Write();
+	    
+	    if(somenthing1D){
+	      histoRPC->Write();
+	      histoDT->Write();
+	      histoeffIdRPC_DT->Write();
+	      histoeffIdRPC_DT->LabelsDeflate();
+	      rollsPointedForASegment<<rpcsrv.name()<<std::endl;
+	      if(histoeffIdRPC_DT->GetRMS()!=0){
+		histoeffIdRPC_DT->Draw();
+		sprintf(namefile1D,"results/Efficiency/profile.%s.png",detUnitLabel);
+		Ca1->SaveAs(namefile1D);
+		rollsWithData<<rpcsrv.name()<<std::endl;
+	      }else{
+	      rollsWithOutData<<rpcsrv.name()<<std::endl;
+	      }
+	      Ca1->Clear();
+	    }else{
+	      rollsNotPointedForASegment<<rpcsrv.name()<<std::endl;
+	    }
+	    
+	    if(somenthing2D){
+	      histoRPC_2D->Write();
+	      histoDT_2D->Write();
+	      histoeffIdRPC_DT_2D->Write();
+	      if(histoeffIdRPC_DT_2D->GetRMS()!=0){
+		histoeffIdRPC_DT_2D->Draw();
+		sprintf(namefile2D,"results/Efficiency/profile2D.%s.png",detUnitLabel);
+		Ca1->SaveAs(namefile2D);
+	      }
+	      Ca1->Clear();
+	    }
 	  }
+	}else{
+	  rollsEndCap<<rpcsrv.name()<<std::endl;
 	}
       }
     }
   }
+  
+  Ca1->Close();
   theFileout->Close();
   theFile->Close();
+  rollsWithOutData.close();
+  rollsWithData.close();
+  rollsBarrel.close();
+  rollsEndCap.close();
+  rpcInfo.close();
+  
 }
 
 
