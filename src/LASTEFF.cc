@@ -48,6 +48,7 @@
 #include "TCanvas.h"
 #include "TTree.h"
 #include "TGaxis.h"
+#include <TStyle.h>
 
 //
 // class decleration
@@ -70,6 +71,7 @@ class LASTEFF : public edm::EDAnalyzer {
   TH1F * histoeffIdRPC_DT_2D;
   TH1F * histoeffIdRPC_DT;
   TH1F * BXDistribution;
+  TH1F * histoRealRPC;
 
   TH1F * EffGlobWm2;
   TH1F * EffGlobWm1;
@@ -123,6 +125,7 @@ class LASTEFF : public edm::EDAnalyzer {
       std::ofstream rollsEndCap;
       std::ofstream rollsPointedForASegment;
       std::ofstream rollsNotPointedForASegment;
+      std::ofstream bxMeanList;
 };
 
 
@@ -152,6 +155,7 @@ LASTEFF::beginJob(const edm::EventSetup&)
   rollsEndCap.open("rollsEndCap.txt");
   rollsPointedForASegment.open("rollsPointedForASegment.txt");
   rollsNotPointedForASegment.open("rollsNotPointedForASegment.txt");
+  bxMeanList.open("bxMeanList.txt");
 }
 
 
@@ -210,12 +214,12 @@ LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
 
   int indexWheel[5];
   for(int j=0;j<5;j++){
-    indexWheel[j]=1;
+    indexWheel[j]=0;
   }
   
   int indexWheelf[5];
   for(int j=0;j<5;j++){
-    indexWheelf[j]=1;
+    indexWheelf[j]=0;
   }
 
   for (TrackingGeometry::DetContainer::const_iterator it=rpcGeo->dets().begin();it<rpcGeo->dets().end();it++){
@@ -232,6 +236,7 @@ LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
 	int NumberMasked=0;
 	
 	int sector = rpcId.sector();
+	int station = rpcId.station();
 	
   	
 	if(rpcId.region()==0){
@@ -250,6 +255,9 @@ LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
 	  char effIdRPC_DT_2D [128];
 	  
 	  char bxDistroId [128];
+
+	  char meIdRealRPC[128];
+	  
 	  char bxFileName [128];
 
 	  char namefile1D [128];
@@ -284,6 +292,7 @@ LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
 	  sprintf(effIdRPC_DT_2D,"%s/EfficienyFromDT2DExtrapolation_%s",folder,detUnitLabel);
 	  
 	  sprintf(bxDistroId,"%s/BXDistribution_%s",folder,detUnitLabel);
+	  sprintf(meIdRealRPC,"%s/RealDetectedOccupancyFromDT_%s",folder,detUnitLabel);  
 	  
 	  std::cout<<folder<<std::endl;
 	  
@@ -294,10 +303,11 @@ LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
 	  histoeffIdRPC_DT_2D= (TH1F*)theFile->Get(effIdRPC_DT_2D);
 	  histoeffIdRPC_DT = (TH1F*)theFile->Get(effIdRPC_DT);
 	  BXDistribution = (TH1F*)theFile->Get(bxDistroId);
-	  
+	  histoRealRPC = (TH1F*)theFile->Get(meIdRealRPC);
+	  	  
 	  std::cout<<"Before If..."<<std::endl;
 	  
-	  if(histoRPC && histoDT && histoRPC_2D && histoDT_2D && histoeffIdRPC_DT_2D && histoeffIdRPC_DT && BXDistribution){
+	  if(histoRPC && histoDT && histoRPC_2D && histoDT_2D && histoeffIdRPC_DT_2D && histoeffIdRPC_DT && BXDistribution && histoRealRPC){
 	    
 	    std::cout<<"No empty Histogram"<<std::endl;
 	    
@@ -312,7 +322,7 @@ LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
 		somenthing1D = true;
 		std::cout<<"Bin Content"<<histoDT->GetBinContent(i)<<std::endl;
 	      }
-	      if(histoRPC->GetBinContent(i)==0) NumberMasked++;
+	      if(histoRealRPC->GetBinContent(i)==0) NumberMasked++;
 	    }
 	    
 	    bool somenthing2D = false;
@@ -402,15 +412,22 @@ LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
 	    
 	    std::cout<<"Strips Ratio for"<<camera<<" is "<<stripsratio<<std::endl;
 
-	    if(sector==1||sector==2||sector==3||sector==10||sector==11||sector==12){
+	    float mybxhisto = 50.+BXDistribution->GetMean()*10;
+	    float mybxerror = BXDistribution->GetRMS()*10;
+	    
+	    if(BXDistribution->GetMean()!=0){
+	      bxMeanList<<rpcsrv.name()<<" \t"<<BXDistribution->GetMean()<<std::endl;
+	    }
+	    
+	    if((sector==1||sector==2||sector==3||sector==10||sector==11||sector==12)){
 	      if(Ring==-2){
 		indexWheel[0]++;  
 		EffGlobWm2->SetBinContent(indexWheel[0],ef);  
 		EffGlobWm2->SetBinError(indexWheel[0],er);  
 		EffGlobWm2->GetXaxis()->SetBinLabel(indexWheel[0],camera);
 
-		BXGlobWm2->SetBinContent(indexWheel[0],50.+BXDistribution->GetMean()*10);  
-		BXGlobWm2->SetBinError(indexWheel[0],BXDistribution->GetRMS()*10);  
+		BXGlobWm2->SetBinContent(indexWheel[0],mybxhisto);  
+		BXGlobWm2->SetBinError(indexWheel[0],mybxerror);  
 		//BXGlobWm2->GetXaxis()->SetBinLabel(indexWheel[0],camera);
 	      
 		MaskedGlobWm2->SetBinContent(indexWheel[0],stripsratio);  
@@ -423,8 +440,8 @@ LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
 		EffGlobWm1->SetBinError(indexWheel[1],er);  
 		EffGlobWm1->GetXaxis()->SetBinLabel(indexWheel[1],camera);  
 	      
-		BXGlobWm1->SetBinContent(indexWheel[1],50.+BXDistribution->GetMean()*10);  
-		BXGlobWm1->SetBinError(indexWheel[1],BXDistribution->GetRMS()*10);  
+		BXGlobWm1->SetBinContent(indexWheel[1],mybxhisto);  
+		BXGlobWm1->SetBinError(indexWheel[1],mybxerror);  
 		//BXGlobWm1->GetXaxis()->SetBinLabel(indexWheel[1],camera);
 	      
 		MaskedGlobWm1->SetBinContent(indexWheel[1],stripsratio);  
@@ -437,8 +454,8 @@ LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
 		EffGlobW0->SetBinError(indexWheel[2],er);  
 		EffGlobW0->GetXaxis()->SetBinLabel(indexWheel[2],camera);  
 	      
-		BXGlobW0->SetBinContent(indexWheel[2],50.+BXDistribution->GetMean()*10);  
-		BXGlobW0->SetBinError(indexWheel[2],BXDistribution->GetRMS()*10);  
+		BXGlobW0->SetBinContent(indexWheel[2],mybxhisto);  
+		BXGlobW0->SetBinError(indexWheel[2],mybxerror);  
 		//BXGlobW0->GetXaxis()->SetBinLabel(indexWheel[2],camera);
 
 		MaskedGlobW0->SetBinContent(indexWheel[2],stripsratio);  
@@ -451,8 +468,8 @@ LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
 		EffGlobW1->SetBinError(indexWheel[3],er);  
 		EffGlobW1->GetXaxis()->SetBinLabel(indexWheel[3],camera);  
 	      
-		BXGlobW1->SetBinContent(indexWheel[3],50.+BXDistribution->GetMean()*10);  
-		BXGlobW1->SetBinError(indexWheel[3],BXDistribution->GetRMS()*10);  
+		BXGlobW1->SetBinContent(indexWheel[3],mybxhisto);  
+		BXGlobW1->SetBinError(indexWheel[3],mybxerror);  
 		//BXGlobW1->GetXaxis()->SetBinLabel(indexWheel[3],camera);
 
 		MaskedGlobW1->SetBinContent(indexWheel[3],stripsratio);  
@@ -465,8 +482,8 @@ LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
 		EffGlobW2->SetBinError(indexWheel[4],er);
 		EffGlobW2->GetXaxis()->SetBinLabel(indexWheel[4],camera);
 
-		BXGlobW2->SetBinContent(indexWheel[4],50.+BXDistribution->GetMean()*10);  
-		BXGlobW2->SetBinError(indexWheel[4],BXDistribution->GetRMS()*10);  
+		BXGlobW2->SetBinContent(indexWheel[4],mybxhisto);  
+		BXGlobW2->SetBinError(indexWheel[4],mybxerror);  
 		//BXGlobW2->GetXaxis()->SetBinLabel(indexWheel[4],camera);
 	      
 		MaskedGlobW2->SetBinContent(indexWheel[4],stripsratio);  
@@ -480,8 +497,8 @@ LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
 		EffGlobWm2far->SetBinError(indexWheelf[0],er);  
 		EffGlobWm2far->GetXaxis()->SetBinLabel(indexWheelf[0],camera);
 
-		BXGlobWm2far->SetBinContent(indexWheelf[0],50.+BXDistribution->GetMean()*10);  
-		BXGlobWm2far->SetBinError(indexWheelf[0],BXDistribution->GetRMS()*10);  
+		BXGlobWm2far->SetBinContent(indexWheelf[0],mybxhisto);  
+		BXGlobWm2far->SetBinError(indexWheelf[0],mybxerror);  
 		//BXGlobWm2far->GetXaxis()->SetBinLabel(indexWheelf[0],camera);
 	      
 		MaskedGlobWm2far->SetBinContent(indexWheelf[0],stripsratio);
@@ -494,8 +511,8 @@ LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
 		EffGlobWm1far->SetBinError(indexWheelf[1],er);  
 		EffGlobWm1far->GetXaxis()->SetBinLabel(indexWheelf[1],camera);  
 	      
-		BXGlobWm1far->SetBinContent(indexWheelf[1],50.+BXDistribution->GetMean()*10);  
-		BXGlobWm1far->SetBinError(indexWheelf[1],BXDistribution->GetRMS()*10);  
+		BXGlobWm1far->SetBinContent(indexWheelf[1],mybxhisto);  
+		BXGlobWm1far->SetBinError(indexWheelf[1],mybxerror);  
 		//BXGlobWm1far->GetXaxis()->SetBinLabel(indexWheelf[1],camera);
 	      
 		MaskedGlobWm1far->SetBinContent(indexWheelf[1],stripsratio);
@@ -508,8 +525,8 @@ LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
 		EffGlobW0far->SetBinError(indexWheelf[2],er);  
 		EffGlobW0far->GetXaxis()->SetBinLabel(indexWheelf[2],camera);  
 	      
-		BXGlobW0far->SetBinContent(indexWheelf[2],50.+BXDistribution->GetMean()*10);  
-		BXGlobW0far->SetBinError(indexWheelf[2],BXDistribution->GetRMS()*10);  
+		BXGlobW0far->SetBinContent(indexWheelf[2],mybxhisto);  
+		BXGlobW0far->SetBinError(indexWheelf[2],mybxerror);  
 		//BXGlobW0far->GetXaxis()->SetBinLabel(indexWheelf[2],camera);
 
 		MaskedGlobW0far->SetBinContent(indexWheelf[2],stripsratio);
@@ -522,12 +539,12 @@ LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
 		EffGlobW1far->SetBinError(indexWheelf[3],er);  
 		EffGlobW1far->GetXaxis()->SetBinLabel(indexWheelf[3],camera);  
 	      
-		BXGlobW1far->SetBinContent(indexWheelf[3],50.+BXDistribution->GetMean()*10);  
-		BXGlobW1far->SetBinError(indexWheelf[3],BXDistribution->GetRMS()*10);  
+		BXGlobW1far->SetBinContent(indexWheelf[3],mybxhisto);  
+		BXGlobW1far->SetBinError(indexWheelf[3],mybxerror);  
 		//BXGlobW1far->GetXaxis()->SetBinLabel(indexWheelf[3],camera);
 
 		MaskedGlobW1far->SetBinContent(indexWheelf[3],stripsratio);
-		//MaskedGlobW1->GetXaxis()->SetBinLabel(indexWheelf[3],camera);
+		//MaskedGlobW1far->GetXaxis()->SetBinLabel(indexWheelf[3],camera);
 	      }
 	    
 	      if(Ring==2){
@@ -536,8 +553,8 @@ LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
 		EffGlobW2far->SetBinError(indexWheelf[4],er);
 		EffGlobW2far->GetXaxis()->SetBinLabel(indexWheelf[4],camera);
 
-		BXGlobW2far->SetBinContent(indexWheelf[4],50.+BXDistribution->GetMean()*10);  
-		BXGlobW2far->SetBinError(indexWheelf[4],BXDistribution->GetRMS()*10);  
+		BXGlobW2far->SetBinContent(indexWheelf[4],mybxhisto);  
+		BXGlobW2far->SetBinError(indexWheelf[4],mybxerror);  
 		//BXGlobW2far->GetXaxis()->SetBinLabel(indexWheelf[4],camera);
 	      
 		MaskedGlobW2far->SetBinContent(indexWheelf[4],stripsratio);
@@ -557,6 +574,18 @@ LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
   EffGlobW0->GetXaxis()->LabelsOption("v");
   EffGlobW1->GetXaxis()->LabelsOption("v");
   EffGlobW2->GetXaxis()->LabelsOption("v");
+
+  EffGlobWm2->GetXaxis()->SetLabelSize(0.03);
+  EffGlobWm1->GetXaxis()->SetLabelSize(0.03);
+  EffGlobW0->GetXaxis()->SetLabelSize(0.03);
+  EffGlobW1->GetXaxis()->SetLabelSize(0.03);
+  EffGlobW2->GetXaxis()->SetLabelSize(0.03);
+
+  EffGlobWm2->GetYaxis()->SetRangeUser(0.,100.);
+  EffGlobWm1->GetYaxis()->SetRangeUser(0.,100.);
+  EffGlobW0->GetYaxis()->SetRangeUser(0.,100.);
+  EffGlobW1->GetYaxis()->SetRangeUser(0.,100.);
+  EffGlobW2->GetYaxis()->SetRangeUser(0.,100.);
   
   BXGlobWm2->GetXaxis()->LabelsOption("v");
   BXGlobWm1->GetXaxis()->LabelsOption("v");
@@ -576,7 +605,20 @@ LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
   EffGlobW0far->GetXaxis()->LabelsOption("v");
   EffGlobW1far->GetXaxis()->LabelsOption("v");
   EffGlobW2far->GetXaxis()->LabelsOption("v");
+
+  EffGlobWm2far->GetXaxis()->SetLabelSize(0.03);
+  EffGlobWm1far->GetXaxis()->SetLabelSize(0.03);
+  EffGlobW0far->GetXaxis()->SetLabelSize(0.03);
+  EffGlobW1far->GetXaxis()->SetLabelSize(0.03);
+  EffGlobW2far->GetXaxis()->SetLabelSize(0.03);
+
+  EffGlobWm2far->GetYaxis()->SetRangeUser(0.,100.);
+  EffGlobWm1far->GetYaxis()->SetRangeUser(0.,100.);
+  EffGlobW0far->GetYaxis()->SetRangeUser(0.,100.);
+  EffGlobW1far->GetYaxis()->SetRangeUser(0.,100.);
+  EffGlobW2far->GetYaxis()->SetRangeUser(0.,100.);
   
+
   BXGlobWm2far->GetXaxis()->LabelsOption("v");
   BXGlobWm1far->GetXaxis()->LabelsOption("v");
   BXGlobW0far->GetXaxis()->LabelsOption("v");
@@ -589,22 +631,22 @@ LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
   MaskedGlobW1far->GetXaxis()->LabelsOption("v");
   MaskedGlobW2far->GetXaxis()->LabelsOption("v");
 
-  Ca2 = new TCanvas("Ca2","Global Efficiency",1200,600);
-  
-  Ca2->Range(-10,-1,10,1);
-
-  TGaxis * bxAxis = new TGaxis(8,-0.8,8,0.8,-5,5,50510,"+L");
-  bxAxis->SetLabelColor(9);
-  bxAxis->SetName("bxAxis");
-  bxAxis->Draw();
-
   std::cout<<"Efficiency Images"<<std::endl;
 
   Ca2->SetBottomMargin(0.4);
+  
+  TGaxis * bxAxis = new TGaxis(90.,0.,90.,100.,-5,5,11,"+L");
+  bxAxis->SetLabelColor(9);
+  bxAxis->SetName("bxAxis");
+  bxAxis->SetTitle("Mean BX");
+  bxAxis->SetTitleColor(9);
+  bxAxis->CenterTitle();
+  bxAxis->Draw("same");
+  gStyle->SetOptStat(0);
 
   EffGlobWm2->LabelsDeflate();
   EffGlobWm2->Draw();
-  EffGlobWm2->GetYaxis()->SetTitle("Efficiency %");
+  EffGlobWm2->GetYaxis()->SetTitle("Efficiency (%)/Dead Strips (%)");
   
   BXGlobWm2->LabelsDeflate();
   BXGlobWm2->SetMarkerColor(9);
@@ -616,13 +658,13 @@ LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
   MaskedGlobWm2->SetLineColor(2);
   MaskedGlobWm2->Draw("same");
   
-  Ca2->SaveAs("GlobalEfficiencyFromLocalWm2near.png");
-  Ca2->SaveAs("GlobalEfficiencyFromLocalWm2near.root");
+  Ca2->SaveAs("BxDeadStripEffFromLocalWm2near.png");
+  Ca2->SaveAs("BxDeadStripEffFromLocalWm2near.root");
   Ca2->Clear();
 
   EffGlobWm2far->LabelsDeflate();
   EffGlobWm2far->Draw();
-  EffGlobWm2far->GetYaxis()->SetTitle("Efficiency %");
+  EffGlobWm2far->GetYaxis()->SetTitle("Efficiency (%)/Dead Strips (%)");
   
   BXGlobWm2far->LabelsDeflate();
   BXGlobWm2far->SetMarkerColor(9);
@@ -634,13 +676,15 @@ LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
   MaskedGlobWm2far->SetLineColor(2);
   MaskedGlobWm2far->Draw("same");
   
-  Ca2->SaveAs("GlobalEfficiencyFromLocalWm2far.png");
-  Ca2->SaveAs("GlobalEfficiencyFromLocalWm2far.root");
+  bxAxis->Draw("same");
+  
+  Ca2->SaveAs("BxDeadStripEffFromLocalWm2far.png");
+  Ca2->SaveAs("BxDeadStripEffFromLocalWm2far.root");
   Ca2->Clear();
 
   EffGlobWm1->LabelsDeflate();
   EffGlobWm1->Draw();
-  EffGlobWm1->GetYaxis()->SetTitle("Efficiency %");
+  EffGlobWm1->GetYaxis()->SetTitle("Efficiency (%)/Dead Strips (%)");
   
   BXGlobWm1->LabelsDeflate();
   BXGlobWm1->SetMarkerColor(9);
@@ -652,13 +696,15 @@ LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
   MaskedGlobWm1->SetLineColor(2);
   MaskedGlobWm1->Draw("same");
 
-  Ca2->SaveAs("GlobalEfficiencyFromLocalWm1near.png");
-  Ca2->SaveAs("GlobalEfficiencyFromLocalWm1near.root");
+  bxAxis->Draw("same");
+
+  Ca2->SaveAs("BxDeadStripEffFromLocalWm1near.png");
+  Ca2->SaveAs("BxDeadStripEffFromLocalWm1near.root");
   Ca2->Clear();
 
   EffGlobWm1far->LabelsDeflate();
   EffGlobWm1far->Draw();
-  EffGlobWm1far->GetYaxis()->SetTitle("Efficiency %");
+  EffGlobWm1far->GetYaxis()->SetTitle("Efficiency (%)/Dead Strips (%)");
   
   BXGlobWm1far->LabelsDeflate();
   BXGlobWm1far->SetMarkerColor(9);
@@ -670,13 +716,15 @@ LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
   MaskedGlobWm1far->SetLineColor(2);
   MaskedGlobWm1far->Draw("same");
 
-  Ca2->SaveAs("GlobalEfficiencyFromLocalWm1far.png");
-  Ca2->SaveAs("GlobalEfficiencyFromLocalWm1far.root");
+  bxAxis->Draw("same");
+
+  Ca2->SaveAs("BxDeadStripEffFromLocalWm1far.png");
+  Ca2->SaveAs("BxDeadStripEffFromLocalWm1far.root");
   Ca2->Clear();
 
   EffGlobW0->LabelsDeflate();
   EffGlobW0->Draw();
-  EffGlobW0->GetYaxis()->SetTitle("Efficiency %");
+  EffGlobW0->GetYaxis()->SetTitle("Efficiency (%)/Dead Strips (%)");
   
   BXGlobW0->LabelsDeflate();
   BXGlobW0->SetMarkerColor(9);
@@ -688,13 +736,15 @@ LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
   MaskedGlobW0->SetLineColor(2);
   MaskedGlobW0->Draw("same");
 
-  Ca2->SaveAs("GlobalEfficiencyFromLocalW0near.png");
-  Ca2->SaveAs("GlobalEfficiencyFromLocalW0near.root");
+  bxAxis->Draw("same");
+
+  Ca2->SaveAs("BxDeadStripEffFromLocalW0near.png");
+  Ca2->SaveAs("BxDeadStripEffFromLocalW0near.root");
   Ca2->Clear();
 
   EffGlobW0far->LabelsDeflate();
   EffGlobW0far->Draw();
-  EffGlobW0far->GetYaxis()->SetTitle("Efficiency %");
+  EffGlobW0far->GetYaxis()->SetTitle("Efficiency (%)/Dead Strips (%)");
   
   BXGlobW0far->LabelsDeflate();
   BXGlobW0far->SetMarkerColor(9);
@@ -706,13 +756,15 @@ LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
   MaskedGlobW0far->SetLineColor(2);
   MaskedGlobW0far->Draw("same");
 
-  Ca2->SaveAs("GlobalEfficiencyFromLocalW0far.png");
-  Ca2->SaveAs("GlobalEfficiencyFromLocalW0far.root");
+  bxAxis->Draw("same");
+
+  Ca2->SaveAs("BxDeadStripEffFromLocalW0far.png");
+  Ca2->SaveAs("BxDeadStripEffFromLocalW0far.root");
   Ca2->Clear();
 
   EffGlobW1->LabelsDeflate();
   EffGlobW1->Draw();
-  EffGlobW1->GetYaxis()->SetTitle("Efficiency %");
+  EffGlobW1->GetYaxis()->SetTitle("Efficiency (%)/Dead Strips (%)");
   
   BXGlobW1->LabelsDeflate();
   BXGlobW1->SetMarkerColor(9);
@@ -724,13 +776,15 @@ LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
   MaskedGlobW1->SetLineColor(2);
   MaskedGlobW1->Draw("same");
 
-  Ca2->SaveAs("GlobalEfficiencyFromLocalW1near.png");
-  Ca2->SaveAs("GlobalEfficiencyFromLocalW1near.root");
+  bxAxis->Draw("same");
+
+  Ca2->SaveAs("BxDeadStripEffFromLocalW1near.png");
+  Ca2->SaveAs("BxDeadStripEffFromLocalW1near.root");
   Ca2->Clear();
 
   EffGlobW1far->LabelsDeflate();
   EffGlobW1far->Draw();
-  EffGlobW1far->GetYaxis()->SetTitle("Efficiency %");
+  EffGlobW1far->GetYaxis()->SetTitle("Efficiency (%)/Dead Strips (%)");
   
   BXGlobW1far->LabelsDeflate();
   BXGlobW1far->SetMarkerColor(9);
@@ -742,13 +796,15 @@ LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
   MaskedGlobW1far->SetLineColor(2);
   MaskedGlobW1far->Draw("same");
 
-  Ca2->SaveAs("GlobalEfficiencyFromLocalW1far.png");
-  Ca2->SaveAs("GlobalEfficiencyFromLocalW1far.root");
+  bxAxis->Draw("same");
+
+  Ca2->SaveAs("BxDeadStripEffFromLocalW1far.png");
+  Ca2->SaveAs("BxDeadStripEffFromLocalW1far.root");
   Ca2->Clear();
 
   EffGlobW2->LabelsDeflate();
   EffGlobW2->Draw();
-  EffGlobW2->GetYaxis()->SetTitle("Efficiency %");
+  EffGlobW2->GetYaxis()->SetTitle("Efficiency (%)/Dead Strips (%)");
   
   BXGlobW2->LabelsDeflate();
   BXGlobW2->SetMarkerColor(9);
@@ -760,13 +816,15 @@ LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
   MaskedGlobW2->SetLineColor(2);
   MaskedGlobW2->Draw("same");
   
-  Ca2->SaveAs("GlobalEfficiencyFromLocalW2near.png");
-  Ca2->SaveAs("GlobalEfficiencyFromLocalW2near.root");
+  bxAxis->Draw("same");
+
+  Ca2->SaveAs("BxDeadStripEffFromLocalW2near.png");
+  Ca2->SaveAs("BxDeadStripEffFromLocalW2near.root");
   Ca2->Clear();
   
   EffGlobW2far->LabelsDeflate();
   EffGlobW2far->Draw();
-  EffGlobW2far->GetYaxis()->SetTitle("Efficiency %");
+  EffGlobW2far->GetYaxis()->SetTitle("Efficiency (%)/Dead Strips (%)");
   
   BXGlobW2far->LabelsDeflate();
   BXGlobW2far->SetMarkerColor(9);
@@ -778,8 +836,10 @@ LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
   MaskedGlobW2far->SetLineColor(2);
   MaskedGlobW2far->Draw("same");
   
-  Ca2->SaveAs("GlobalEfficiencyFromLocalW2far.png");
-  Ca2->SaveAs("GlobalEfficiencyFromLocalW2far.root");
+  bxAxis->Draw("same");
+  
+  Ca2->SaveAs("BxDeadStripEffFromLocalW2far.png");
+  Ca2->SaveAs("BxDeadStripEffFromLocalW2far.root");
   Ca2->Clear();
 
   theFileout->cd();
@@ -830,6 +890,7 @@ LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
   rollsBarrel.close();
   rollsEndCap.close();
   rpcInfo.close();
+  bxMeanList.close();
   
 }
 
