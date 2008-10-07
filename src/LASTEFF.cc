@@ -61,14 +61,91 @@ class TFile;
 class LASTEFF : public edm::EDAnalyzer {
 public:
   explicit LASTEFF(const edm::ParameterSet&);
-  ~LASTEFF();
-  
+  ~LASTEFF();  
   TFile * theFile;
   TFile * theFileOut;
+  
+  TH1F * statistics;
+  
+  TH1F * hGlobalResClu1La1;
+  TH1F * hGlobalResClu1La2;
+  TH1F * hGlobalResClu1La3;
+  TH1F * hGlobalResClu1La4;
+  TH1F * hGlobalResClu1La5;
+  TH1F * hGlobalResClu1La6;
+
+  TH1F * hGlobalResClu2La1;
+  TH1F * hGlobalResClu2La2;
+  TH1F * hGlobalResClu2La3;
+  TH1F * hGlobalResClu2La4;
+  TH1F * hGlobalResClu2La5;
+  TH1F * hGlobalResClu2La6;
+
+  TH1F * hGlobalResClu3La1;
+  TH1F * hGlobalResClu3La2;
+  TH1F * hGlobalResClu3La3;
+  TH1F * hGlobalResClu3La4;
+  TH1F * hGlobalResClu3La5;
+  TH1F * hGlobalResClu3La6;
+
+  //Endcap                                                                                                                            
+
+  TH1F * hGlobalResClu1R3C;
+  TH1F * hGlobalResClu1R3B;
+  TH1F * hGlobalResClu1R3A;
+  TH1F * hGlobalResClu1R2C;
+  TH1F * hGlobalResClu1R2B;
+  TH1F * hGlobalResClu1R2A;
+
+  TH1F * hGlobalResClu2R3C;
+  TH1F * hGlobalResClu2R3B;
+  TH1F * hGlobalResClu2R3A;
+  TH1F * hGlobalResClu2R2C;
+  TH1F * hGlobalResClu2R2B;
+  TH1F * hGlobalResClu2R2A;
+
+  TH1F * hGlobalResClu3R3C;
+  TH1F * hGlobalResClu3R3B;
+  TH1F * hGlobalResClu3R3A;
+  TH1F * hGlobalResClu3R2C;
+  TH1F * hGlobalResClu3R2B;
+  TH1F * hGlobalResClu3R2A;
+  
+  TH1F * EffBarrel;
+
+  TH1F * EffDistroWm2;
+  TH1F * EffDistroWm1;
+  TH1F * EffDistroW0;
+  TH1F * EffDistroW1;
+  TH1F * EffDistroW2;
+
+  TH1F * EffDistroWm2far;
+  TH1F * EffDistroWm1far;
+  TH1F * EffDistroW0far;
+  TH1F * EffDistroW1far;
+  TH1F * EffDistroW2far;
+
+  TH1F * EffEndCap;
+
+  TH1F * EffDistroDm3;  
+  TH1F * EffDistroDm2;
+  TH1F * EffDistroDm1;
+  TH1F * EffDistroD1;
+  TH1F * EffDistroD2;
+  TH1F * EffDistroD3;
+
+  TH1F * EffDistroDm3far;
+  TH1F * EffDistroDm2far;
+  TH1F * EffDistroDm1far;
+  TH1F * EffDistroD1far;
+  TH1F * EffDistroD2far;
+  TH1F * EffDistroD3far;
 
   TH1F * histoRPC;
   TH1F * histoDT;
-  TH1F * histoeffIdRPC_DT;
+  TH1F * histoCSC;
+  TH1F * histoPRO;
+  TH1F * histoRES;
   TH1F * BXDistribution;
   TH1F * histoRealRPC;
 
@@ -132,7 +209,75 @@ public:
   TH1F * NoPredictionW1far;
   TH1F * NoPredictionW2far;
 
-  TGaxis * bxAxis;
+  TH1F * EffGlobDm3;
+  TH1F * EffGlobDm2;
+  TH1F * EffGlobDm1;
+  TH1F * EffGlobD1;
+  TH1F * EffGlobD2;
+  TH1F * EffGlobD3;
+
+  TH1F * EffGlobDm3far;
+  TH1F * EffGlobDm2far;
+  TH1F * EffGlobDm1far;
+  TH1F * EffGlobD1far;
+  TH1F * EffGlobD2far;
+  TH1F * EffGlobD3far;
+
+  TH1F * BXGlobDm3;
+  TH1F * BXGlobDm2;
+  TH1F * BXGlobDm1;
+  TH1F * BXGlobD1;
+  TH1F * BXGlobD2;
+  TH1F * BXGlobD3;
+  
+  TH1F * BXGlobDm3far;
+  TH1F * BXGlobDm2far;
+  TH1F * BXGlobDm1far;
+  TH1F * BXGlobD1far;
+  TH1F * BXGlobD2far;
+  TH1F * BXGlobD3far;
+
+  TH1F * MaskedGlobDm3;
+  TH1F * MaskedGlobDm2;
+  TH1F * MaskedGlobDm1;
+  TH1F * MaskedGlobD1;
+  TH1F * MaskedGlobD2;
+  TH1F * MaskedGlobD3;
+  
+  TH1F * MaskedGlobDm3far;
+  TH1F * MaskedGlobDm2far;
+  TH1F * MaskedGlobDm1far;
+  TH1F * MaskedGlobD1far;
+  TH1F * MaskedGlobD2far;
+  TH1F * MaskedGlobD3far;
+
+  TH1F * AverageEffDm3;
+  TH1F * AverageEffDm2;
+  TH1F * AverageEffDm1;
+  TH1F * AverageEffD1;
+  TH1F * AverageEffD2;
+  TH1F * AverageEffD3;
+
+  TH1F * AverageEffDm3far;
+  TH1F * AverageEffDm2far;
+  TH1F * AverageEffDm1far;
+  TH1F * AverageEffD1far;
+  TH1F * AverageEffD2far;
+  TH1F * AverageEffD3far;
+
+  TH1F * NoPredictionDm3;
+  TH1F * NoPredictionDm2;
+  TH1F * NoPredictionDm1;
+  TH1F * NoPredictionD1;
+  TH1F * NoPredictionD2;
+  TH1F * NoPredictionD3;
+
+  TH1F * NoPredictionDm3far;
+  TH1F * NoPredictionDm2far;
+  TH1F * NoPredictionDm1far;
+  TH1F * NoPredictionD1far;
+  TH1F * NoPredictionD2far;
+  TH1F * NoPredictionD3far;
 
   TPaveText * pave;
 
@@ -151,7 +296,12 @@ public:
       std::ofstream rollsPointedForASegment;
       std::ofstream rollsNotPointedForASegment;
       std::ofstream bxMeanList;
-      bool offline;
+      bool prodimages;
+      bool makehtml;
+      bool cosmics;
+      double threshold;
+      bool endcap;
+      bool barrel; 
 };
 
 
@@ -161,7 +311,12 @@ LASTEFF::LASTEFF(const edm::ParameterSet& iConfig)
    //now do what ever initialization is needed
   file=iConfig.getUntrackedParameter<std::string>("fileName");
   fileout=iConfig.getUntrackedParameter<std::string>("fileOut");  
-  offline=iConfig.getUntrackedParameter<bool>("offline");
+  prodimages=iConfig.getUntrackedParameter<bool>("prodimages");
+  makehtml=iConfig.getUntrackedParameter<bool>("makehtml");
+  cosmics=iConfig.getUntrackedParameter<bool>("cosmics");
+  threshold=iConfig.getUntrackedParameter<double>("threshold");
+  endcap=iConfig.getUntrackedParameter<bool>("endcap");
+  barrel=iConfig.getUntrackedParameter<bool>("barrel");
 }
 
 
@@ -172,8 +327,9 @@ void
 LASTEFF::beginJob(const edm::EventSetup&)
 {
   theFile = new TFile(file.c_str());
+  if(!theFile)std::cout<<"The File Doesn't exist"<<std::endl;
   theFileOut = new TFile(fileout.c_str(), "RECREATE");
-  rpcInfo.open("RPCInfo.txt");
+  /*rpcInfo.open("RPCInfo.txt");
   rpcNames.open("RPCNames.txt");
   rollsWithOutData.open("rollsWithOutData.txt");
   rollsWithData.open("rollsWithData.txt");
@@ -181,7 +337,7 @@ LASTEFF::beginJob(const edm::EventSetup&)
   rollsEndCap.open("rollsEndCap.txt");
   rollsPointedForASegment.open("rollsPointedForASegment.txt");
   rollsNotPointedForASegment.open("rollsNotPointedForASegment.txt");
-  bxMeanList.open("bxMeanList.txt");
+  bxMeanList.open("bxMeanList.txt");*/
 }
 
 void LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
@@ -190,14 +346,49 @@ void LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
   edm::ESHandle<RPCGeometry> rpcGeo;
   iSetup.get<MuonGeometryRecord>().get(rpcGeo);
 
-  int CanvaSizeX = 800;
+  int CanvaSizeX = 1200;
   int CanvaSizeY = 600;
 
+  TCanvas * Ca0;
   TCanvas * Ca1;
   TCanvas * Ca2;
+  TCanvas * Ca3;
+  TCanvas * Ca4;
+
+
+
   
-  Ca1 = new TCanvas("Ca1","Efficiency",CanvaSizeX,CanvaSizeY);
-  Ca2 = new TCanvas("Ca2","Global Efficiency",1200,CanvaSizeY);
+  Ca2 = new TCanvas("Ca2","Global Efficiency",CanvaSizeX,CanvaSizeY);
+
+  EffBarrel = new TH1F ("EffBarrel","Efficieny Distribution For All The Barrel",40,0.5,100.5);
+
+  EffDistroWm2= new TH1F ("EffDistroWm2near","Efficieny Distribution For Near Side Wheel -2",20,0.5,100.5);
+  EffDistroWm1= new TH1F ("EffDistroWm1near","Efficieny Distribution For Near Side Wheel -1",20,0.5,100.5);
+  EffDistroW0= new TH1F ("EffDistroW0near","Efficieny Distribution For Near Side Wheel 0",20,0.5,100.5);
+  EffDistroW1= new TH1F ("EffDistroW1near","Efficieny Distribution For Near Side Wheel 1",20,0.5,100.5);
+  EffDistroW2= new TH1F ("EffDistroW2near","Efficieny Distribution For Near Side Wheel 2",20,0.5,100.5);
+
+  EffDistroWm2far= new TH1F ("EffDistroWm2far","Efficieny Distribution For Far Side Wheel -2",20,0.5,100.5);
+  EffDistroWm1far= new TH1F ("EffDistroWm1far","Efficieny Distribution For Far Side Wheel -1",20,0.5,100.5);
+  EffDistroW0far= new TH1F ("EffDistroW0far","Efficieny Distribution For For Side Wheel 0",20,0.5,100.5);
+  EffDistroW1far= new TH1F ("EffDistroW1far","Efficieny Distribution For Far Side Wheel 1",20,0.5,100.5);
+  EffDistroW2far= new TH1F ("EffDistroW2far","Efficieny Distribution For Far Side Wheel 2",20,0.5,100.5);
+
+  EffEndCap= new TH1F ("EffDistroEndCap ","Efficieny Distribution For ",60,0.5,100.5);
+
+  EffDistroDm3= new TH1F ("EffDistroDm3near","Efficieny Distribution For Near Side Disk -3",20,0.5,100.5);  
+  EffDistroDm2= new TH1F ("EffDistroDm2near","Efficieny Distribution For Near Side Disk -2",20,0.5,100.5);
+  EffDistroDm1= new TH1F ("EffDistroDm1near","Efficieny Distribution For Near Side Disk -1",20,0.5,100.5);
+  EffDistroD1= new TH1F ("EffDistroD1near","Efficieny Distribution For Near Side Disk 1",20,0.5,100.5);
+  EffDistroD2= new TH1F ("EffDistroD2near","Efficieny Distribution For Near Side Disk 2",20,0.5,100.5);
+  EffDistroD3= new TH1F ("EffDistroD3near","Efficieny Distribution For Near Side Disk 3",20,0.5,100.5);
+
+  EffDistroDm3far= new TH1F ("EffDistroDm3far","Efficieny Distribution For Far Side Disk -3",20,0.5,100.5);
+  EffDistroDm2far= new TH1F ("EffDistroDm2far","Efficieny Distribution For Far Side Disk -2",20,0.5,100.5);
+  EffDistroDm1far= new TH1F ("EffDistroDm1far","Efficieny Distribution For Far Side Disk -1",20,0.5,100.5);
+  EffDistroD1far= new TH1F ("EffDistroD1far","Efficieny Distribution For Far Side Disk 1",20,0.5,100.5);
+  EffDistroD2far= new TH1F ("EffDistroD2far","Efficieny Distribution For Far Side Disk 2",20,0.5,100.5);
+  EffDistroD3far= new TH1F ("EffDistroD3far","Efficieny Distribution For Far Side Disk 3",20,0.5,100.5);
 
   EffGlobWm2= new TH1F ("GlobEfficiencyWheel_-2near","Efficiency Near Side Wheel -2",101,0.5,101.5);
   EffGlobWm2far= new TH1F ("GlobEfficiencyWheel_-2far","Efficiency Far Side Wheel -2",105,0.5,105.5);
@@ -254,6 +445,183 @@ void LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
   NoPredictionW2= new TH1F ("NoPredictionWheel_2near","No Predictions Near Side Wheel 2 ",101,0.5,101.5);
   NoPredictionW2far= new TH1F ("NoPredictionWheel_2far","No Predictions Efficiency Far Side Wheel 2 ",105,0.5,105.5);
   
+  //EndCap
+
+  EffGlobD3 = new TH1F ("GlobEfficiencyDisk_3near","Efficiency Near Side Disk 3",109,0.5,109.5);
+  EffGlobD3far =new TH1F ("GlobEfficiencyDisk_3far","Efficiency Far Side Disk 3",109,0.5,109.5);
+  BXGlobD3 = new TH1F ("GlobBXDisk_3near","BX Near Side Disk 3",109,0.5,109.5);
+  BXGlobD3far = new TH1F ("GlobBXDisk_3far","BX Far Side Disk 3",109,0.5,109.5);
+  MaskedGlobD3 = new TH1F ("GlobMaskedDisk_3near","Masked Near Side Disk 3",109,0.5,109.5);
+  MaskedGlobD3far = new TH1F ("GlobMaskedDisk_3far","Masked Far Side Disk 3",109,0.5,109.5);
+  AverageEffD3=new TH1F ("AverageEfficiencyDisk_3near","Average Efficiency Near Side Disk 3 ",109,0.5,109.5);
+  AverageEffD3far=new TH1F ("AverageEfficiencyDisk_3far","Average Efficiency Far Side Disk 3 ",109,0.5,109.5);
+  NoPredictionD3=new TH1F ("NoPredictionDisk_3near","No Predictions Near Side Disk 3 ",109,0.5,109.5);
+  NoPredictionD3far=new TH1F ("NoPredictionDisk_3far","No Predictions Efficiency Far Side Disk 3 ",109,0.5,109.5);
+
+  EffGlobD2 = new TH1F ("GlobEfficiencyDisk_2near","Efficiency Near Side Disk 2",109,0.5,109.5);
+  EffGlobD2far =new TH1F ("GlobEfficiencyDisk_2far","Efficiency Far Side Disk 2",109,0.5,109.5);
+  BXGlobD2 = new TH1F ("GlobBXDisk_2near","BX Near Side Disk 2",109,0.5,109.5);
+  BXGlobD2far = new TH1F ("GlobBXDisk_2far","BX Far Side Disk 2",109,0.5,109.5);
+  MaskedGlobD2 = new TH1F ("GlobMaskedDisk_2near","Masked Near Side Disk 2",109,0.5,109.5);
+  MaskedGlobD2far = new TH1F ("GlobMaskedDisk_2far","Masked Far Side Disk 2",109,0.5,109.5);
+  AverageEffD2=new TH1F ("AverageEfficiencyDisk_2near","Average Efficiency Near Side Disk 2 ",109,0.5,109.5);
+  AverageEffD2far=new TH1F ("AverageEfficiencyDisk_2far","Average Efficiency Far Side Disk 2 ",109,0.5,109.5);
+  NoPredictionD2=new TH1F ("NoPredictionDisk_2near","No Predictions Near Side Disk 2 ",109,0.5,109.5);
+  NoPredictionD2far=new TH1F ("NoPredictionDisk_2far","No Predictions Efficiency Far Side Disk 2 ",109,0.5,109.5);
+
+  EffGlobD1 = new TH1F ("GlobEfficiencyDisk_1near","Efficiency Near Side Disk 1",109,0.5,109.5);
+  EffGlobD1far =new TH1F ("GlobEfficiencyDisk_1far","Efficiency Far Side Disk 1",109,0.5,109.5);
+  BXGlobD1 = new TH1F ("GlobBXDisk_1near","BX Near Side Disk 1",109,0.5,109.5);
+  BXGlobD1far = new TH1F ("GlobBXDisk_1far","BX Far Side Disk 1",109,0.5,109.5);
+  MaskedGlobD1 = new TH1F ("GlobMaskedDisk_1near","Masked Near Side Disk 1",109,0.5,109.5);
+  MaskedGlobD1far = new TH1F ("GlobMaskedDisk_1far","Masked Far Side Disk 1",109,0.5,109.5);
+  AverageEffD1=new TH1F ("AverageEfficiencyDisk_1near","Average Efficiency Near Side Disk 1 ",109,0.5,109.5);
+  AverageEffD1far=new TH1F ("AverageEfficiencyDisk_1far","Average Efficiency Far Side Disk 1 ",109,0.5,109.5);
+  NoPredictionD1=new TH1F ("NoPredictionDisk_1near","No Predictions Near Side Disk 1 ",109,0.5,109.5);
+  NoPredictionD1far=new TH1F ("NoPredictionDisk_1far","No Predictions Efficiency Far Side Disk 1 ",109,0.5,109.5);
+
+  EffGlobDm1 = new TH1F ("GlobEfficiencyDisk_m1near","Efficiency Near Side Disk -1",109,0.5,109.5);
+  EffGlobDm1far =new TH1F ("GlobEfficiencyDisk_m1far","Efficiency Far Side Disk -1",109,0.5,109.5);
+  BXGlobDm1 = new TH1F ("GlobBXDisk_m1near","BX Near Side Disk -1",109,0.5,109.5);
+  BXGlobDm1far = new TH1F ("GlobBXDisk_m1far","BX Far Side Disk -1",109,0.5,109.5);
+  MaskedGlobDm1 = new TH1F ("GlobMaskedDisk_m1near","Masked Near Side Disk -1",109,0.5,109.5);
+  MaskedGlobDm1far = new TH1F ("GlobMaskedDisk_m1far","Masked Far Side Disk -1",109,0.5,109.5);
+  AverageEffDm1=new TH1F ("AverageEfficiencyDisk_m1near","Average Efficiency Near Side Disk -1 ",109,0.5,109.5);
+  AverageEffDm1far=new TH1F ("AverageEfficiencyDisk_m1far","Average Efficiency Far Side Disk -1 ",109,0.5,109.5);
+  NoPredictionDm1=new TH1F ("NoPredictionDisk_m1near","No Predictions Near Side Disk -1 ",109,0.5,109.5);
+  NoPredictionDm1far=new TH1F ("NoPredictionDisk_m1far","No Predictions Efficiency Far Side Disk -1 ",109,0.5,109.5);
+
+  EffGlobDm2 = new TH1F ("GlobEfficiencyDisk_m2near","Efficiency Near Side Disk -2",109,0.5,109.5);
+  EffGlobDm2far =new TH1F ("GlobEfficiencyDisk_m2far","Efficiency Far Side Disk -2",109,0.5,109.5);
+  BXGlobDm2 = new TH1F ("GlobBXDisk_m2near","BX Near Side Disk -2",109,0.5,109.5);
+  BXGlobDm2far = new TH1F ("GlobBXDisk_m2far","BX Far Side Disk -2",109,0.5,109.5);
+  MaskedGlobDm2 = new TH1F ("GlobMaskedDisk_m2near","Masked Near Side Disk -2",109,0.5,109.5);
+  MaskedGlobDm2far = new TH1F ("GlobMaskedDisk_m2far","Masked Far Side Disk -2",109,0.5,109.5);
+  AverageEffDm2=new TH1F ("AverageEfficiencyDisk_m2near","Average Efficiency Near Side Disk -2 ",109,0.5,109.5);
+  AverageEffDm2far=new TH1F ("AverageEfficiencyDisk_m2far","Average Efficiency Far Side Disk -2 ",109,0.5,109.5);
+  NoPredictionDm2=new TH1F ("NoPredictionDisk_m2near","No Predictions Near Side Disk -2 ",109,0.5,109.5);
+  NoPredictionDm2far=new TH1F ("NoPredictionDisk_m2far","No Predictions Efficiency Far Side Disk -2 ",109,0.5,109.5);
+
+  EffGlobDm3 = new TH1F ("GlobEfficiencyDisk_m3near","Efficiency Near Side Disk -3",109,0.5,109.5);
+  EffGlobDm3far =new TH1F ("GlobEfficiencyDisk_m3far","Efficiency Far Side Disk -3",109,0.5,109.5);
+  BXGlobDm3 = new TH1F ("GlobBXDisk_m3near","BX Near Side Disk -3",109,0.5,109.5);
+  BXGlobDm3far = new TH1F ("GlobBXDisk_m3far","BX Far Side Disk -3",109,0.5,109.5);
+  MaskedGlobDm3 = new TH1F ("GlobMaskedDisk_m3near","Masked Near Side Disk -3",109,0.5,109.5);
+  MaskedGlobDm3far = new TH1F ("GlobMaskedDisk_m3far","Masked Far Side Disk -3",109,0.5,109.5);
+  AverageEffDm3=new TH1F ("AverageEfficiencyDisk_m3near","Average Efficiency Near Side Disk -3 ",109,0.5,109.5);
+  AverageEffDm3far=new TH1F ("AverageEfficiencyDisk_m3far","Average Efficiency Far Side Disk -3 ",109,0.5,109.5);
+  NoPredictionDm3=new TH1F ("NoPredictionDisk_m3near","No Predictions Near Side Disk -3 ",109,0.5,109.5);
+  NoPredictionDm3far=new TH1F ("NoPredictionDisk_m3far","No Predictions Efficiency Far Side Disk -3 ",109,0.5,109.5);
+
+
+  //Producing plots for residuals and global statistics.
+
+  Ca3 = new TCanvas("Ca3","Profile",1200,600);
+  
+  gStyle->SetOptStat(0);
+  
+  std::string meIdRES,folder,labeltoSave,command;
+  
+  folder = "DQMData/Muons/MuonSegEff/";
+  
+  meIdRES = folder + "Statistics";
+  statistics = (TH1F*)theFile->Get(meIdRES.c_str());
+  statistics->GetXaxis()->LabelsOption("v");
+  statistics->GetXaxis()->SetLabelSize(0.035);
+  statistics->Draw();
+  labeltoSave = "Statistics.png";
+  Ca3->SetBottomMargin(0.35);
+  Ca3->SaveAs(labeltoSave.c_str()); 
+  Ca3->Clear();
+
+  folder = "DQMData/Muons/MuonSegEff/Residuals/Barrel/";
+ 
+  Ca4 = new TCanvas("Ca4","Residuals",800,600);
+  
+  command = "mkdir resBarrel"; system(command.c_str());
+  
+  meIdRES = folder + "GlobalResidualsClu1La1"; histoRES = (TH1F*)theFile->Get(meIdRES.c_str());  histoRES->Draw(); labeltoSave = "resBarrel/ResidualsClu1La1.png"; histoRES->GetXaxis()->SetTitle("(cm)");
+  Ca4->SetLogy(); Ca4->SaveAs(labeltoSave.c_str()); Ca4->Clear();
+  meIdRES = folder + "GlobalResidualsClu1La2"; histoRES = (TH1F*)theFile->Get(meIdRES.c_str());  histoRES->Draw(); labeltoSave = "resBarrel/ResidualsClu1La2.png"; histoRES->GetXaxis()->SetTitle("(cm)");
+  Ca4->SetLogy(); Ca4->SaveAs(labeltoSave.c_str()); Ca4->Clear();
+  meIdRES = folder + "GlobalResidualsClu1La3"; histoRES = (TH1F*)theFile->Get(meIdRES.c_str());  histoRES->Draw(); labeltoSave = "resBarrel/ResidualsClu1La3.png"; histoRES->GetXaxis()->SetTitle("(cm)");
+  Ca4->SetLogy(); Ca4->SaveAs(labeltoSave.c_str()); Ca4->Clear();
+  meIdRES = folder + "GlobalResidualsClu1La4"; histoRES = (TH1F*)theFile->Get(meIdRES.c_str());  histoRES->Draw(); labeltoSave = "resBarrel/ResidualsClu1La4.png"; histoRES->GetXaxis()->SetTitle("(cm)");
+  Ca4->SetLogy(); Ca4->SaveAs(labeltoSave.c_str()); Ca4->Clear();
+  meIdRES = folder + "GlobalResidualsClu1La5"; histoRES = (TH1F*)theFile->Get(meIdRES.c_str());  histoRES->Draw(); labeltoSave = "resBarrel/ResidualsClu1La5.png"; histoRES->GetXaxis()->SetTitle("(cm)");
+  Ca4->SetLogy(); Ca4->SaveAs(labeltoSave.c_str()); Ca4->Clear();
+  meIdRES = folder + "GlobalResidualsClu1La6"; histoRES = (TH1F*)theFile->Get(meIdRES.c_str());  histoRES->Draw(); labeltoSave = "resBarrel/ResidualsClu1La6.png"; histoRES->GetXaxis()->SetTitle("(cm)");
+  Ca4->SetLogy(); Ca4->SaveAs(labeltoSave.c_str()); Ca4->Clear();
+
+  meIdRES = folder + "GlobalResidualsClu2La1"; histoRES = (TH1F*)theFile->Get(meIdRES.c_str());  histoRES->Draw(); labeltoSave = "resBarrel/ResidualsClu2La1.png"; histoRES->GetXaxis()->SetTitle("(cm)");
+  Ca4->SetLogy(); Ca4->SaveAs(labeltoSave.c_str()); Ca4->Clear();
+  meIdRES = folder + "GlobalResidualsClu2La2"; histoRES = (TH1F*)theFile->Get(meIdRES.c_str());  histoRES->Draw(); labeltoSave = "resBarrel/ResidualsClu2La2.png"; histoRES->GetXaxis()->SetTitle("(cm)");
+  Ca4->SetLogy(); Ca4->SaveAs(labeltoSave.c_str()); Ca4->Clear();
+  meIdRES = folder + "GlobalResidualsClu2La3"; histoRES = (TH1F*)theFile->Get(meIdRES.c_str());  histoRES->Draw(); labeltoSave = "resBarrel/ResidualsClu2La3.png"; histoRES->GetXaxis()->SetTitle("(cm)");
+  Ca4->SetLogy(); Ca4->SaveAs(labeltoSave.c_str()); Ca4->Clear();
+  meIdRES = folder + "GlobalResidualsClu2La4"; histoRES = (TH1F*)theFile->Get(meIdRES.c_str());  histoRES->Draw(); labeltoSave = "resBarrel/ResidualsClu2La4.png"; histoRES->GetXaxis()->SetTitle("(cm)");
+  Ca4->SetLogy(); Ca4->SaveAs(labeltoSave.c_str()); Ca4->Clear();
+  meIdRES = folder + "GlobalResidualsClu2La5"; histoRES = (TH1F*)theFile->Get(meIdRES.c_str());  histoRES->Draw(); labeltoSave = "resBarrel/ResidualsClu2La5.png"; histoRES->GetXaxis()->SetTitle("(cm)");
+  Ca4->SetLogy(); Ca4->SaveAs(labeltoSave.c_str()); Ca4->Clear();
+  meIdRES = folder + "GlobalResidualsClu2La6"; histoRES = (TH1F*)theFile->Get(meIdRES.c_str());  histoRES->Draw(); labeltoSave = "resBarrel/ResidualsClu2La6.png"; histoRES->GetXaxis()->SetTitle("(cm)");
+  Ca4->SetLogy(); Ca4->SaveAs(labeltoSave.c_str()); Ca4->Clear();
+
+  meIdRES = folder + "GlobalResidualsClu3La1"; histoRES = (TH1F*)theFile->Get(meIdRES.c_str());  histoRES->Draw(); labeltoSave = "resBarrel/ResidualsClu3La1.png"; histoRES->GetXaxis()->SetTitle("(cm)");
+  Ca4->SetLogy(); Ca4->SaveAs(labeltoSave.c_str()); Ca4->Clear();
+  meIdRES = folder + "GlobalResidualsClu3La2"; histoRES = (TH1F*)theFile->Get(meIdRES.c_str());  histoRES->Draw(); labeltoSave = "resBarrel/ResidualsClu3La2.png"; histoRES->GetXaxis()->SetTitle("(cm)");
+  Ca4->SetLogy(); Ca4->SaveAs(labeltoSave.c_str()); Ca4->Clear();
+  meIdRES = folder + "GlobalResidualsClu3La3"; histoRES = (TH1F*)theFile->Get(meIdRES.c_str());  histoRES->Draw(); labeltoSave = "resBarrel/ResidualsClu3La3.png"; histoRES->GetXaxis()->SetTitle("(cm)");
+  Ca4->SetLogy(); Ca4->SaveAs(labeltoSave.c_str()); Ca4->Clear();
+  meIdRES = folder + "GlobalResidualsClu3La4"; histoRES = (TH1F*)theFile->Get(meIdRES.c_str());  histoRES->Draw(); labeltoSave = "resBarrel/ResidualsClu3La4.png"; histoRES->GetXaxis()->SetTitle("(cm)");
+  Ca4->SetLogy(); Ca4->SaveAs(labeltoSave.c_str()); Ca4->Clear();
+  meIdRES = folder + "GlobalResidualsClu3La5"; histoRES = (TH1F*)theFile->Get(meIdRES.c_str());  histoRES->Draw(); labeltoSave = "resBarrel/ResidualsClu3La5.png"; histoRES->GetXaxis()->SetTitle("(cm)");
+  Ca4->SetLogy(); Ca4->SaveAs(labeltoSave.c_str()); Ca4->Clear();
+  meIdRES = folder + "GlobalResidualsClu3La6"; histoRES = (TH1F*)theFile->Get(meIdRES.c_str());  histoRES->Draw(); labeltoSave = "resBarrel/ResidualsClu3La6.png"; histoRES->GetXaxis()->SetTitle("(cm)");
+  Ca4->SetLogy(); Ca4->SaveAs(labeltoSave.c_str()); Ca4->Clear();
+  
+  folder = "DQMData/Muons/MuonSegEff/Residuals/EndCap/";
+ 
+  command = "mkdir resEndCap"; system(command.c_str());
+  
+  meIdRES = folder + "GlobalResidualsClu1R2A"; histoRES = (TH1F*)theFile->Get(meIdRES.c_str());  histoRES->Draw(); labeltoSave = "resEndCap/ResidualsClu1R2A.png"; histoRES->GetXaxis()->SetTitle("(cm)");
+  Ca4->SetLogy(); Ca4->SaveAs(labeltoSave.c_str()); Ca4->Clear();
+  meIdRES = folder + "GlobalResidualsClu1R2B"; histoRES = (TH1F*)theFile->Get(meIdRES.c_str());  histoRES->Draw(); labeltoSave = "resEndCap/ResidualsClu1R2B.png"; histoRES->GetXaxis()->SetTitle("(cm)");
+  Ca4->SetLogy(); Ca4->SaveAs(labeltoSave.c_str()); Ca4->Clear();
+  meIdRES = folder + "GlobalResidualsClu1R2C"; histoRES = (TH1F*)theFile->Get(meIdRES.c_str());  histoRES->Draw(); labeltoSave = "resEndCap/ResidualsClu1R2C.png"; histoRES->GetXaxis()->SetTitle("(cm)");
+  Ca4->SetLogy(); Ca4->SaveAs(labeltoSave.c_str()); Ca4->Clear();
+  meIdRES = folder + "GlobalResidualsClu1R3A"; histoRES = (TH1F*)theFile->Get(meIdRES.c_str());  histoRES->Draw(); labeltoSave = "resEndCap/ResidualsClu1R3A.png"; histoRES->GetXaxis()->SetTitle("(cm)");
+  Ca4->SetLogy(); Ca4->SaveAs(labeltoSave.c_str()); Ca4->Clear();
+  meIdRES = folder + "GlobalResidualsClu1R3B"; histoRES = (TH1F*)theFile->Get(meIdRES.c_str());  histoRES->Draw(); labeltoSave = "resEndCap/ResidualsClu1R3B.png"; histoRES->GetXaxis()->SetTitle("(cm)");
+  Ca4->SetLogy(); Ca4->SaveAs(labeltoSave.c_str()); Ca4->Clear();
+  meIdRES = folder + "GlobalResidualsClu1R3C"; histoRES = (TH1F*)theFile->Get(meIdRES.c_str());  histoRES->Draw(); labeltoSave = "resEndCap/ResidualsClu1R3C.png"; histoRES->GetXaxis()->SetTitle("(cm)");
+
+  meIdRES = folder + "GlobalResidualsClu2R2A"; histoRES = (TH1F*)theFile->Get(meIdRES.c_str());  histoRES->Draw(); labeltoSave = "resEndCap/ResidualsClu2R2A.png"; histoRES->GetXaxis()->SetTitle("(cm)");
+  Ca4->SetLogy(); Ca4->SaveAs(labeltoSave.c_str()); Ca4->Clear();
+  meIdRES = folder + "GlobalResidualsClu2R2B"; histoRES = (TH1F*)theFile->Get(meIdRES.c_str());  histoRES->Draw(); labeltoSave = "resEndCap/ResidualsClu2R2B.png"; histoRES->GetXaxis()->SetTitle("(cm)");
+  Ca4->SetLogy(); Ca4->SaveAs(labeltoSave.c_str()); Ca4->Clear();
+  meIdRES = folder + "GlobalResidualsClu2R2C"; histoRES = (TH1F*)theFile->Get(meIdRES.c_str());  histoRES->Draw(); labeltoSave = "resEndCap/ResidualsClu2R2C.png"; histoRES->GetXaxis()->SetTitle("(cm)");
+  Ca4->SetLogy(); Ca4->SaveAs(labeltoSave.c_str()); Ca4->Clear();
+  meIdRES = folder + "GlobalResidualsClu2R3A"; histoRES = (TH1F*)theFile->Get(meIdRES.c_str());  histoRES->Draw(); labeltoSave = "resEndCap/ResidualsClu2R3A.png"; histoRES->GetXaxis()->SetTitle("(cm)");
+  Ca4->SetLogy(); Ca4->SaveAs(labeltoSave.c_str()); Ca4->Clear();
+  meIdRES = folder + "GlobalResidualsClu2R3B"; histoRES = (TH1F*)theFile->Get(meIdRES.c_str());  histoRES->Draw(); labeltoSave = "resEndCap/ResidualsClu2R3B.png"; histoRES->GetXaxis()->SetTitle("(cm)");
+  Ca4->SetLogy(); Ca4->SaveAs(labeltoSave.c_str()); Ca4->Clear();
+  meIdRES = folder + "GlobalResidualsClu2R3C"; histoRES = (TH1F*)theFile->Get(meIdRES.c_str());  histoRES->Draw(); labeltoSave = "resEndCap/ResidualsClu2R3C.png"; histoRES->GetXaxis()->SetTitle("(cm)");
+
+  meIdRES = folder + "GlobalResidualsClu3R2A"; histoRES = (TH1F*)theFile->Get(meIdRES.c_str());  histoRES->Draw(); labeltoSave = "resEndCap/ResidualsClu3R2A.png"; histoRES->GetXaxis()->SetTitle("(cm)");
+  Ca4->SetLogy(); Ca4->SaveAs(labeltoSave.c_str()); Ca4->Clear();
+  meIdRES = folder + "GlobalResidualsClu3R2B"; histoRES = (TH1F*)theFile->Get(meIdRES.c_str());  histoRES->Draw(); labeltoSave = "resEndCap/ResidualsClu3R2B.png"; histoRES->GetXaxis()->SetTitle("(cm)");
+  Ca4->SetLogy(); Ca4->SaveAs(labeltoSave.c_str()); Ca4->Clear();
+  meIdRES = folder + "GlobalResidualsClu3R2C"; histoRES = (TH1F*)theFile->Get(meIdRES.c_str());  histoRES->Draw(); labeltoSave = "resEndCap/ResidualsClu3R2C.png"; histoRES->GetXaxis()->SetTitle("(cm)");
+  Ca4->SetLogy(); Ca4->SaveAs(labeltoSave.c_str()); Ca4->Clear();
+  meIdRES = folder + "GlobalResidualsClu3R3A"; histoRES = (TH1F*)theFile->Get(meIdRES.c_str());  histoRES->Draw(); labeltoSave = "resEndCap/ResidualsClu3R3A.png"; histoRES->GetXaxis()->SetTitle("(cm)");
+  Ca4->SetLogy(); Ca4->SaveAs(labeltoSave.c_str()); Ca4->Clear();
+  meIdRES = folder + "GlobalResidualsClu3R3B"; histoRES = (TH1F*)theFile->Get(meIdRES.c_str());  histoRES->Draw(); labeltoSave = "resEndCap/ResidualsClu3R3B.png"; histoRES->GetXaxis()->SetTitle("(cm)");
+  Ca4->SetLogy(); Ca4->SaveAs(labeltoSave.c_str()); Ca4->Clear();
+  meIdRES = folder + "GlobalResidualsClu3R3C"; histoRES = (TH1F*)theFile->Get(meIdRES.c_str());  histoRES->Draw(); labeltoSave = "resEndCap/ResidualsClu3R3C.png"; histoRES->GetXaxis()->SetTitle("(cm)");
+
+
+  //exit(1);
+  
   int indexWheel[5];
   for(int j=0;j<5;j++){
     indexWheel[j]=0;
@@ -263,6 +631,52 @@ void LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
   for(int j=0;j<5;j++){
     indexWheelf[j]=0;
   }
+
+  int indexDisk[6];
+  for(int j=0;j<6;j++){
+    indexDisk[j]=0;
+  }
+  
+  int indexDiskf[6];
+  for(int j=0;j<6;j++){
+    indexDiskf[j]=0;
+  }
+
+
+  if(makehtml){
+
+    command = "rm *.html" ; system(command.c_str());
+
+    command = "cat htmltemplates/indexhead.html > indexDm3near.html"; system(command.c_str());
+    command = "cat htmltemplates/indexhead.html > indexDm2near.html"; system(command.c_str());
+    command = "cat htmltemplates/indexhead.html > indexDm1near.html"; system(command.c_str());
+    command = "cat htmltemplates/indexhead.html > indexDm1near.html"; system(command.c_str());
+    command = "cat htmltemplates/indexhead.html > indexDm2near.html"; system(command.c_str());
+    command = "cat htmltemplates/indexhead.html > indexDm3near.html"; system(command.c_str());
+
+    command = "cat htmltemplates/indexhead.html > indexDm3far.html"; system(command.c_str());
+    command = "cat htmltemplates/indexhead.html > indexDm2far.html"; system(command.c_str());
+    command = "cat htmltemplates/indexhead.html > indexDm1far.html"; system(command.c_str());
+    command = "cat htmltemplates/indexhead.html > indexDm1far.html"; system(command.c_str());
+    command = "cat htmltemplates/indexhead.html > indexDm2far.html"; system(command.c_str());
+    command = "cat htmltemplates/indexhead.html > indexDm3far.html"; system(command.c_str());
+
+    command = "cat htmltemplates/indexhead.html > indexWm2near.html"; system(command.c_str());
+    command = "cat htmltemplates/indexhead.html > indexWm2far.html"; system(command.c_str());
+    command = "cat htmltemplates/indexhead.html > indexWm1near.html"; system(command.c_str());
+    command = "cat htmltemplates/indexhead.html > indexWm1far.html"; system(command.c_str());
+    command = "cat htmltemplates/indexhead.html > indexW0near.html"; system(command.c_str());
+    command = "cat htmltemplates/indexhead.html > indexW0far.html"; system(command.c_str());
+    command = "cat htmltemplates/indexhead.html > indexW1near.html"; system(command.c_str());
+    command = "cat htmltemplates/indexhead.html > indexW1far.html"; system(command.c_str());
+    command = "cat htmltemplates/indexhead.html > indexW2near.html"; system(command.c_str());
+    command = "cat htmltemplates/indexhead.html > indexW2far.html"; system(command.c_str());
+    
+  }
+  
+  std::cout<<"Before Rolls Loop"<<std::endl;
+  
+  Ca0 = new TCanvas("Ca0","Profile",800,600);
   
   for (TrackingGeometry::DetContainer::const_iterator it=rpcGeo->dets().begin();it<rpcGeo->dets().end();it++){
     if( dynamic_cast< RPCChamber* >( *it ) != 0 ){
@@ -271,32 +685,30 @@ void LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
       for(std::vector<const RPCRoll*>::const_iterator r = roles.begin();r != roles.end(); ++r){
 	RPCDetId rpcId = (*r)->id();
 	RPCGeomServ rpcsrv(rpcId);
-		
+	
 	int sector = rpcId.sector();
-  	
-	if(rpcId.region()==0){
-	  std::string detUnitLabel, meIdRPC,meIdDT, bxDistroId, meIdRealRPC  ;
+	int station = rpcId.station();
+
+	if(rpcId.region()==0 && barrel && (!cosmics||((sector!=1||sector!=7) && station!=4))){  
+	  std::string detUnitLabel, meIdRPC,meIdDT, meIdPRO, bxDistroId, meIdRealRPC  ;
 	 
 	  RPCBookFolderStructure *  folderStr = new RPCBookFolderStructure(); //Anna
-	  std::string folder = "DQMData/RPC/MuonSegEff/" +  folderStr->folderStructure(rpcId);
+	  std::string folder = "DQMData/Muons/MuonSegEff/" +  folderStr->folderStructure(rpcId);
 		
 	  meIdRPC = folder +"/RPCDataOccupancyFromDT_"+ rpcsrv.name();	
 	  meIdDT =folder+"/ExpectedOccupancyFromDT_"+ rpcsrv.name();
 	  bxDistroId =folder+"/BXDistribution_"+ rpcsrv.name();
 	  meIdRealRPC =folder+"/RealDetectedOccupancyFromDT_"+ rpcsrv.name();  
-	  
-	  /*histoRPC= dbe->get(meIdRPC);
-	  histoDT= dbe->get(meIdDT);
-	  BXDistribution = dbe->get(bxDistroId);
-	  histoRealRPC = dbe->get(meIdRealRPC);*/
+	  meIdPRO = "Profile_For_"+rpcsrv.name();
 
 	  histoRPC= (TH1F*)theFile->Get(meIdRPC.c_str());
           histoDT= (TH1F*)theFile->Get(meIdDT.c_str());
           BXDistribution = (TH1F*)theFile->Get(bxDistroId.c_str());
           histoRealRPC = (TH1F*)theFile->Get(meIdRealRPC.c_str());
-
-
-	  std::cout <<rpcsrv.name()<<std::endl;
+	  
+	  histoPRO= new TH1F (meIdPRO.c_str(),meIdPRO.c_str(),int((*r)->nstrips()),0.5,int((*r)->nstrips())+0.5);
+	  
+	  std::cout <<folder<<"/"<<rpcsrv.name()<<std::endl;
 
 	  int NumberMasked=0;
 	  int NumberWithOutPrediction=0;
@@ -314,34 +726,161 @@ void LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
 	  float averageerr = 0;
 
 	  int NumberStripsPointed = 0;
+	  double deadStripsContribution=0;
 	  
 	  if(histoRPC && histoDT && BXDistribution && histoRealRPC){
+	    std::cout<<"All Histograms Exists"<<std::endl;
 	    for(int i=1;i<=int((*r)->nstrips());++i){
-	      if(histoRealRPC->GetBinContent(i)==0) NumberMasked++;
-	      
+	      if(histoRealRPC->GetBinContent(i)==0){
+		NumberMasked++;
+		deadStripsContribution=deadStripsContribution+histoDT->GetBinContent(i);
+	      }
 	      if(histoDT->GetBinContent(i)!=0){
-		buffef = float(histoRPC->GetBinContent(i))/float(histoDT->GetBinContent(i));
-		buffer = sqrt(buffef*(1.-buffef)/float(histoDT->GetBinContent(i)));
+		if(histoRPC->GetBinContent(i)==0){ 
+		  std::cout<<"The RPC Data was CERO!!!!! Then Efficiency 0";
+		  buffer=0.;
+		  buffef=0.;
+		}else{
+		  buffef = float(histoRPC->GetBinContent(i))/float(histoDT->GetBinContent(i));
+		  buffer = sqrt(buffef*(1.-buffef)/float(histoDT->GetBinContent(i)));
+		}
 		sumbuffef = sumbuffef + buffef;
 		sumbuffer = sumbuffer + buffer*buffer;
 		NumberStripsPointed++;
 	      }else{
 		NumberWithOutPrediction++;
 	      }
-	    }
-	    p=histoDT->Integral();
-	    o=histoRPC->Integral();
+	      
+	      histoPRO->SetBinContent(i,buffef);
+	      histoPRO->SetBinError(i,buffer);
 
+	      std::cout<<"\t \t Write in Histo PRO"<<histoPRO->GetBinContent(i)<<std::endl;
+	      std::cout<<"\t \t Strip="<<i<<" RealRPC="<<histoRealRPC->GetBinContent(i)<<" RPC="<<histoRPC->GetBinContent(i)<<" DT="<<histoDT->GetBinContent(i)<<" buffef="<<buffef<<" buffer="<<buffer<<" sumbuffef="<<sumbuffef<<" sumbuffer="<<sumbuffer<<" NumberStripsPointed="<<NumberStripsPointed<<" NumberWithOutPrediction"<<NumberWithOutPrediction<<" Number Masked="<<NumberMasked<<std::endl;
+	    }//Finishing loop over digis
+	    
 	    if(NumberStripsPointed!=0){
 	      averageeff = (sumbuffef/float(NumberStripsPointed))*100.;
 	      averageerr = sqrt(sumbuffer/float(NumberStripsPointed))*100.;
+	      EffBarrel->Fill(averageeff);
+	      
+	      int Ring = rpcId.ring();
+	      
+	      if(sector==1||sector==2||sector==3||sector==10||sector==11||sector==12){
+		if(Ring==-2){ EffDistroWm2->Fill(averageeff);
+		}else if(Ring==-1){ EffDistroWm1->Fill(averageeff);
+		}else if(Ring==0) { EffDistroW0->Fill(averageeff);
+		}else if(Ring==1) { EffDistroW1->Fill(averageeff);
+		}else if(Ring==2) { EffDistroW2->Fill(averageeff);
+		}
+	      }else{
+		if(Ring==-2){ EffDistroWm2far->Fill(averageeff);
+		}else if(Ring==-1){ EffDistroWm1far->Fill(averageeff);
+		}else if(Ring==0) { EffDistroW0far->Fill(averageeff);
+		}else if(Ring==1) { EffDistroW1far->Fill(averageeff);
+		}else if(Ring==2) { EffDistroW2far->Fill(averageeff);
+		}
+	      }
+	    }
+	    
+	    
+	    command = "mkdir " + rpcsrv.name();
+	    system(command.c_str());
+	        
+	    if(prodimages){
+	      histoPRO->Draw();
+	      std::string labeltoSave = rpcsrv.name() + "/Profile.png";
+	      Ca0->SaveAs(labeltoSave.c_str());
+	      Ca0->Clear();
+	      
+	      histoRPC->Draw();
+	      labeltoSave = rpcsrv.name() + "/RPCOccupancy.png";
+	      Ca0->SaveAs(labeltoSave.c_str());
+	      Ca0->Clear();
+	    
+	      histoRealRPC->Draw();
+	      labeltoSave = rpcsrv.name() + "/DQMOccupancy.png";
+	      Ca0->SaveAs(labeltoSave.c_str());
+	      Ca0->Clear();
+	      
+	      histoDT->Draw();
+	      labeltoSave = rpcsrv.name() + "/DTOccupancy.png";
+	      Ca0->SaveAs(labeltoSave.c_str());
+	      Ca0->Clear();
+	      
+	      BXDistribution->Draw();
+	      labeltoSave = rpcsrv.name() + "/BXDistribution.png";
+	      Ca0->SaveAs(labeltoSave.c_str());
+	      Ca0->Clear();
 	    }
 
+	    int Ring = rpcId.ring();
+	    int sector = rpcId.sector();
+	    //Near Side
+
+	    std::cout<<"Before if = "<<makehtml<<std::endl;
+	    if(makehtml){
+	      command = "cp htmltemplates/indexLocal.html " + rpcsrv.name() + "/index.html"; system(command.c_str());
+	      std::cout<<"html for "<<rpcId<<std::endl;
+	      
+	      std::string color = "#0000FF";
+	      if(averageeff<threshold) color = "#ff4500";
+
+	      if(sector==1||sector==2||sector==3||sector==10||sector==11||sector==12){
+		if(Ring==-2){ 
+		  command = "sed -e \"s|roll|" + rpcsrv.name() + "|g\" htmltemplates/indextemplate.html >> indexWm2near.html"; system(command.c_str());
+		  command = "sed -e \"s|roll|" + rpcsrv.name() + "|g\" -e \"s|colore|" + color + "|g\" htmltemplates/indexline.html >> insertWm2near.html"; system(command.c_str());
+		}
+		else if(Ring==-1){ 
+		  command = "sed -e \"s|roll|" + rpcsrv.name() + "|g\" htmltemplates/indextemplate.html >> indexWm1near.html"; system(command.c_str());
+		  command = "sed -e \"s|roll|" + rpcsrv.name() + "|g\" -e \"s|colore|" + color + "|g\" htmltemplates/indexline.html >> insertWm1near.html"; system(command.c_str());
+		}
+		else if(Ring==0){ 
+		  command = "sed -e \"s|roll|" + rpcsrv.name() + "|g\" htmltemplates/indextemplate.html >> indexW0near.html"; system(command.c_str());
+		  command = "sed -e \"s|roll|" + rpcsrv.name() + "|g\" -e \"s|colore|" + color + "|g\" htmltemplates/indexline.html >> insertW0near.html"; system(command.c_str());
+		}
+		else if(Ring==1) { 
+		  command = "sed -e \"s|roll|" + rpcsrv.name() + "|g\" htmltemplates/indextemplate.html >> indexW1near.html"; system(command.c_str());
+		  command = "sed -e \"s|roll|" + rpcsrv.name() + "|g\" -e \"s|colore|" + color + "|g\" htmltemplates/indexline.html >> insertW1near.html"; system(command.c_str());
+		}
+		else if(Ring==2) { 
+		  command = "sed -e \"s|roll|" + rpcsrv.name() + "|g\" htmltemplates/indextemplate.html >> indexW2near.html"; system(command.c_str());
+		  command = "sed -e \"s|roll|" + rpcsrv.name() + "|g\" -e \"s|colore|" + color + "|g\" htmltemplates/indexline.html >> insertW2near.html"; system(command.c_str());
+		}     
+	      }else{
+		if(Ring==-2){ 
+		  command = "sed -e \"s|roll|" + rpcsrv.name() + "|g\" htmltemplates/indextemplate.html >> indexWm2far.html"; system(command.c_str());
+		  command = "sed -e \"s|roll|" + rpcsrv.name() + "|g\" -e \"s|colore|" + color + "|g\" htmltemplates/indexline.html >> insertWm2far.html"; system(command.c_str());
+		}
+		else if(Ring==-1){ 
+		  command = "sed -e \"s|roll|" + rpcsrv.name() + "|g\" htmltemplates/indextemplate.html >> indexWm1far.html"; system(command.c_str());
+		  command = "sed -e \"s|roll|" + rpcsrv.name() + "|g\" -e \"s|colore|" + color + "|g\" htmltemplates/indexline.html >> insertWm1far.html"; system(command.c_str());
+		}
+		else if(Ring==0) { 
+		  command = "sed -e \"s|roll|" + rpcsrv.name() + "|g\" htmltemplates/indextemplate.html >> indexW0far.html"; system(command.c_str());
+		  command = "sed -e \"s|roll|" + rpcsrv.name() + "|g\" -e \"s|colore|" + color + "|g\" htmltemplates/indexline.html >> insertW0far.html"; system(command.c_str());
+		}
+		else if(Ring==1) { 
+		  command = "sed -e \"s|roll|" + rpcsrv.name() + "|g\" htmltemplates/indextemplate.html >> indexW1far.html"; system(command.c_str());
+		  command = "sed -e \"s|roll|" + rpcsrv.name() + "|g\" -e \"s|colore|" + color + "|g\" htmltemplates/indexline.html >> insertW1far.html"; system(command.c_str());
+		}
+		else if(Ring==2) { 
+		  command = "sed -e \"s|roll|" + rpcsrv.name() + "|g\" htmltemplates/indextemplate.html >> indexW2far.html"; system(command.c_str());
+		  command = "sed -e \"s|roll|" + rpcsrv.name() + "|g\" -e \"s|colore|" + color + "|g\" htmltemplates/indexline.html >> insertW2far.html"; system(command.c_str());
+		}     
+	      }
+	    }
+
+	    //exit(1);
 	    mybxhisto = 50.+BXDistribution->GetMean()*10;
 	    mybxerror = BXDistribution->GetRMS()*10;
+	  }else{
+	    std::cout<<"One of the histograms Doesn't exist for Barrel!!!"<<std::endl;
+	    exit(1);
 	  }
-	  
-	  int Ring = rpcId.ring();
+	  	  
+	  p=histoDT->Integral();
+	  //-deadStripsContribution;
+	  o=histoRPC->Integral();
 	  
 	  if(p!=0){
 	    ef = float(o)/float(p); 
@@ -351,18 +890,19 @@ void LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
 	  ef=ef*100;
 	  er=er*100;
 	    
-	  std::string camera = rpcsrv.name().c_str();
-	  
+	  std::string camera = rpcsrv.name().c_str();  
 	  float stripsratio = (float(NumberMasked)/float((*r)->nstrips()))*100.;
 	  float nopredictionsratio = (float(NumberWithOutPrediction)/float((*r)->nstrips()))*100.;
 	  
+	  std::cout<<"Filling Global with: Average Eff="<<averageeff<<" Ingegral Eff="<<ef<<" Strips Ratio"<<stripsratio<<" No Predictionratio="<<nopredictionsratio<<std::endl;
 
 	  //Near Side
 
+	  int Ring = rpcId.ring();
 	  if((sector==1||sector==2||sector==3||sector==10||sector==11||sector==12)){
 	    if(Ring==-2){
-	      indexWheel[0]++;  
-	      EffGlobWm2->SetBinContent(indexWheel[0],ef);  
+	      indexWheel[0]++;
+	      EffGlobWm2->SetBinContent(indexWheel[0],ef);
 	      EffGlobWm2->SetBinError(indexWheel[0],er);  
 	      EffGlobWm2->GetXaxis()->SetBinLabel(indexWheel[0],camera.c_str());
 
@@ -559,14 +1099,513 @@ void LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
               NoPredictionW2far->GetXaxis()->SetBinLabel(indexWheelf[4],camera.c_str());
 	    }
 	  }
+	}else if(endcap&&!cosmics){//ENDCAPs
+
+	  std::string detUnitLabel, meIdRPC,meIdCSC, meIdPRO, bxDistroId, meIdRealRPC  ;
+	 
+	  RPCBookFolderStructure *  folderStr = new RPCBookFolderStructure(); //Anna
+	  std::string folder = "DQMData/Muons/MuonSegEff/" +  folderStr->folderStructure(rpcId);
+	
+	  meIdRPC = folder +"/RPCDataOccupancyFromCSC_"+ rpcsrv.name();	
+	  meIdCSC =folder+"/ExpectedOccupancyFromCSC_"+ rpcsrv.name();
+	  bxDistroId =folder+"/BXDistribution_"+ rpcsrv.name();
+	  meIdRealRPC =folder+"/RealDetectedOccupancyFromCSC_"+ rpcsrv.name();
+	  meIdPRO = "Profile_For_"+rpcsrv.name();
+
+	  histoRPC= (TH1F*)theFile->Get(meIdRPC.c_str()); if(!histoRPC) std::cout<<meIdRPC<<"Doesn't exist"<<std::endl; 
+	  histoCSC= (TH1F*)theFile->Get(meIdCSC.c_str());if(!histoCSC)std::cout<<meIdCSC<<"Doesn't exist"<<std::endl; 
+	  BXDistribution = (TH1F*)theFile->Get(bxDistroId.c_str());if(!BXDistribution)std::cout<<BXDistribution<<"Doesn't exist"<<std::endl; 
+	  histoRealRPC = (TH1F*)theFile->Get(meIdRealRPC.c_str());if(!histoRealRPC)std::cout<<meIdRealRPC<<"Doesn't exist"<<std::endl; 
+	  
+	  histoPRO= new TH1F (meIdPRO.c_str(),meIdPRO.c_str(),int((*r)->nstrips()),0.5,int((*r)->nstrips())+0.5);
+
+	  std::cout <<folder<<"/"<<rpcsrv.name()<<std::endl;
+	  
+	  int NumberMasked=0;
+	  int NumberWithOutPrediction=0;
+	  double p = 0;
+	  double o = 0;
+	  float mybxhisto = 0;
+	  float mybxerror = 0;
+	  float ef =0;
+	  float er =0;
+	  float buffef = 0;
+	  float buffer = 0;
+	  float sumbuffef = 0;
+	  float sumbuffer = 0;
+	  float averageeff = 0;
+	  float averageerr = 0;
+	  
+	  int NumberStripsPointed = 0;
+	  double deadStripsContribution = 0;
+	  
+	  if(histoRPC && histoCSC && BXDistribution && histoRealRPC){
+	    std::cout<<"All Histograms Exists"<<std::endl;
+	    for(int i=1;i<=int((*r)->nstrips());++i){
+	      if(histoRealRPC->GetBinContent(i)==0){
+		NumberMasked++;
+		deadStripsContribution=deadStripsContribution+histoCSC->GetBinContent(i);
+	      }
+	      if(histoCSC->GetBinContent(i)!=0){
+		if(histoRPC->GetBinContent(i)==0){ 
+		  std::cout<<"The RPC Data was CERO!!!!! Then Efficiency 0";
+		  buffer=0.;
+		  buffef=0.;
+		}else{
+		  buffef = double(histoRPC->GetBinContent(i))/double(histoCSC->GetBinContent(i));
+		  buffer = sqrt(buffef*(1.-buffef)/double(histoCSC->GetBinContent(i)));
+		}
+		sumbuffef=sumbuffef+buffef;
+		sumbuffer = sumbuffer + buffer*buffer;
+		NumberStripsPointed++;
+	      }else{
+		NumberWithOutPrediction++;
+	      }
+	      
+	      histoPRO->SetBinContent(i,buffef);
+	      histoPRO->SetBinError(i,buffer);
+
+	      std::cout<<"\t \t Write in Histo PRO"<<histoPRO->GetBinContent(i)<<std::endl;
+	      std::cout<<"\t \t Strip="<<i<<" RealRPC="<<histoRealRPC->GetBinContent(i)<<" RPC="<<histoRPC->GetBinContent(i)<<" CSC="<<histoCSC->GetBinContent(i)<<" buffef="<<buffef<<" buffer="<<buffer<<" sumbuffef="<<sumbuffef<<" sumbuffer="<<sumbuffer<<" NumberStripsPointed="<<NumberStripsPointed<<" NumberWithOutPrediction"<<NumberWithOutPrediction<<" Number Masked="<<NumberMasked<<std::endl;
+	    }
+	    
+	    if(NumberStripsPointed!=0){
+	      averageeff = (sumbuffef/float(NumberStripsPointed))*100.;
+	      averageerr = sqrt(sumbuffer/float(NumberStripsPointed))*100.;
+	      EffEndCap->Fill(averageeff);
+	      //Filling eff distro
+	      int Disk=rpcId.station()*rpcId.region();
+	      if(sector==1||sector==2||sector==6){
+		if(Disk==-3){EffDistroDm3->Fill(averageeff);
+		}else if(Disk==-2){EffDistroDm2->Fill(averageeff);
+		}else if(Disk==-1){EffDistroDm1->Fill(averageeff);
+		}else if(Disk==1){EffDistroD1->Fill(averageeff);
+		}else if(Disk==2){EffDistroD2->Fill(averageeff);
+		}else if(Disk==3){EffDistroD3->Fill(averageeff);
+		}
+	      }else{//Far Side 
+		if(Disk==-3){EffDistroDm3far->Fill(averageeff);
+		}else if(Disk==-2){EffDistroDm2far->Fill(averageeff);
+		}else if(Disk==-1){EffDistroDm1far->Fill(averageeff);
+		}else if(Disk==1){EffDistroDm1far->Fill(averageeff);
+		}else if(Disk==2){EffDistroDm2far->Fill(averageeff);
+		}else if(Disk==3){EffDistroDm3far->Fill(averageeff);
+		}
+	      }//Finishing EndCap
+	      
+	      command = "mkdir " + rpcsrv.name();
+	      system(command.c_str());
+	        
+	      if(prodimages){//ENDCAP
+		histoPRO->Draw();
+		std::string labeltoSave = rpcsrv.name() + "/Profile.png";
+		Ca0->SaveAs(labeltoSave.c_str());
+		Ca0->Clear();
+	      
+		histoRPC->Draw();
+		labeltoSave = rpcsrv.name() + "/RPCOccupancy.png";
+		Ca0->SaveAs(labeltoSave.c_str());
+		Ca0->Clear();
+	    
+		histoRealRPC->Draw();
+		labeltoSave = rpcsrv.name() + "/DQMOccupancy.png";
+		Ca0->SaveAs(labeltoSave.c_str());
+		Ca0->Clear();
+	      
+		histoCSC->Draw();
+		labeltoSave = rpcsrv.name() + "/DTOccupancy.png";
+		Ca0->SaveAs(labeltoSave.c_str());
+		Ca0->Clear();
+	      
+		BXDistribution->Draw();
+		labeltoSave = rpcsrv.name() + "/BXDistribution.png";
+		Ca0->SaveAs(labeltoSave.c_str());
+		Ca0->Clear();
+	      }
+	      
+	      int sector = rpcId.sector();
+	      //Near Side
+	      
+	      std::cout<<"Before if = "<<makehtml<<std::endl;
+	      if(makehtml){
+		command = "cp htmltemplates/indexLocal.html " + rpcsrv.name() + "/index.html"; system(command.c_str());
+		
+		std::cout<<"html for "<<rpcId<<std::endl;
+		
+		std::string color = "#0000FF";
+		if(averageeff<threshold) color = "#ff4500";
+		
+		int Disk=rpcId.station()*rpcId.region();
+		
+		if(sector==1||sector==2||sector==3){
+		  if(Disk==-3){ 
+		    command = "sed -e \"s|roll|" + rpcsrv.name() + "|g\" htmltemplates/indextemplate.html >> indexDm3near.html"; system(command.c_str());
+		    command = "sed -e \"s|roll|" + rpcsrv.name() + "|g\" -e \"s|colore|" + color + "|g\" htmltemplates/indexline.html >> insertDm3near.html"; system(command.c_str());
+		  }
+		  else if(Disk==-2){ 
+		    command = "sed -e \"s|roll|" + rpcsrv.name() + "|g\" htmltemplates/ndextemplate.html >> indexDm2near.html"; system(command.c_str());
+		    command = "sed -e \"s|roll|" + rpcsrv.name() + "|g\" -e \"s|colore|" + color + "|g\" htmltemplates/indexline.html >> insertDm2near.html"; system(command.c_str());
+		  }
+		  else if(Disk==-1){ 
+		    command = "sed -e \"s|roll|" + rpcsrv.name() + "|g\" htmltemplates/indextemplate.html >> indexDm1near.html"; system(command.c_str());
+		    command = "sed -e \"s|roll|" + rpcsrv.name() + "|g\" -e \"s|colore|" + color + "|g\" htmltemplates/indexline.html >> insertDm1near.html"; system(command.c_str());
+		  }
+		  else if(Disk==1){ 
+		    command = "sed -e \"s|roll|" + rpcsrv.name() + "|g\" htmltemplates/indextemplate.html >> indexD1near.html"; system(command.c_str());
+		    command = "sed -e \"s|roll|" + rpcsrv.name() + "|g\" -e \"s|colore|" + color + "|g\" htmltemplates/indexline.html >> insertD1near.html"; system(command.c_str());
+		  }
+		  else if(Disk==2) { 
+		    command = "sed -e \"s|roll|" + rpcsrv.name() + "|g\" htmltemplates/indextemplate.html >> indexD2near.html"; system(command.c_str());
+		    command = "sed -e \"s|roll|" + rpcsrv.name() + "|g\" -e \"s|colore|" + color + "|g\" htmltemplates/indexline.html >> insertD2near.html"; system(command.c_str());
+		  }else if(Disk==3){
+		    command = "sed -e \"s|roll|" + rpcsrv.name() + "|g\" htmltemplates/indextemplate.html >> indexD3near.html"; system(command.c_str());
+		    command = "sed -e \"s|roll|" + rpcsrv.name() + "|g\" -e \"s|colore|" + color + "|g\" htmltemplates/indexline.html >> insertD3near.html"; system(command.c_str());
+		  }
+		}else{
+		  if(Disk==-3){ 
+		    command = "sed -e \"s|roll|" + rpcsrv.name() + "|g\" htmltemplates/indextemplate.html >> indexDm3far.html"; system(command.c_str());
+		    command = "sed -e \"s|roll|" + rpcsrv.name() + "|g\" -e \"s|colore|" + color + "|g\" htmltemplates/indexline.html >> insertDm3far.html"; system(command.c_str());
+		  }else if(Disk==-2){ 
+		    command = "sed -e \"s|roll|" + rpcsrv.name() + "|g\" htmltemplates/indextemplate.html >> indexDm2far.html"; system(command.c_str());
+		    command = "sed -e \"s|roll|" + rpcsrv.name() + "|g\" -e \"s|colore|" + color + "|g\" htmltemplates/indexline.html >> insertDm2far.html"; system(command.c_str());
+		  }else if(Disk==-1){ 
+		    command = "sed -e \"s|roll|" + rpcsrv.name() + "|g\" htmltemplates/indextemplate.html >> indexDm1far.html"; system(command.c_str());
+		    command = "sed -e \"s|roll|" + rpcsrv.name() + "|g\" -e \"s|colore|" + color + "|g\" htmltemplates/indexline.html >> insertDm1far.html"; system(command.c_str());
+		  }else if(Disk==1){ 
+		    command = "sed -e \"s|roll|" + rpcsrv.name() + "|g\" htmltemplates/indextemplate.html >> indexD1far.html"; system(command.c_str());
+		    command = "sed -e \"s|roll|" + rpcsrv.name() + "|g\" -e \"s|colore|" + color + "|g\" htmltemplates/indexline.html >> insertD1far.html"; system(command.c_str());
+		  }else if(Disk==2) { 
+		    command = "sed -e \"s|roll|" + rpcsrv.name() + "|g\" htmltemplates/indextemplate.html >> indexD2far.html"; system(command.c_str());
+		    command = "sed -e \"s|roll|" + rpcsrv.name() + "|g\" -e \"s|colore|" + color + "|g\" htmltemplates/indexline.html >> insertD2far.html"; system(command.c_str());
+		  }else if(Disk==3){
+		    command = "sed -e \"s|roll|" + rpcsrv.name() + "|g\" htmltemplates/indextemplate.html >> indexD3far.html"; system(command.c_str());
+		    command = "sed -e \"s|roll|" + rpcsrv.name() + "|g\" -e \"s|colore|" + color + "|g\" htmltemplates/indexline.html >> insertD3far.html"; system(command.c_str());
+		  }
+		}
+	      }
+	    }
+
+	    
+	    mybxhisto = 50.+BXDistribution->GetMean()*10;
+	    mybxerror = BXDistribution->GetRMS()*10;
+	  }else{
+	    std::cout<<"One of the histograms Doesn't exist!!!"<<std::endl;
+	    exit(1);
+	  }
+	  
+	  p=histoCSC->Integral();
+	  //-deadStripsContribution;
+	  o=histoRPC->Integral();
+
+
+	  int Disk = rpcId.station()*rpcId.region();
+	  
+	  if(p!=0){
+	    ef = float(o)/float(p); 
+	    er = sqrt(ef*(1.-ef)/float(p));
+	  }
+	    
+	  ef=ef*100;
+	  er=er*100;
+	    
+	  std::string camera = rpcsrv.name();
+	  
+	  float maskedratio = (float(NumberMasked)/float((*r)->nstrips()))*100.;
+	  float nopredictionsratio = (float(NumberWithOutPrediction)/float((*r)->nstrips()))*100.;
+	  
+	  std::cout<<"p="<<p<<" o="<<o<<std::endl;
+	  std::cout<<"ef="<<ef<<" +/- er="<<er<<std::endl;
+	  std::cout<<"averageeff="<<averageeff<<" +/- averageerr="<<averageerr<<std::endl;
+	  std::cout<<"maskedratio="<<maskedratio<<std::endl;
+	  std::cout<<"nopredictionsratio="<<nopredictionsratio<<std::endl;
+	  
+ 	  //Near Side
+
+	  if(sector==1||sector==2||sector==6){
+	    if(Disk==-3){
+	      indexDisk[0]++;  
+	      EffGlobDm3->SetBinContent(indexDisk[0],ef);  
+	      EffGlobDm3->SetBinError(indexDisk[0],er);  
+	      EffGlobDm3->GetXaxis()->SetBinLabel(indexDisk[0],camera.c_str());
+            
+	      BXGlobDm3->SetBinContent(indexDisk[0],mybxhisto);  
+	      BXGlobDm3->SetBinError(indexDisk[0],mybxerror);  
+	      BXGlobDm3->GetXaxis()->SetBinLabel(indexDisk[0],camera.c_str());
+	      
+	      MaskedGlobDm3->SetBinContent(indexDisk[0],maskedratio);  
+	      MaskedGlobDm3->GetXaxis()->SetBinLabel(indexDisk[0],camera.c_str());
+
+	      AverageEffDm3->SetBinContent(indexDisk[0],averageeff);
+	      AverageEffDm3->SetBinError(indexDisk[0],averageerr);  
+	      AverageEffDm3->GetXaxis()->SetBinLabel(indexDisk[0],camera.c_str());
+	      
+	      NoPredictionDm3->SetBinContent(indexDisk[0],nopredictionsratio);
+              NoPredictionDm3->GetXaxis()->SetBinLabel(indexDisk[0],camera.c_str());
+	    }else if(Disk==-2){
+	      indexDisk[1]++;  
+	      EffGlobDm2->SetBinContent(indexDisk[1],ef);  
+	      EffGlobDm2->SetBinError(indexDisk[1],er);  
+	      EffGlobDm2->GetXaxis()->SetBinLabel(indexDisk[1],camera.c_str());
+
+	      BXGlobDm2->SetBinContent(indexDisk[1],mybxhisto);  
+	      BXGlobDm2->SetBinError(indexDisk[1],mybxerror);  
+	      BXGlobDm2->GetXaxis()->SetBinLabel(indexDisk[1],camera.c_str());
+	      
+	      MaskedGlobDm2->SetBinContent(indexDisk[1],maskedratio);  
+	      MaskedGlobDm2->GetXaxis()->SetBinLabel(indexDisk[1],camera.c_str());
+
+	      AverageEffDm2->SetBinContent(indexDisk[1],averageeff);
+	      AverageEffDm2->SetBinError(indexDisk[1],averageerr);  
+	      AverageEffDm2->GetXaxis()->SetBinLabel(indexDisk[1],camera.c_str());
+	      
+	      NoPredictionDm2->SetBinContent(indexDisk[1],nopredictionsratio);
+              NoPredictionDm2->GetXaxis()->SetBinLabel(indexDisk[1],camera.c_str());
+	    }else if(Disk==-1){
+	      indexDisk[2]++;  
+	      EffGlobDm1->SetBinContent(indexDisk[2],ef);  
+	      EffGlobDm1->SetBinError(indexDisk[2],er);  
+	      EffGlobDm1->GetXaxis()->SetBinLabel(indexDisk[2],camera.c_str());  
+	      
+	      BXGlobDm1->SetBinContent(indexDisk[2],mybxhisto);  
+	      BXGlobDm1->SetBinError(indexDisk[2],mybxerror);  
+	      BXGlobDm1->GetXaxis()->SetBinLabel(indexDisk[2],camera.c_str());
+	      
+	      MaskedGlobDm1->SetBinContent(indexDisk[2],maskedratio);  
+	      MaskedGlobDm1->GetXaxis()->SetBinLabel(indexDisk[2],camera.c_str());
+
+	      AverageEffDm1->SetBinContent(indexDisk[2],averageeff);
+	      AverageEffDm1->SetBinError(indexDisk[2],averageerr);  
+	      AverageEffDm1->GetXaxis()->SetBinLabel(indexDisk[2],camera.c_str());
+	      
+	      NoPredictionDm1->SetBinContent(indexDisk[2],nopredictionsratio);
+              NoPredictionDm1->GetXaxis()->SetBinLabel(indexDisk[2],camera.c_str());
+
+	    }else if(Disk==1){
+	      indexDisk[3]++;  
+	      EffGlobD1->SetBinContent(indexDisk[3],ef);  
+	      EffGlobD1->SetBinError(indexDisk[3],er);  
+	      EffGlobD1->GetXaxis()->SetBinLabel(indexDisk[3],camera.c_str());  
+	      
+	      BXGlobD1->SetBinContent(indexDisk[3],mybxhisto);  
+	      BXGlobD1->SetBinError(indexDisk[3],mybxerror);  
+	      BXGlobD1->GetXaxis()->SetBinLabel(indexDisk[3],camera.c_str());
+
+	      MaskedGlobD1->SetBinContent(indexDisk[3],maskedratio);  
+	      MaskedGlobD1->GetXaxis()->SetBinLabel(indexDisk[3],camera.c_str());
+
+	      AverageEffD1->SetBinContent(indexDisk[3],averageeff);
+	      AverageEffD1->SetBinError(indexDisk[3],averageerr);  
+	      AverageEffD1->GetXaxis()->SetBinLabel(indexDisk[3],camera.c_str());
+	      
+	      NoPredictionD1->SetBinContent(indexDisk[3],nopredictionsratio);
+              NoPredictionD1->GetXaxis()->SetBinLabel(indexDisk[3],camera.c_str());	      
+	    }else if(Disk==2){
+	      indexDisk[4]++;
+	      EffGlobD2->SetBinContent(indexDisk[4],ef);
+	      EffGlobD2->SetBinError(indexDisk[4],er);
+	      EffGlobD2->GetXaxis()->SetBinLabel(indexDisk[4],camera.c_str());
+
+	      BXGlobD2->SetBinContent(indexDisk[4],mybxhisto);  
+	      BXGlobD2->SetBinError(indexDisk[4],mybxerror);  
+	      BXGlobD2->GetXaxis()->SetBinLabel(indexDisk[4],camera.c_str());
+	      
+	      MaskedGlobD2->SetBinContent(indexDisk[4],maskedratio);  
+	      MaskedGlobD2->GetXaxis()->SetBinLabel(indexDisk[4],camera.c_str());
+
+	      AverageEffD2->SetBinContent(indexDisk[4],averageeff);
+	      AverageEffD2->SetBinError(indexDisk[4],averageerr);  
+	      AverageEffD2->GetXaxis()->SetBinLabel(indexDisk[4],camera.c_str());
+	      
+	      NoPredictionD2->SetBinContent(indexDisk[4],nopredictionsratio);
+              NoPredictionD2->GetXaxis()->SetBinLabel(indexDisk[4],camera.c_str());	      
+	    }else if(Disk==3){
+	      indexDisk[5]++;
+	      EffGlobD3->SetBinContent(indexDisk[5],ef);
+	      EffGlobD3->SetBinError(indexDisk[5],er);
+	      EffGlobD3->GetXaxis()->SetBinLabel(indexDisk[5],camera.c_str());
+
+	      BXGlobD3->SetBinContent(indexDisk[5],mybxhisto);  
+	      BXGlobD3->SetBinError(indexDisk[5],mybxerror);  
+	      BXGlobD3->GetXaxis()->SetBinLabel(indexDisk[5],camera.c_str());
+	      
+	      MaskedGlobD3->SetBinContent(indexDisk[5],maskedratio);  
+	      MaskedGlobD3->GetXaxis()->SetBinLabel(indexDisk[5],camera.c_str());
+
+	      AverageEffD3->SetBinContent(indexDisk[5],averageeff);
+	      AverageEffD3->SetBinError(indexDisk[5],averageerr);  
+	      AverageEffD3->GetXaxis()->SetBinLabel(indexDisk[5],camera.c_str());
+	      
+	      NoPredictionD3->SetBinContent(indexDisk[5],nopredictionsratio);
+              NoPredictionD3->GetXaxis()->SetBinLabel(indexDisk[5],camera.c_str());	      
+	    }
+	  }else{//Far Side 
+	    
+	    if(Disk==-3){
+	      indexDiskf[0]++;  
+	      EffGlobDm3far->SetBinContent(indexDiskf[0],ef);  
+	      EffGlobDm3far->SetBinError(indexDiskf[0],er);  
+	      EffGlobDm3far->GetXaxis()->SetBinLabel(indexDiskf[0],camera.c_str());
+
+	      BXGlobDm3far->SetBinContent(indexDiskf[0],mybxhisto);  
+	      BXGlobDm3far->SetBinError(indexDiskf[0],mybxerror);  
+	      BXGlobDm3far->GetXaxis()->SetBinLabel(indexDiskf[0],camera.c_str());
+	      
+	      MaskedGlobDm3far->SetBinContent(indexDiskf[0],maskedratio);
+	      MaskedGlobDm3far->GetXaxis()->SetBinLabel(indexDiskf[0],camera.c_str());
+	      
+	      AverageEffDm3far->SetBinContent(indexDiskf[0],averageeff);
+              AverageEffDm3far->SetBinError(indexDiskf[0],averageerr);
+              AverageEffDm3far->GetXaxis()->SetBinLabel(indexDiskf[0],camera.c_str());
+
+              NoPredictionDm3->SetBinContent(indexDisk[0],nopredictionsratio);
+              NoPredictionDm3->GetXaxis()->SetBinLabel(indexDisk[0],camera.c_str());
+
+	    }
+	    else if(Disk==-2){
+	      indexDiskf[1]++;  
+	      EffGlobDm2far->SetBinContent(indexDiskf[1],ef);  
+	      EffGlobDm2far->SetBinError(indexDiskf[1],er);  
+	      EffGlobDm2far->GetXaxis()->SetBinLabel(indexDiskf[1],camera.c_str());
+
+	      BXGlobDm2far->SetBinContent(indexDiskf[1],mybxhisto);  
+	      BXGlobDm2far->SetBinError(indexDiskf[1],mybxerror);  
+	      BXGlobDm2far->GetXaxis()->SetBinLabel(indexDiskf[1],camera.c_str());
+	      
+	      MaskedGlobDm2far->SetBinContent(indexDiskf[1],maskedratio);
+	      MaskedGlobDm2far->GetXaxis()->SetBinLabel(indexDiskf[1],camera.c_str());
+	      
+	      AverageEffDm2far->SetBinContent(indexDiskf[1],averageeff);
+              AverageEffDm2far->SetBinError(indexDiskf[1],averageerr);
+              AverageEffDm2far->GetXaxis()->SetBinLabel(indexDiskf[1],camera.c_str());
+
+              NoPredictionDm2->SetBinContent(indexDisk[1],nopredictionsratio);
+              NoPredictionDm2->GetXaxis()->SetBinLabel(indexDisk[1],camera.c_str());
+
+	    }else if(Disk==-1){
+	      indexDiskf[2]++;  
+	      EffGlobDm1far->SetBinContent(indexDiskf[2],ef);  
+	      EffGlobDm1far->SetBinError(indexDiskf[2],er);  
+	      EffGlobDm1far->GetXaxis()->SetBinLabel(indexDiskf[2],camera.c_str());  
+	      
+	      BXGlobDm1far->SetBinContent(indexDiskf[2],mybxhisto);  
+	      BXGlobDm1far->SetBinError(indexDiskf[2],mybxerror);  
+	      BXGlobDm1far->GetXaxis()->SetBinLabel(indexDiskf[2],camera.c_str());
+	      
+	      MaskedGlobDm1far->SetBinContent(indexDiskf[2],maskedratio);
+	      MaskedGlobDm1far->GetXaxis()->SetBinLabel(indexDiskf[2],camera.c_str());
+
+	      AverageEffDm1far->SetBinContent(indexDiskf[2],averageeff);
+              AverageEffDm1far->SetBinError(indexDiskf[2],averageerr);
+              AverageEffDm1far->GetXaxis()->SetBinLabel(indexDiskf[2],camera.c_str());
+
+              NoPredictionDm1far->SetBinContent(indexDiskf[2],nopredictionsratio);
+              NoPredictionDm1far->GetXaxis()->SetBinLabel(indexDiskf[2],camera.c_str());
+
+	    }else if(Disk==1){
+	      indexDiskf[3]++;  
+	      EffGlobD1far->SetBinContent(indexDiskf[3],ef);  
+	      EffGlobD1far->SetBinError(indexDiskf[3],er);  
+	      EffGlobD1far->GetXaxis()->SetBinLabel(indexDiskf[3],camera.c_str());  
+	      
+	      BXGlobD1far->SetBinContent(indexDiskf[3],mybxhisto);  
+	      BXGlobD1far->SetBinError(indexDiskf[3],mybxerror);  
+	      BXGlobD1far->GetXaxis()->SetBinLabel(indexDiskf[3],camera.c_str());
+
+	      MaskedGlobD1far->SetBinContent(indexDiskf[3],maskedratio);
+	      MaskedGlobD1far->GetXaxis()->SetBinLabel(indexDiskf[3],camera.c_str());
+	      
+	      AverageEffD1far->SetBinContent(indexDiskf[3],averageeff);
+              AverageEffD1far->SetBinError(indexDiskf[3],averageerr);
+              AverageEffD1far->GetXaxis()->SetBinLabel(indexDiskf[3],camera.c_str());
+
+              NoPredictionD1far->SetBinContent(indexDiskf[3],nopredictionsratio);
+              NoPredictionD1far->GetXaxis()->SetBinLabel(indexDiskf[3],camera.c_str());
+
+	    }else if(Disk==2){
+	      indexDiskf[4]++;
+	      EffGlobD2far->SetBinContent(indexDiskf[4],ef);
+	      EffGlobD2far->SetBinError(indexDiskf[4],er);
+	      EffGlobD2far->GetXaxis()->SetBinLabel(indexDiskf[4],camera.c_str());
+
+	      BXGlobD2far->SetBinContent(indexDiskf[4],mybxhisto);  
+	      BXGlobD2far->SetBinError(indexDiskf[4],mybxerror);  
+	      BXGlobD2far->GetXaxis()->SetBinLabel(indexDiskf[4],camera.c_str());
+	      
+	      MaskedGlobD2far->SetBinContent(indexDiskf[4],maskedratio);
+	      MaskedGlobD2far->GetXaxis()->SetBinLabel(indexDiskf[4],camera.c_str());
+
+	      AverageEffD2far->SetBinContent(indexDiskf[4],averageeff);
+              AverageEffD2far->SetBinError(indexDiskf[4],averageerr);
+              AverageEffD2far->GetXaxis()->SetBinLabel(indexDiskf[4],camera.c_str());
+
+              NoPredictionD2far->SetBinContent(indexDiskf[4],nopredictionsratio);
+              NoPredictionD2far->GetXaxis()->SetBinLabel(indexDiskf[4],camera.c_str());
+	    }else if(Disk==3){
+	      indexDiskf[5]++;
+	      EffGlobD3far->SetBinContent(indexDiskf[5],ef);
+	      EffGlobD3far->SetBinError(indexDiskf[5],er);
+	      EffGlobD3far->GetXaxis()->SetBinLabel(indexDiskf[5],camera.c_str());
+
+	      BXGlobD3far->SetBinContent(indexDiskf[5],mybxhisto);  
+	      BXGlobD3far->SetBinError(indexDiskf[5],mybxerror);  
+	      BXGlobD3far->GetXaxis()->SetBinLabel(indexDiskf[5],camera.c_str());
+	      
+	      MaskedGlobD3far->SetBinContent(indexDiskf[5],maskedratio);
+	      MaskedGlobD3far->GetXaxis()->SetBinLabel(indexDiskf[5],camera.c_str());
+
+	      AverageEffD3far->SetBinContent(indexDiskf[5],averageeff);
+              AverageEffD3far->SetBinError(indexDiskf[5],averageerr);
+              AverageEffD3far->GetXaxis()->SetBinLabel(indexDiskf[5],camera.c_str());
+
+              NoPredictionD3far->SetBinContent(indexDiskf[5],nopredictionsratio);
+              NoPredictionD3far->GetXaxis()->SetBinLabel(indexDiskf[5],camera.c_str());
+	    }
+	  }//Finishing EndCap
 	}
       }
     }
   }
-  
+
+  if(makehtml){
+    
+    command = "cat htmltemplates/indextail.html >> indexDm3near.html"; system(command.c_str());
+    command = "cat htmltemplates/indextail.html >> indexDm2near.html"; system(command.c_str());
+    command = "cat htmltemplates/indextail.html >> indexDm1near.html"; system(command.c_str());
+    command = "cat htmltemplates/indextail.html >> indexDm1near.html"; system(command.c_str());
+    command = "cat htmltemplates/indextail.html >> indexDm2near.html"; system(command.c_str());
+    command = "cat htmltemplates/indextail.html >> indexDm3near.html"; system(command.c_str());
+
+    command = "cat htmltemplates/indextail.html >> indexDm3far.html"; system(command.c_str());
+    command = "cat htmltemplates/indextail.html >> indexDm2far.html"; system(command.c_str());
+    command = "cat htmltemplates/indextail.html >> indexDm1far.html"; system(command.c_str());
+    command = "cat htmltemplates/indextail.html >> indexDm1far.html"; system(command.c_str());
+    command = "cat htmltemplates/indextail.html >> indexDm2far.html"; system(command.c_str());
+    command = "cat htmltemplates/indextail.html >> indexDm3far.html"; system(command.c_str());
+
+    command = "cat htmltemplates/indextail.html >> indexWm2near.html"; system(command.c_str());
+    command = "cat htmltemplates/indextail.html >> indexWm2far.html"; system(command.c_str());
+    command = "cat htmltemplates/indextail.html >> indexWm1near.html"; system(command.c_str());
+    command = "cat htmltemplates/indextail.html >> indexWm1far.html"; system(command.c_str());
+    command = "cat htmltemplates/indextail.html >> indexW0near.html"; system(command.c_str());
+    command = "cat htmltemplates/indextail.html >> indexW0far.html"; system(command.c_str());
+    command = "cat htmltemplates/indextail.html >> indexW1near.html"; system(command.c_str());
+    command = "cat htmltemplates/indextail.html >> indexW1far.html"; system(command.c_str());
+    command = "cat htmltemplates/indextail.html >> indexW2near.html"; system(command.c_str());
+    command = "cat htmltemplates/indextail.html >> indexW2far.html"; system(command.c_str());
+
+    //DONT FORGET TO ROTATE AND TO COPY WITH THE RIGHT RUN THE INDEXES.
+    //command = "cat htmltemplates/index.html > index.html"; system(command.c_str());
+    //command = "cat htmltemplates/tmpindex.html > tmpindex.html"; system(command.c_str());
+    //command = "cat htmltemplates/indexDistro.html > indexDistro.html"; system(command.c_str());
+
+    //command = "cd Sides"; system(command.c_str());
+    //command = "../htmltemplates/rot.sh"; system(command.c_str());
+  }
+
+	 
 
 //Producing Images
-
+  if(barrel){
 EffGlobWm2->GetXaxis()->LabelsOption("v");
 EffGlobWm1->GetXaxis()->LabelsOption("v");
 EffGlobW0->GetXaxis()->LabelsOption("v");
@@ -650,6 +1689,180 @@ NoPredictionWm1far->GetXaxis()->LabelsOption("v");
 NoPredictionW0far->GetXaxis()->LabelsOption("v");
 NoPredictionW1far->GetXaxis()->LabelsOption("v");
 NoPredictionW2far->GetXaxis()->LabelsOption("v");
+  }
+  if(endcap){
+NoPredictionDm3->GetXaxis()->LabelsOption("v");
+AverageEffDm3->GetXaxis()->LabelsOption("v");
+EffGlobDm3->GetXaxis()->LabelsOption("v");
+BXGlobDm3->GetXaxis()->LabelsOption("v");
+MaskedGlobDm3->GetXaxis()->LabelsOption("v");
+NoPredictionDm3far->GetXaxis()->LabelsOption("v");
+AverageEffDm3far->GetXaxis()->LabelsOption("v");
+EffGlobDm3far->GetXaxis()->LabelsOption("v");
+BXGlobDm3far->GetXaxis()->LabelsOption("v");
+MaskedGlobDm3far->GetXaxis()->LabelsOption("v");
+NoPredictionDm2->GetXaxis()->LabelsOption("v");
+AverageEffDm2->GetXaxis()->LabelsOption("v");
+EffGlobDm2->GetXaxis()->LabelsOption("v");
+BXGlobDm2->GetXaxis()->LabelsOption("v");
+MaskedGlobDm2->GetXaxis()->LabelsOption("v");
+NoPredictionDm2far->GetXaxis()->LabelsOption("v");
+AverageEffDm2far->GetXaxis()->LabelsOption("v");
+EffGlobDm2far->GetXaxis()->LabelsOption("v");
+BXGlobDm2far->GetXaxis()->LabelsOption("v");
+MaskedGlobDm2far->GetXaxis()->LabelsOption("v");
+NoPredictionDm1->GetXaxis()->LabelsOption("v");
+AverageEffDm1->GetXaxis()->LabelsOption("v");
+EffGlobDm1->GetXaxis()->LabelsOption("v");
+BXGlobDm1->GetXaxis()->LabelsOption("v");
+MaskedGlobDm1->GetXaxis()->LabelsOption("v");
+NoPredictionDm1far->GetXaxis()->LabelsOption("v");
+AverageEffDm1far->GetXaxis()->LabelsOption("v");
+EffGlobDm1far->GetXaxis()->LabelsOption("v");
+BXGlobDm1far->GetXaxis()->LabelsOption("v");
+MaskedGlobDm1far->GetXaxis()->LabelsOption("v");
+NoPredictionD1->GetXaxis()->LabelsOption("v");
+AverageEffD1->GetXaxis()->LabelsOption("v");
+EffGlobD1->GetXaxis()->LabelsOption("v");
+BXGlobD1->GetXaxis()->LabelsOption("v");
+MaskedGlobD1->GetXaxis()->LabelsOption("v");
+NoPredictionD1far->GetXaxis()->LabelsOption("v");
+AverageEffD1far->GetXaxis()->LabelsOption("v");
+EffGlobD1far->GetXaxis()->LabelsOption("v");
+BXGlobD1far->GetXaxis()->LabelsOption("v");
+MaskedGlobD1far->GetXaxis()->LabelsOption("v");
+NoPredictionD2->GetXaxis()->LabelsOption("v");
+AverageEffD2->GetXaxis()->LabelsOption("v");
+EffGlobD2->GetXaxis()->LabelsOption("v");
+BXGlobD2->GetXaxis()->LabelsOption("v");
+MaskedGlobD2->GetXaxis()->LabelsOption("v");
+NoPredictionD2far->GetXaxis()->LabelsOption("v");
+AverageEffD2far->GetXaxis()->LabelsOption("v");
+EffGlobD2far->GetXaxis()->LabelsOption("v");
+BXGlobD2far->GetXaxis()->LabelsOption("v");
+MaskedGlobD2far->GetXaxis()->LabelsOption("v");
+NoPredictionD3->GetXaxis()->LabelsOption("v");
+AverageEffD3->GetXaxis()->LabelsOption("v");
+EffGlobD3->GetXaxis()->LabelsOption("v");
+BXGlobD3->GetXaxis()->LabelsOption("v");
+MaskedGlobD3->GetXaxis()->LabelsOption("v");
+NoPredictionD3far->GetXaxis()->LabelsOption("v");
+AverageEffD3far->GetXaxis()->LabelsOption("v");
+EffGlobD3far->GetXaxis()->LabelsOption("v");
+BXGlobD3far->GetXaxis()->LabelsOption("v");
+MaskedGlobD3far->GetXaxis()->LabelsOption("v");
+
+NoPredictionDm3->GetXaxis()->SetLabelSize(0.03);
+AverageEffDm3->GetXaxis()->SetLabelSize(0.03);
+EffGlobDm3->GetXaxis()->SetLabelSize(0.03);
+BXGlobDm3->GetXaxis()->SetLabelSize(0.03);
+MaskedGlobDm3->GetXaxis()->SetLabelSize(0.03);
+NoPredictionDm3far->GetXaxis()->SetLabelSize(0.03);
+AverageEffDm3far->GetXaxis()->SetLabelSize(0.03);
+EffGlobDm3far->GetXaxis()->SetLabelSize(0.03);
+BXGlobDm3far->GetXaxis()->SetLabelSize(0.03);
+MaskedGlobDm3far->GetXaxis()->SetLabelSize(0.03);
+NoPredictionDm2->GetXaxis()->SetLabelSize(0.03);
+AverageEffDm2->GetXaxis()->SetLabelSize(0.03);
+EffGlobDm2->GetXaxis()->SetLabelSize(0.03);
+BXGlobDm2->GetXaxis()->SetLabelSize(0.03);
+MaskedGlobDm2->GetXaxis()->SetLabelSize(0.03);
+NoPredictionDm2far->GetXaxis()->SetLabelSize(0.03);
+AverageEffDm2far->GetXaxis()->SetLabelSize(0.03);
+EffGlobDm2far->GetXaxis()->SetLabelSize(0.03);
+BXGlobDm2far->GetXaxis()->SetLabelSize(0.03);
+MaskedGlobDm2far->GetXaxis()->SetLabelSize(0.03);
+NoPredictionDm1->GetXaxis()->SetLabelSize(0.03);
+AverageEffDm1->GetXaxis()->SetLabelSize(0.03);
+EffGlobDm1->GetXaxis()->SetLabelSize(0.03);
+BXGlobDm1->GetXaxis()->SetLabelSize(0.03);
+MaskedGlobDm1->GetXaxis()->SetLabelSize(0.03);
+NoPredictionDm1far->GetXaxis()->SetLabelSize(0.03);
+AverageEffDm1far->GetXaxis()->SetLabelSize(0.03);
+EffGlobDm1far->GetXaxis()->SetLabelSize(0.03);
+BXGlobDm1far->GetXaxis()->SetLabelSize(0.03);
+MaskedGlobDm1far->GetXaxis()->SetLabelSize(0.03);
+NoPredictionD1->GetXaxis()->SetLabelSize(0.03);
+AverageEffD1->GetXaxis()->SetLabelSize(0.03);
+EffGlobD1->GetXaxis()->SetLabelSize(0.03);
+BXGlobD1->GetXaxis()->SetLabelSize(0.03);
+MaskedGlobD1->GetXaxis()->SetLabelSize(0.03);
+NoPredictionD1far->GetXaxis()->SetLabelSize(0.03);
+AverageEffD1far->GetXaxis()->SetLabelSize(0.03);
+EffGlobD1far->GetXaxis()->SetLabelSize(0.03);
+BXGlobD1far->GetXaxis()->SetLabelSize(0.03);
+MaskedGlobD1far->GetXaxis()->SetLabelSize(0.03);
+NoPredictionD2->GetXaxis()->SetLabelSize(0.03);
+AverageEffD2->GetXaxis()->SetLabelSize(0.03);
+EffGlobD2->GetXaxis()->SetLabelSize(0.03);
+BXGlobD2->GetXaxis()->SetLabelSize(0.03);
+MaskedGlobD2->GetXaxis()->SetLabelSize(0.03);
+NoPredictionD2far->GetXaxis()->SetLabelSize(0.03);
+AverageEffD2far->GetXaxis()->SetLabelSize(0.03);
+EffGlobD2far->GetXaxis()->SetLabelSize(0.03);
+BXGlobD2far->GetXaxis()->SetLabelSize(0.03);
+MaskedGlobD2far->GetXaxis()->SetLabelSize(0.03);
+NoPredictionD3->GetXaxis()->SetLabelSize(0.03);
+AverageEffD3->GetXaxis()->SetLabelSize(0.03);
+EffGlobD3->GetXaxis()->SetLabelSize(0.03);
+BXGlobD3->GetXaxis()->SetLabelSize(0.03);
+MaskedGlobD3->GetXaxis()->SetLabelSize(0.03);
+NoPredictionD3far->GetXaxis()->SetLabelSize(0.03);
+AverageEffD3far->GetXaxis()->SetLabelSize(0.03);
+EffGlobD3far->GetXaxis()->SetLabelSize(0.03);
+BXGlobD3far->GetXaxis()->SetLabelSize(0.03);
+MaskedGlobD3far->GetXaxis()->SetLabelSize(0.03);
+
+NoPredictionDm3->GetYaxis()->SetRangeUser(0.,100.);
+AverageEffDm3->GetYaxis()->SetRangeUser(0.,100.);
+EffGlobDm3->GetYaxis()->SetRangeUser(0.,100.);
+MaskedGlobDm3->GetYaxis()->SetRangeUser(0.,100.);
+NoPredictionDm3far->GetYaxis()->SetRangeUser(0.,100.);
+AverageEffDm3far->GetYaxis()->SetRangeUser(0.,100.);
+EffGlobDm3far->GetYaxis()->SetRangeUser(0.,100.);
+MaskedGlobDm3far->GetYaxis()->SetRangeUser(0.,100.);
+NoPredictionDm2->GetYaxis()->SetRangeUser(0.,100.);
+AverageEffDm2->GetYaxis()->SetRangeUser(0.,100.);
+EffGlobDm2->GetYaxis()->SetRangeUser(0.,100.);
+MaskedGlobDm2->GetYaxis()->SetRangeUser(0.,100.);
+NoPredictionDm2far->GetYaxis()->SetRangeUser(0.,100.);
+AverageEffDm2far->GetYaxis()->SetRangeUser(0.,100.);
+EffGlobDm2far->GetYaxis()->SetRangeUser(0.,100.);
+MaskedGlobDm2far->GetYaxis()->SetRangeUser(0.,100.);
+NoPredictionDm1->GetYaxis()->SetRangeUser(0.,100.);
+AverageEffDm1->GetYaxis()->SetRangeUser(0.,100.);
+EffGlobDm1->GetYaxis()->SetRangeUser(0.,100.);
+MaskedGlobDm1->GetYaxis()->SetRangeUser(0.,100.);
+NoPredictionDm1far->GetYaxis()->SetRangeUser(0.,100.);
+AverageEffDm1far->GetYaxis()->SetRangeUser(0.,100.);
+EffGlobDm1far->GetYaxis()->SetRangeUser(0.,100.);
+MaskedGlobDm1far->GetYaxis()->SetRangeUser(0.,100.);
+NoPredictionD1->GetYaxis()->SetRangeUser(0.,100.);
+AverageEffD1->GetYaxis()->SetRangeUser(0.,100.);
+EffGlobD1->GetYaxis()->SetRangeUser(0.,100.);
+MaskedGlobD1->GetYaxis()->SetRangeUser(0.,100.);
+NoPredictionD1far->GetYaxis()->SetRangeUser(0.,100.);
+AverageEffD1far->GetYaxis()->SetRangeUser(0.,100.);
+EffGlobD1far->GetYaxis()->SetRangeUser(0.,100.);
+MaskedGlobD1far->GetYaxis()->SetRangeUser(0.,100.);
+NoPredictionD2->GetYaxis()->SetRangeUser(0.,100.);
+AverageEffD2->GetYaxis()->SetRangeUser(0.,100.);
+EffGlobD2->GetYaxis()->SetRangeUser(0.,100.);
+MaskedGlobD2->GetYaxis()->SetRangeUser(0.,100.);
+NoPredictionD2far->GetYaxis()->SetRangeUser(0.,100.);
+AverageEffD2far->GetYaxis()->SetRangeUser(0.,100.);
+EffGlobD2far->GetYaxis()->SetRangeUser(0.,100.);
+MaskedGlobD2far->GetYaxis()->SetRangeUser(0.,100.);
+NoPredictionD3->GetYaxis()->SetRangeUser(0.,100.);
+AverageEffD3->GetYaxis()->SetRangeUser(0.,100.);
+EffGlobD3->GetYaxis()->SetRangeUser(0.,100.);
+MaskedGlobD3->GetYaxis()->SetRangeUser(0.,100.);
+NoPredictionD3far->GetYaxis()->SetRangeUser(0.,100.);
+AverageEffD3far->GetYaxis()->SetRangeUser(0.,100.);
+EffGlobD3far->GetYaxis()->SetRangeUser(0.,100.);
+MaskedGlobD3far->GetYaxis()->SetRangeUser(0.,100.);
+  }
+
 
 std::cout<<"Efficiency Images"<<std::endl;
 
@@ -679,6 +1892,7 @@ Ca2->SetBottomMargin(0.4);
   
 TGaxis * bxAxis = new TGaxis(104.,0.,104.,100.,-5,5,11,"+L");
 TGaxis * bxAxisFar = new TGaxis(108.,0.,108.,100.,-5,5,11,"+L");
+TGaxis * bxAxisEndCap = new TGaxis(112.,0.,112.,100.,-5,5,11,"+L");
 
 bxAxis->SetLabelColor(9);
 bxAxis->SetName("bxAxis");
@@ -691,345 +1905,662 @@ bxAxisFar->SetName("bxAxis");
 bxAxisFar->SetTitle("Mean BX (bx Units)");
 bxAxisFar->SetTitleColor(9);
 bxAxisFar->CenterTitle();
-gStyle->SetOptStat(0);
 
-EffGlobWm2->Draw();
-EffGlobWm2->GetYaxis()->SetTitle("%");
+bxAxisEndCap->SetLabelColor(9);
+bxAxisEndCap->SetName("bxAxis");
+bxAxisEndCap->SetTitle("Mean BX (bx Units)");
+bxAxisEndCap->SetTitleColor(9);
+bxAxisEndCap->CenterTitle();
+
+ gStyle->SetOptStat(0);
+
+//Negative EndCap
+
+ command = "mkdir Sides" ; system(command.c_str());
+ command = "mkdir Distro" ; system(command.c_str());
+
+ if(endcap){
+   EffGlobDm3->Draw();
+   EffGlobDm3->GetYaxis()->SetTitle("%");
+   
+   BXGlobDm3->SetMarkerColor(9);
+   BXGlobDm3->SetLineColor(9);
+   BXGlobDm3->Draw("same");
+   
+   MaskedGlobDm3->SetMarkerColor(2);
+   MaskedGlobDm3->SetLineColor(2);
+   MaskedGlobDm3->Draw("same");
+   
+   AverageEffDm3->SetMarkerColor(8);
+   AverageEffDm3->SetLineColor(8);
+   AverageEffDm3->Draw("same");
+   
+   NoPredictionDm3->SetMarkerColor(5);
+   NoPredictionDm3->SetLineColor(5);
+   NoPredictionDm3->Draw("same");
+   
+   pave->Draw();
+
+   bxAxisEndCap->Draw("same");
   
-BXGlobWm2->SetMarkerColor(9);
-BXGlobWm2->SetLineColor(9);
-BXGlobWm2->Draw("same");
+   Ca2->SaveAs("Sides/SegEff_Dm3near.png");
+   Ca2->SaveAs("SegEff_Dm3near.root");
+   Ca2->Clear();
 
-MaskedGlobWm2->SetMarkerColor(2);
-MaskedGlobWm2->SetLineColor(2);
-MaskedGlobWm2->Draw("same");
 
-AverageEffWm2->SetMarkerColor(8);
-AverageEffWm2->SetLineColor(8);
-AverageEffWm2->Draw("same");
+   EffGlobDm2->Draw();
+   EffGlobDm2->GetYaxis()->SetTitle("%");
+  
+   BXGlobDm2->SetMarkerColor(9);
+   BXGlobDm2->SetLineColor(9);
+   BXGlobDm2->Draw("same");
 
-NoPredictionWm2->SetMarkerColor(5);
-NoPredictionWm2->SetLineColor(5);
-NoPredictionWm2->Draw("same");
+   MaskedGlobDm2->SetMarkerColor(2);
+   MaskedGlobDm2->SetLineColor(2);
+   MaskedGlobDm2->Draw("same");
 
-pave->Draw();
+   AverageEffDm2->SetMarkerColor(8);
+   AverageEffDm2->SetLineColor(8);
+   AverageEffDm2->Draw("same");
+
+   NoPredictionDm2->SetMarkerColor(5);
+   NoPredictionDm2->SetLineColor(5);
+   NoPredictionDm2->Draw("same");
+
+   pave->Draw();
+
+   bxAxisEndCap->Draw("same");
+  
+   Ca2->SaveAs("Sides/SegEff_Dm2near.png");
+   Ca2->SaveAs("SegEff_Dm2near.root");
+   Ca2->Clear();
+
+
+   EffGlobDm1->Draw();
+   EffGlobDm1->GetYaxis()->SetTitle("%");
+  
+   BXGlobDm1->SetMarkerColor(9);
+   BXGlobDm1->SetLineColor(9);
+   BXGlobDm1->Draw("same");
+
+   MaskedGlobDm1->SetMarkerColor(2);
+   MaskedGlobDm1->SetLineColor(2);
+   MaskedGlobDm1->Draw("same");
+
+   AverageEffDm1->SetMarkerColor(8);
+   AverageEffDm1->SetLineColor(8);
+   AverageEffDm1->Draw("same");
+
+   NoPredictionDm1->SetMarkerColor(5);
+   NoPredictionDm1->SetLineColor(5);
+   NoPredictionDm1->Draw("same");
+
+   pave->Draw();
+
+   bxAxisEndCap->Draw("same");
+  
+   Ca2->SaveAs("Sides/SegEff_Dm1near.png");
+   Ca2->SaveAs("SegEff_Dm1near.root");
+   Ca2->Clear();
+ }
  
-bxAxis->Draw("same");
+ //Barrel
+ if(barrel){
+
+   Ca2->Clear();
+
+   EffGlobWm2->Draw();
+   EffGlobWm2->GetYaxis()->SetTitle("%");
   
-Ca2->SaveAs("BxDeadStripEffFromLocalWm2near.png");
-Ca2->SaveAs("BxDeadStripEffFromLocalWm2near.root");
-Ca2->Clear();
+   BXGlobWm2->SetMarkerColor(9);
+   BXGlobWm2->SetLineColor(9);
+   BXGlobWm2->Draw("same");
 
-EffGlobWm2far->Draw();
-EffGlobWm2far->GetYaxis()->SetTitle("%");
-  
-BXGlobWm2far->SetMarkerColor(9);
-BXGlobWm2far->SetLineColor(9);
-BXGlobWm2far->Draw("same");
+   MaskedGlobWm2->SetMarkerColor(2);
+   MaskedGlobWm2->SetLineColor(2);
+   MaskedGlobWm2->Draw("same");
 
-MaskedGlobWm2far->SetMarkerColor(2);
-MaskedGlobWm2far->SetLineColor(2);
-MaskedGlobWm2far->Draw("same");
+   AverageEffWm2->SetMarkerColor(8);
+   AverageEffWm2->SetLineColor(8);
+   AverageEffWm2->Draw("same");
 
-AverageEffWm2far->SetMarkerColor(8);
-AverageEffWm2far->SetLineColor(8);
-AverageEffWm2far->Draw("same");
+   NoPredictionWm2->SetMarkerColor(5);
+   NoPredictionWm2->SetLineColor(5);
+   NoPredictionWm2->Draw("same");
 
-NoPredictionWm2far->SetMarkerColor(5);
-NoPredictionWm2far->SetLineColor(5);
-NoPredictionWm2far->Draw("same");
-
-pave->Draw();
-
-bxAxisFar->Draw("same");
-  
-Ca2->SaveAs("BxDeadStripEffFromLocalWm2far.png");
-Ca2->SaveAs("BxDeadStripEffFromLocalWm2far.root");
-Ca2->Clear();
-
-EffGlobWm1->Draw();
-EffGlobWm1->GetYaxis()->SetTitle("%");
-  
-BXGlobWm1->SetMarkerColor(9);
-BXGlobWm1->SetLineColor(9);
-BXGlobWm1->Draw("same");
-
-MaskedGlobWm1->SetMarkerColor(2);
-MaskedGlobWm1->SetLineColor(2);
-MaskedGlobWm1->Draw("same");
-
-AverageEffWm1->SetMarkerColor(8);
-AverageEffWm1->SetLineColor(8);
-AverageEffWm1->Draw("same");
-
-NoPredictionWm1->SetMarkerColor(5);
-NoPredictionWm1->SetLineColor(5);
-NoPredictionWm1->Draw("same");
+   pave->Draw();
  
-pave->Draw();
-
-bxAxis->Draw("same");
-
-Ca2->SaveAs("BxDeadStripEffFromLocalWm1near.png");
-Ca2->SaveAs("BxDeadStripEffFromLocalWm1near.root");
-Ca2->Clear();
-
-EffGlobWm1far->Draw();
-EffGlobWm1far->GetYaxis()->SetTitle("%");
+   bxAxis->Draw("same");
   
-BXGlobWm1far->SetMarkerColor(9);
-BXGlobWm1far->SetLineColor(9);
-BXGlobWm1far->Draw("same");
+   Ca2->SaveAs("Sides/SegEff_Wm2near.png");
+   Ca2->SaveAs("SegEff_Wm2near.root");
+   Ca2->Clear();
 
-MaskedGlobWm1far->SetMarkerColor(2);
-MaskedGlobWm1far->SetLineColor(2);
-MaskedGlobWm1far->Draw("same");
+   EffGlobWm2far->Draw();
+   EffGlobWm2far->GetYaxis()->SetTitle("%");
+  
+   BXGlobWm2far->SetMarkerColor(9);
+   BXGlobWm2far->SetLineColor(9);
+   BXGlobWm2far->Draw("same");
 
-AverageEffWm1far->SetMarkerColor(8);
-AverageEffWm1far->SetLineColor(8);
-AverageEffWm1far->Draw("same");
+   MaskedGlobWm2far->SetMarkerColor(2);
+   MaskedGlobWm2far->SetLineColor(2);
+   MaskedGlobWm2far->Draw("same");
 
-NoPredictionWm1far->SetMarkerColor(5);
-NoPredictionWm1far->SetLineColor(5);
-NoPredictionWm1far->Draw("same");
+   AverageEffWm2far->SetMarkerColor(8);
+   AverageEffWm2far->SetLineColor(8);
+   AverageEffWm2far->Draw("same");
+
+   NoPredictionWm2far->SetMarkerColor(5);
+   NoPredictionWm2far->SetLineColor(5);
+   NoPredictionWm2far->Draw("same");
+
+   pave->Draw();
+
+   bxAxisFar->Draw("same");
+  
+   Ca2->SaveAs("Sides/SegEff_Wm2far.png");
+   Ca2->SaveAs("SegEff_Wm2far.root");
+   Ca2->Clear();
+
+   EffGlobWm1->Draw();
+   EffGlobWm1->GetYaxis()->SetTitle("%");
+  
+   BXGlobWm1->SetMarkerColor(9);
+   BXGlobWm1->SetLineColor(9);
+   BXGlobWm1->Draw("same");
+
+   MaskedGlobWm1->SetMarkerColor(2);
+   MaskedGlobWm1->SetLineColor(2);
+   MaskedGlobWm1->Draw("same");
+
+   AverageEffWm1->SetMarkerColor(8);
+   AverageEffWm1->SetLineColor(8);
+   AverageEffWm1->Draw("same");
+
+   NoPredictionWm1->SetMarkerColor(5);
+   NoPredictionWm1->SetLineColor(5);
+   NoPredictionWm1->Draw("same");
  
-pave->Draw();
+   pave->Draw();
 
-bxAxisFar->Draw("same");
+   bxAxis->Draw("same");
 
-Ca2->SaveAs("BxDeadStripEffFromLocalWm1far.png");
-Ca2->SaveAs("BxDeadStripEffFromLocalWm1far.root");
-Ca2->Clear();
+   Ca2->SaveAs("Sides/SegEff_Wm1near.png");
+   Ca2->SaveAs("SegEff_Wm1near.root");
+   Ca2->Clear();
 
-EffGlobW0->Draw();
-EffGlobW0->GetYaxis()->SetTitle("%");
+   EffGlobWm1far->Draw();
+   EffGlobWm1far->GetYaxis()->SetTitle("%");
   
-BXGlobW0->SetMarkerColor(9);
-BXGlobW0->SetLineColor(9);
-BXGlobW0->Draw("same");
+   BXGlobWm1far->SetMarkerColor(9);
+   BXGlobWm1far->SetLineColor(9);
+   BXGlobWm1far->Draw("same");
 
-MaskedGlobW0->SetMarkerColor(2);
-MaskedGlobW0->SetLineColor(2);
-MaskedGlobW0->Draw("same");
+   MaskedGlobWm1far->SetMarkerColor(2);
+   MaskedGlobWm1far->SetLineColor(2);
+   MaskedGlobWm1far->Draw("same");
 
-AverageEffW0->SetMarkerColor(8);
-AverageEffW0->SetLineColor(8);
-AverageEffW0->Draw("same");
+   AverageEffWm1far->SetMarkerColor(8);
+   AverageEffWm1far->SetLineColor(8);
+   AverageEffWm1far->Draw("same");
 
-NoPredictionW0->SetMarkerColor(5);
-NoPredictionW0->SetLineColor(5);
-NoPredictionW0->Draw("same");
+   NoPredictionWm1far->SetMarkerColor(5);
+   NoPredictionWm1far->SetLineColor(5);
+   NoPredictionWm1far->Draw("same");
  
-pave->Draw();
+   pave->Draw();
 
-bxAxis->Draw("same");
+   bxAxisFar->Draw("same");
 
-Ca2->SaveAs("BxDeadStripEffFromLocalW0near.png");
-Ca2->SaveAs("BxDeadStripEffFromLocalW0near.root");
-Ca2->Clear();
+   Ca2->SaveAs("Sides/SegEff_Wm1far.png");
+   Ca2->SaveAs("SegEff_Wm1far.root");
+   Ca2->Clear();
 
-EffGlobW0far->Draw();
-EffGlobW0far->GetYaxis()->SetTitle("%");
+   EffGlobW0->Draw();
+   EffGlobW0->GetYaxis()->SetTitle("%");
   
-BXGlobW0far->SetMarkerColor(9);
-BXGlobW0far->SetLineColor(9);
-BXGlobW0far->Draw("same");
+   BXGlobW0->SetMarkerColor(9);
+   BXGlobW0->SetLineColor(9);
+   BXGlobW0->Draw("same");
 
-MaskedGlobW0far->SetMarkerColor(2);
-MaskedGlobW0far->SetLineColor(2);
-MaskedGlobW0far->Draw("same");
+   MaskedGlobW0->SetMarkerColor(2);
+   MaskedGlobW0->SetLineColor(2);
+   MaskedGlobW0->Draw("same");
 
-AverageEffW0far->SetMarkerColor(8);
-AverageEffW0far->SetLineColor(8);
-AverageEffW0far->Draw("same");
+   AverageEffW0->SetMarkerColor(8);
+   AverageEffW0->SetLineColor(8);
+   AverageEffW0->Draw("same");
 
-  NoPredictionW0far->SetMarkerColor(5);
-NoPredictionW0far->SetLineColor(5);
-NoPredictionW0far->Draw("same");
+   NoPredictionW0->SetMarkerColor(5);
+   NoPredictionW0->SetLineColor(5);
+   NoPredictionW0->Draw("same");
  
-pave->Draw();
+   pave->Draw();
 
-bxAxisFar->Draw("same");
+   bxAxis->Draw("same");
 
-Ca2->SaveAs("BxDeadStripEffFromLocalW0far.png");
-Ca2->SaveAs("BxDeadStripEffFromLocalW0far.root");
-Ca2->Clear();
+   Ca2->SaveAs("Sides/SegEff_W0near.png");
+   Ca2->SaveAs("SegEff_W0near.root");
+   Ca2->Clear();
 
-EffGlobW1->Draw();
-EffGlobW1->GetYaxis()->SetTitle("%");
+   EffGlobW0far->Draw();
+   EffGlobW0far->GetYaxis()->SetTitle("%");
   
-BXGlobW1->SetMarkerColor(9);
-BXGlobW1->SetLineColor(9);
-BXGlobW1->Draw("same");
+   BXGlobW0far->SetMarkerColor(9);
+   BXGlobW0far->SetLineColor(9);
+   BXGlobW0far->Draw("same");
 
-MaskedGlobW1->SetMarkerColor(2);
-MaskedGlobW1->SetLineColor(2);
-MaskedGlobW1->Draw("same");
+   MaskedGlobW0far->SetMarkerColor(2);
+   MaskedGlobW0far->SetLineColor(2);
+   MaskedGlobW0far->Draw("same");
 
-AverageEffW1->SetMarkerColor(8);
-AverageEffW1->SetLineColor(8);
-AverageEffW1->Draw("same");
+   AverageEffW0far->SetMarkerColor(8);
+   AverageEffW0far->SetLineColor(8);
+   AverageEffW0far->Draw("same");
 
-NoPredictionW1->SetMarkerColor(5);
-NoPredictionW1->SetLineColor(5);
-NoPredictionW1->Draw("same");
+   NoPredictionW0far->SetMarkerColor(5);
+   NoPredictionW0far->SetLineColor(5);
+   NoPredictionW0far->Draw("same");
+ 
+   pave->Draw();
 
-pave->Draw();
+   bxAxisFar->Draw("same");
 
-bxAxis->Draw("same");
+   Ca2->SaveAs("Sides/SegEff_W0far.png");
+   Ca2->SaveAs("SegEff_W0far.root");
+   Ca2->Clear();
 
-Ca2->SaveAs("BxDeadStripEffFromLocalW1near.png");
-Ca2->SaveAs("BxDeadStripEffFromLocalW1near.root");
-Ca2->Clear();
-
-EffGlobW1far->Draw();
-EffGlobW1far->GetYaxis()->SetTitle("%");
+   EffGlobW1->Draw();
+   EffGlobW1->GetYaxis()->SetTitle("%");
   
-BXGlobW1far->SetMarkerColor(9);
-BXGlobW1far->SetLineColor(9);
-BXGlobW1far->Draw("same");
+   BXGlobW1->SetMarkerColor(9);
+   BXGlobW1->SetLineColor(9);
+   BXGlobW1->Draw("same");
 
-MaskedGlobW1far->SetMarkerColor(2);
-MaskedGlobW1far->SetLineColor(2);
-MaskedGlobW1far->Draw("same");
+   MaskedGlobW1->SetMarkerColor(2);
+   MaskedGlobW1->SetLineColor(2);
+   MaskedGlobW1->Draw("same");
 
-AverageEffW1far->SetMarkerColor(8);
-AverageEffW1far->SetLineColor(8);
-AverageEffW1far->Draw("same");
+   AverageEffW1->SetMarkerColor(8);
+   AverageEffW1->SetLineColor(8);
+   AverageEffW1->Draw("same");
 
-NoPredictionW1far->SetMarkerColor(5);
-NoPredictionW1far->SetLineColor(5);
-NoPredictionW1far->Draw("same");
+   NoPredictionW1->SetMarkerColor(5);
+   NoPredictionW1->SetLineColor(5);
+   NoPredictionW1->Draw("same");
 
-pave->Draw();
+   pave->Draw();
 
-bxAxisFar->Draw("same");
+   bxAxis->Draw("same");
 
-Ca2->SaveAs("BxDeadStripEffFromLocalW1far.png");
-Ca2->SaveAs("BxDeadStripEffFromLocalW1far.root");
-Ca2->Clear();
+   Ca2->SaveAs("Sides/SegEff_W1near.png");
+   Ca2->SaveAs("SegEff_W1near.root");
+   Ca2->Clear();
 
-EffGlobW2->Draw();
-EffGlobW2->GetYaxis()->SetTitle("%");
+   EffGlobW1far->Draw();
+   EffGlobW1far->GetYaxis()->SetTitle("%");
   
-BXGlobW2->SetMarkerColor(9);
-BXGlobW2->SetLineColor(9);
-BXGlobW2->Draw("same");
+   BXGlobW1far->SetMarkerColor(9);
+   BXGlobW1far->SetLineColor(9);
+   BXGlobW1far->Draw("same");
 
-MaskedGlobW2->SetMarkerColor(2);
-MaskedGlobW2->SetLineColor(2);
-MaskedGlobW2->Draw("same");
+   MaskedGlobW1far->SetMarkerColor(2);
+   MaskedGlobW1far->SetLineColor(2);
+   MaskedGlobW1far->Draw("same");
 
-AverageEffW2->SetMarkerColor(8);
-AverageEffW2->SetLineColor(8);
-AverageEffW2->Draw("same");
+   AverageEffW1far->SetMarkerColor(8);
+   AverageEffW1far->SetLineColor(8);
+   AverageEffW1far->Draw("same");
 
-NoPredictionW2->SetMarkerColor(5);
-NoPredictionW2->SetLineColor(5);
-NoPredictionW2->Draw("same");
+   NoPredictionW1far->SetMarkerColor(5);
+   NoPredictionW1far->SetLineColor(5);
+   NoPredictionW1far->Draw("same");
 
-pave->Draw();
+   pave->Draw();
+
+   bxAxisFar->Draw("same");
+
+   Ca2->SaveAs("Sides/SegEff_W1far.png");
+   Ca2->SaveAs("SegEff_W1far.root");
+   Ca2->Clear();
+
+   EffGlobW2->Draw();
+   EffGlobW2->GetYaxis()->SetTitle("%");
   
-bxAxis->Draw("same");
+   BXGlobW2->SetMarkerColor(9);
+   BXGlobW2->SetLineColor(9);
+   BXGlobW2->Draw("same");
 
-Ca2->SaveAs("BxDeadStripEffFromLocalW2near.png");
-Ca2->SaveAs("BxDeadStripEffFromLocalW2near.root");
-Ca2->Clear();
+   MaskedGlobW2->SetMarkerColor(2);
+   MaskedGlobW2->SetLineColor(2);
+   MaskedGlobW2->Draw("same");
+
+   AverageEffW2->SetMarkerColor(8);
+   AverageEffW2->SetLineColor(8);
+   AverageEffW2->Draw("same");
+
+   NoPredictionW2->SetMarkerColor(5);
+   NoPredictionW2->SetLineColor(5);
+   NoPredictionW2->Draw("same");
+
+   pave->Draw();
   
-EffGlobW2far->Draw();
-EffGlobW2far->GetYaxis()->SetTitle("%");
+   bxAxis->Draw("same");
+
+   Ca2->SaveAs("Sides/SegEff_W2near.png");
+   Ca2->SaveAs("SegEff_W2near.root");
+   Ca2->Clear();
   
-BXGlobW2far->SetMarkerColor(9);
-BXGlobW2far->SetLineColor(9);
-BXGlobW2far->Draw("same");
-
-MaskedGlobW2far->SetMarkerColor(2);
-MaskedGlobW2far->SetLineColor(2);
-MaskedGlobW2far->Draw("same");
-
-AverageEffW2far->SetMarkerColor(8);
-AverageEffW2far->SetLineColor(8);
-AverageEffW2far->Draw("same");
-
-NoPredictionW2far->SetMarkerColor(5);
-NoPredictionW2far->SetLineColor(5);
-NoPredictionW2far->Draw("same");
-
-pave->Draw();
-
-bxAxisFar->Draw("same");
+   EffGlobW2far->Draw();
+   EffGlobW2far->GetYaxis()->SetTitle("%");
   
-Ca2->SaveAs("BxDeadStripEffFromLocalW2far.png");
-Ca2->SaveAs("BxDeadStripEffFromLocalW2far.root");
-Ca2->Clear();
+   BXGlobW2far->SetMarkerColor(9);
+   BXGlobW2far->SetLineColor(9);
+   BXGlobW2far->Draw("same");
 
-theFileOut->cd();
+   MaskedGlobW2far->SetMarkerColor(2);
+   MaskedGlobW2far->SetLineColor(2);
+   MaskedGlobW2far->Draw("same");
 
-EffGlobWm2->Write();
-EffGlobWm1->Write();
-EffGlobW0->Write();
-EffGlobW1->Write();
-EffGlobW2->Write();
+   AverageEffW2far->SetMarkerColor(8);
+   AverageEffW2far->SetLineColor(8);
+   AverageEffW2far->Draw("same");
 
-EffGlobWm2far->Write();
-EffGlobWm1far->Write();
-EffGlobW0far->Write();
-EffGlobW1far->Write();
-EffGlobW2far->Write();
+   NoPredictionW2far->SetMarkerColor(5);
+   NoPredictionW2far->SetLineColor(5);
+   NoPredictionW2far->Draw("same");
 
-BXGlobWm2->Write();
-BXGlobWm1->Write();
-BXGlobW0->Write();
-BXGlobW1->Write();
-BXGlobW2->Write();
+   pave->Draw();
 
-BXGlobWm2far->Write();
-BXGlobWm1far->Write();
-BXGlobW0far->Write();
-BXGlobW1far->Write();
-BXGlobW2far->Write();
-
-MaskedGlobWm2->Write();
-MaskedGlobWm1->Write();
-MaskedGlobW0->Write();
-MaskedGlobW1->Write();
-MaskedGlobW2->Write();
-
-MaskedGlobWm2far->Write();
-MaskedGlobWm1far->Write();
-MaskedGlobW0far->Write();
-MaskedGlobW1far->Write();
-MaskedGlobW2far->Write();
-
-AverageEffWm2->Write();
-AverageEffWm1->Write();
-AverageEffW0->Write();
-AverageEffW1->Write();
-AverageEffW2->Write();
-
-AverageEffWm2far->Write();
-AverageEffWm1far->Write();
-AverageEffW0far->Write();
-AverageEffW1far->Write();
-AverageEffW2far->Write();
-
-NoPredictionWm2->Write();
-NoPredictionWm1->Write();
-NoPredictionW0->Write();
-NoPredictionW1->Write();
-NoPredictionW2->Write();
-
-NoPredictionWm2far->Write();
-NoPredictionWm1far->Write();
-NoPredictionW0far->Write();
-NoPredictionW1far->Write();
-NoPredictionW2far->Write();
-
-Ca2->Close();
+   bxAxisFar->Draw("same");
   
-Ca1->Close();
-theFileOut->Close();
-theFile->Close();
+   Ca2->SaveAs("Sides/SegEff_W2far.png");
+   Ca2->SaveAs("SegEff_W2far.root");
+   Ca2->Clear();
+ }
+
+ //Positive EndCap
+
+ if(endcap){
+   EffGlobD1->Draw();
+   EffGlobD1->GetYaxis()->SetTitle("%");
+  
+   BXGlobD1->SetMarkerColor(9);
+   BXGlobD1->SetLineColor(9);
+   BXGlobD1->Draw("same");
+
+   MaskedGlobD1->SetMarkerColor(2);
+   MaskedGlobD1->SetLineColor(2);
+   MaskedGlobD1->Draw("same");
+
+   AverageEffD1->SetMarkerColor(8);
+   AverageEffD1->SetLineColor(8);
+   AverageEffD1->Draw("same");
+
+   NoPredictionD1->SetMarkerColor(5);
+   NoPredictionD1->SetLineColor(5);
+   NoPredictionD1->Draw("same");
+
+   pave->Draw();
+
+   bxAxisEndCap->Draw("same");
+  
+   Ca2->SaveAs("Sides/SegEff_D1near.png");
+   Ca2->SaveAs("SegEff_D1near.root");
+   Ca2->Clear();
+
+
+   EffGlobD2->Draw();
+   EffGlobD2->GetYaxis()->SetTitle("%");
+  
+   BXGlobD2->SetMarkerColor(9);
+   BXGlobD2->SetLineColor(9);
+   BXGlobD2->Draw("same");
+
+   MaskedGlobD2->SetMarkerColor(2);
+   MaskedGlobD2->SetLineColor(2);
+   MaskedGlobD2->Draw("same");
+
+   AverageEffD2->SetMarkerColor(8);
+   AverageEffD2->SetLineColor(8);
+   AverageEffD2->Draw("same");
+
+   NoPredictionD2->SetMarkerColor(5);
+   NoPredictionD2->SetLineColor(5);
+   NoPredictionD2->Draw("same");
+
+   pave->Draw();
+
+   bxAxisEndCap->Draw("same");
+  
+   Ca2->SaveAs("Sides/SegEff_D2near.png");
+   Ca2->SaveAs("SegEff_D2near.root");
+   Ca2->Clear();
+
+
+   EffGlobD3->Draw();
+   EffGlobD3->GetYaxis()->SetTitle("%");
+  
+   BXGlobD3->SetMarkerColor(9);
+   BXGlobD3->SetLineColor(9);
+   BXGlobD3->Draw("same");
+
+   MaskedGlobD3->SetMarkerColor(2);
+   MaskedGlobD3->SetLineColor(2);
+   MaskedGlobD3->Draw("same");
+
+   AverageEffD3->SetMarkerColor(8);
+   AverageEffD3->SetLineColor(8);
+   AverageEffD3->Draw("same");
+
+   NoPredictionD3->SetMarkerColor(5);
+   NoPredictionD3->SetLineColor(5);
+   NoPredictionD3->Draw("same");
+
+   pave->Draw();
+
+   bxAxisEndCap->Draw("same");
+  
+   Ca2->SaveAs("Sides/SegEff_D3near.png");
+   Ca2->SaveAs("SegEff_D3near.root");
+   Ca2->Clear();
+ }
+
+ Ca1 = new TCanvas("Ca1","Efficiency",400,600);
+ 
+ 
+ if(barrel){
+   EffBarrel->GetXaxis()->SetTitle("%"); EffBarrel->Draw(); Ca1->SaveAs("Distro/EffDistroBarrel.png");Ca1->SaveAs("EffDistroBarrel.root"); 
+   EffDistroWm2->GetXaxis()->SetTitle("%"); EffDistroWm2->Draw(); Ca1->SaveAs("Distro/EffDistroWm2.png");Ca1->SaveAs("EffDistroWm2.root"); 
+   EffDistroWm1->GetXaxis()->SetTitle("%"); EffDistroWm1->Draw(); Ca1->SaveAs("Distro/EffDistroWm1.png");Ca1->SaveAs("EffDistroWm1.root"); 
+   EffDistroW0->GetXaxis()->SetTitle("%"); EffDistroW0->Draw(); Ca1->SaveAs("Distro/EffDistroW0.png");Ca1->SaveAs("EffDistroW0.root"); 
+   EffDistroW1->GetXaxis()->SetTitle("%"); EffDistroW1->Draw(); Ca1->SaveAs("Distro/EffDistroW1.png");Ca1->SaveAs("EffDistroW1.root"); 
+   EffDistroW2->GetXaxis()->SetTitle("%"); EffDistroW2->Draw(); Ca1->SaveAs("Distro/EffDistroW2.png");Ca1->SaveAs("EffDistroW2.root"); 
+
+   EffDistroWm2far->GetXaxis()->SetTitle("%"); EffDistroWm2far->Draw(); Ca1->SaveAs("Distro/EffDistroWm2far.png");Ca1->SaveAs("EffDistroWm2far.root"); 
+   EffDistroWm1far->GetXaxis()->SetTitle("%"); EffDistroWm1far->Draw(); Ca1->SaveAs("Distro/EffDistroWm1far.png");Ca1->SaveAs("EffDistroWm1far.root"); 
+   EffDistroW0far->GetXaxis()->SetTitle("%"); EffDistroW0far->Draw(); Ca1->SaveAs("Distro/EffDistroW0far.png");Ca1->SaveAs("EffDistroW0far.root"); 
+   EffDistroW1far->GetXaxis()->SetTitle("%"); EffDistroW1far->Draw(); Ca1->SaveAs("Distro/EffDistroW1far.png");Ca1->SaveAs("EffDistroW1far.root"); 
+   EffDistroW2far->GetXaxis()->SetTitle("%"); EffDistroW2far->Draw(); Ca1->SaveAs("Distro/EffDistroW2far.png");Ca1->SaveAs("EffDistroW2far.root"); 
+ }
+
+ if(endcap){
+   EffEndCap->GetXaxis()->SetTitle("%"); EffEndCap->Draw(); Ca1->SaveAs("EffEndCap.png");Ca1->SaveAs("EffEndCap.root"); 
+
+   EffDistroDm3->GetXaxis()->SetTitle("%"); EffDistroDm3->Draw(); Ca1->SaveAs("EffDistroDm3.png");Ca1->SaveAs("EffDistroDm3.root");   
+   EffDistroDm2->GetXaxis()->SetTitle("%"); EffDistroDm2->Draw(); Ca1->SaveAs("EffDistroDm2.png");Ca1->SaveAs("EffDistroDm2.root"); 
+   EffDistroDm1->GetXaxis()->SetTitle("%"); EffDistroDm1->Draw(); Ca1->SaveAs("EffDistroDm1.png");Ca1->SaveAs("EffDistroDm1.root"); 
+   EffDistroD1->GetXaxis()->SetTitle("%"); EffDistroD1->Draw(); Ca1->SaveAs("EffDistroD1.png");Ca1->SaveAs("EffDistroD1.root"); 
+   EffDistroD2->GetXaxis()->SetTitle("%"); EffDistroD2->Draw(); Ca1->SaveAs("EffDistroD2.png");Ca1->SaveAs("EffDistroD2.root"); 
+   EffDistroD3->GetXaxis()->SetTitle("%"); EffDistroD3->Draw(); Ca1->SaveAs("EffDistroD3.png");Ca1->SaveAs("EffDistroD3.root"); 
+   
+   EffDistroDm3far->GetXaxis()->SetTitle("%"); EffDistroDm3far->Draw(); Ca1->SaveAs("EffDistroDm3.png");Ca1->SaveAs("EffDistroDm3.root");   
+   EffDistroDm2far->GetXaxis()->SetTitle("%"); EffDistroDm2far->Draw(); Ca1->SaveAs("EffDistroDm2.png");Ca1->SaveAs("EffDistroDm2.root"); 
+   EffDistroDm1far->GetXaxis()->SetTitle("%"); EffDistroDm1far->Draw(); Ca1->SaveAs("EffDistroDm1.png");Ca1->SaveAs("EffDistroDm1.root"); 
+   EffDistroD1far->GetXaxis()->SetTitle("%"); EffDistroD1far->Draw(); Ca1->SaveAs("EffDistroD1.png");Ca1->SaveAs("EffDistroD1.root"); 
+   EffDistroD2far->GetXaxis()->SetTitle("%"); EffDistroD2far->Draw(); Ca1->SaveAs("EffDistroD2.png");Ca1->SaveAs("EffDistroD2.root"); 
+   EffDistroD3far->GetXaxis()->SetTitle("%"); EffDistroD3far->Draw(); Ca1->SaveAs("EffDistroD3.png");Ca1->SaveAs("EffDistroD3.root"); 
+ }
+
+
+ 
+ theFileOut->cd();
+
+ EffBarrel->Write();
+ EffDistroWm2->Write();
+ EffDistroWm1->Write();
+ EffDistroW0->Write();
+ EffDistroW1->Write();
+ EffDistroW2->Write();
+
+ EffDistroWm2far->Write();
+ EffDistroWm1far->Write();
+ EffDistroW0far->Write();
+ EffDistroW1far->Write();
+ EffDistroW2far->Write();
+
+ EffEndCap->Write();
+
+ EffDistroDm3->Write();  
+ EffDistroDm2->Write();
+ EffDistroDm1->Write();
+ EffDistroD1->Write();
+ EffDistroD2->Write();
+ EffDistroD3->Write();
+
+ EffDistroDm3far->Write();
+ EffDistroDm2far->Write();
+ EffDistroDm1far->Write();
+ EffDistroD1far->Write();
+ EffDistroD2far->Write();
+ EffDistroD3far->Write();
+
+ EffGlobWm2->Write();
+ EffGlobWm1->Write();
+ EffGlobW0->Write();
+ EffGlobW1->Write();
+ EffGlobW2->Write();
+
+ EffGlobWm2far->Write();
+ EffGlobWm1far->Write();
+ EffGlobW0far->Write();
+ EffGlobW1far->Write();
+ EffGlobW2far->Write();
+
+ BXGlobWm2->Write();
+ BXGlobWm1->Write();
+ BXGlobW0->Write();
+ BXGlobW1->Write();
+ BXGlobW2->Write();
+
+ BXGlobWm2far->Write();
+ BXGlobWm1far->Write();
+ BXGlobW0far->Write();
+ BXGlobW1far->Write();
+ BXGlobW2far->Write();
+
+ MaskedGlobWm2->Write();
+ MaskedGlobWm1->Write();
+ MaskedGlobW0->Write();
+ MaskedGlobW1->Write();
+ MaskedGlobW2->Write();
+
+ MaskedGlobWm2far->Write();
+ MaskedGlobWm1far->Write();
+ MaskedGlobW0far->Write();
+ MaskedGlobW1far->Write();
+ MaskedGlobW2far->Write();
+
+ AverageEffWm2->Write();
+ AverageEffWm1->Write();
+ AverageEffW0->Write();
+ AverageEffW1->Write();
+ AverageEffW2->Write();
+
+ AverageEffWm2far->Write();
+ AverageEffWm1far->Write();
+ AverageEffW0far->Write();
+ AverageEffW1far->Write();
+ AverageEffW2far->Write();
+
+ NoPredictionWm2->Write();
+ NoPredictionWm1->Write();
+ NoPredictionW0->Write();
+ NoPredictionW1->Write();
+ NoPredictionW2->Write();
+
+ NoPredictionWm2far->Write();
+ NoPredictionWm1far->Write();
+ NoPredictionW0far->Write();
+ NoPredictionW1far->Write();
+ NoPredictionW2far->Write();
+
+ NoPredictionDm3->Write();
+ AverageEffDm3->Write();
+ EffGlobDm3->Write();
+ BXGlobDm3->Write();
+ MaskedGlobDm3->Write();
+ NoPredictionDm3far->Write();
+ AverageEffDm3far->Write();
+ EffGlobDm3far->Write();
+ BXGlobDm3far->Write();
+ MaskedGlobDm3far->Write();
+ NoPredictionDm2->Write();
+ AverageEffDm2->Write();
+ EffGlobDm2->Write();
+ BXGlobDm2->Write();
+ MaskedGlobDm2->Write();
+ NoPredictionDm2far->Write();
+ AverageEffDm2far->Write();
+ EffGlobDm2far->Write();
+ BXGlobDm2far->Write();
+ MaskedGlobDm2far->Write();
+ NoPredictionDm1->Write();
+ AverageEffDm1->Write();
+ EffGlobDm1->Write();
+ BXGlobDm1->Write();
+ MaskedGlobDm1->Write();
+ NoPredictionDm1far->Write();
+ AverageEffDm1far->Write();
+ EffGlobDm1far->Write();
+ BXGlobDm1far->Write();
+ MaskedGlobDm1far->Write();
+ NoPredictionD1->Write();
+ AverageEffD1->Write();
+ EffGlobD1->Write();
+ BXGlobD1->Write();
+ MaskedGlobD1->Write();
+ NoPredictionD1far->Write();
+ AverageEffD1far->Write();
+ EffGlobD1far->Write();
+ BXGlobD1far->Write();
+ MaskedGlobD1far->Write();
+ NoPredictionD2->Write();
+ AverageEffD2->Write();
+ EffGlobD2->Write();
+ BXGlobD2->Write();
+ MaskedGlobD2->Write();
+ NoPredictionD2far->Write();
+ AverageEffD2far->Write();
+ EffGlobD2far->Write();
+ BXGlobD2far->Write();
+ MaskedGlobD2far->Write();
+ NoPredictionD3->Write();
+ AverageEffD3->Write();
+ EffGlobD3->Write();
+ BXGlobD3->Write();
+ MaskedGlobD3->Write();
+ NoPredictionD3far->Write();
+ AverageEffD3far->Write();
+ EffGlobD3far->Write();
+ BXGlobD3far->Write();
+ MaskedGlobD3far->Write();
+
+ Ca2->Close();
+  
+ theFileOut->Close();
+ theFile->Close();
 
 } 
 
@@ -1040,5 +2571,4 @@ LASTEFF::endJob(){
 }
 
 DEFINE_FWK_MODULE(LASTEFF);
-
 
