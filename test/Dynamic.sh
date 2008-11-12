@@ -40,7 +40,7 @@ echo step = $step
 echo The Project Is In $WhereIsTheProject
 echo The cfgtemplate is $cfgtemplate
 echo The Key of the jobs is $key
-echo The first part of the path $firstpartpad
+echo The first part of the path is $firstpartpad
 echo "-----------------------------"
 
 
@@ -52,16 +52,6 @@ export castorExist=`nsls $castorpad 2>&1 | grep "No such file" | wc -l`
 if [[ $castorExist -eq 1 ]]
 then
    echo !!! The Castor Folder doesnt exist
-   nsls $castorpad
-   echo Doing the Folder
-   rfmkdir $castorpad
-fi
-
-export castorExist=`nsls $castorpad 2>&1 | grep "No such file" | wc -l`
-
-if [[ $castorExist -eq 1 ]]  
-then
-   echo !!! Please create the castor folder and run again
    nsls $castorpad
    exit 0
 fi
@@ -90,8 +80,6 @@ then
 else
    echo "File files (with the list of files) does not exist."
    echo Doing the query...
-   echo The Data Set is $dataset
-   echo The Run is $run
    /afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/cruzetDQM/CMSSW_2_0_6/src/Configuration/GlobalRuns/data/aSearchCLI --input "find file where run=$run and dataset=$dataset" --limit -1 > files
 fi
 
@@ -125,25 +113,20 @@ echo $max >> parameters
 echo cfgtemplate >> parameters
 echo $key >> parameters
 sed -e "s|-input-|$firstpartpad-pad--filename-|g" -e "s|-output-|$key.-filename-|g" $cfgtemplate > cfgtemplate
-~carrillo/public/for_All/cafDynamic/gencafNewDynamicPython.sh parameters #creating files for submit the jobs
+~carrillo/public/for_All/cafDynamic/gencafNewDynamic.sh parameters #creating files for submit the jobs
 echo Submiting $key jobs
 source corraBatch #submiting jobs
 sleep 10
 export numrun=`bjobs | grep RUN | grep $queue | wc -l`
 export numpend=`bjobs | grep PEND | grep $queue | wc -l`
-warn=0;
-mkdir ~/public/report/
-until [[ $numrun -eq 0 && $numpend -eq 0 || $numfilesProduced -eq $numfiles ]]
+
+while [[ $numrun -ne 0 || $numpend -ne 0 ]]
         do
 	export numrun=`bjobs | grep RUN | grep $queue | wc -l`
 	export numpend=`bjobs | grep PEND | grep $queue | wc -l`
 	export numfilesProduced=`nsls $castorpad | wc -l`
-	warn=$(($numrun+$numpend+$numfilesProduced-$numfiles))
+	echo Please Wait: Jobs Running=$numrun  Pending=$numpend Files in Castor=$numfilesProduced of $numfiles
         sleep 10
-	let "i=$i+1"
-	let "t=i*10"
-	echo t=$t s jobs: \| run=$numrun \| pend=$numpend \| in Castor=$numfilesProduced of $numfiles \| warn=$warn \|
-	~carrillo/public/for_All/cafDynamic/htmline.sh $t $numrun $numpend $numfilesProduced $numfiles $warn $key > ~/public/report/$key.html
         done
 
 export numfilesProduced=`nsls $castorpad | wc -l`
@@ -162,22 +145,13 @@ else
 fi
 mkdir $wd/merging
 cd $wd/merging
-
-if [[ $numfilesProduced -eq 1 ]]
-then
-   echo !!! The merging was not submited because you just have one file find your results under Castor or here.
-   export singlefile=`nsls $castorpad`
-   echo $singlefile
-   rfcp $castorpad/$singlefile $wd/$key.root
-   echo "!!! $key is done find it under $wd, time=$t, files=$numfiles, host=$HOST." > finbash.txt
-   mail 0041762210358@sms.switch.ch < finbash.txt
-   cat finbash.txt
-   rm finbash.txt
-   exit 0
-fi
-
+echo $castorpad > parameters
+echo $WhereIsTheProject >> parameters
+echo $step >> parameters
+echo $queue >> parameters
+echo $key >> parameters
+~carrillo/public/for_All/cafDynamic/mergingDynamic/genmergeLocalDynamic.sh parameters
 export foldersInCastor=`nsls $castorpad | grep $key | wc -l`
-
 if [[ $foldersInCastor -eq 0 ]]
 then
    echo !!! Your Config File is not producing root files, run interactive cmsRun $wd/anyfile.cfg
@@ -185,71 +159,43 @@ then
    exit 0
 fi
 
-if [[ $step -eq "-1" ]]
-then 
- step=$(echo "sqrt($foldersInCastor)" | bc)
- echo Step setted with square root step=$step
-fi
-
-echo $castorpad > parameters
-echo $WhereIsTheProject >> parameters
-echo $step >> parameters
-echo $queue >> parameters
-echo $key >> parameters
-~carrillo/public/for_All/cafDynamic/mergingDynamic/genmergeLocalDynamic.sh parameters
 source corraBatchLocal #submiting merging jobs
-
-export expectedInCastorLocal=`cat corraBatchLocal | wc -l`
-echo MergingFiles for $key with $expectedInCastorLocal jobs in steps of $step
-
+echo MergingFiles for $key
 sleep 10
 export numrun=`bjobs | grep RUN | grep $queue | wc -l`
 export numpend=`bjobs | grep PEND | grep $queue | wc -l`
-export filesInCastorLocal=`nsls $castorpad | grep Local | wc -l`
-
-until [[ $numrun -eq 0 && $numpend -eq 0 || $expectedInCastorLocal -eq $filesInCastorLocal ]]
+while [[ $numrun -ne 0 || $numpend -ne 0 ]]
         do
         export numrun=`bjobs | grep RUN | grep $queue | wc -l`
         export numpend=`bjobs | grep PEND | grep $queue | wc -l`
-	export filesInCastorLocal=`nsls $castorpad | grep Local | wc -l`        
-        warn2=$(($numrun+$numpend+$filesInCastorLocal-$expectedInCastorLocal))
-        sleep 10
-        let "i=$i+1"
-        let "t=i*10"
-        echo t=$t s jobs: \| run=$numrun \| pend=$numpend \| in Castor=$filesInCastorLocal of $expectedInCastorLocal \| warn2=$warn2 \|
-	~carrillo/public/for_All/cafDynamic/htmline.sh $t $numrun $numpend $filesInCastorLocal $expectedInCastorLocal $warn2 Merg_$key > ~/public/report/$key.html
+        echo Please Wait until all your jobs are finished: Jobs Running=$numrun  Jobs Pending=$numpend
         sleep 10
         done
-
-export foldersInCastorLocal=`nsls $castorpad | grep Local | wc -l`
-if [[ $foldersInCastorLocal -eq 0 ]]
+export foldersInCastor=`nsls $castorpad | grep Local | wc -l`
+if [[ $foldersInCastor -eq 0 ]]
 then
-   echo here was a problem in the merging.
+   echo !!! THE FINAL MERGE WAS NOT SUBMITED BECAUSE YOUR RUN JUST HAVE ONE FILE FIND YOUR RESULTS UNDER CASTOR.
+   nsls $castorpad
+   echo if this is not the case there was a problem merging
+   echo !!! The Merging is not working.
    nsls $castorpad
    exit 0
 fi
 
 bsub -q $queue -e jobLocalFinal.err -o jobLocalFinal.olsf -J jobLocalFinal jobLocalFinal.lsf
-echo Submiting Last Merging for $key for $filesInCastorLocal files
+echo Submiting Last Merging for $key 
 sleep 10
 export numrun=`bjobs | grep RUN | grep $queue | wc -l`
 export numpend=`bjobs | grep PEND | grep $queue | wc -l`
-
-until [[ $numrun -eq 0 && $numpend -eq 0 || -f Local.root ]]
+while [[ $numrun -ne 0 || $numpend -ne 0 ]]
         do  
         export numrun=`bjobs | grep RUN | grep $queue | wc -l`
         export numpend=`bjobs | grep PEND | grep $queue | wc -l`
-        let "i=$i+1"
-        let "t=i*10"
-	echo t=$t s jobs: \| run=$numrun \| pend=$numpend \| merging $filesInCastor \|
-	~carrillo/public/for_All/cafDynamic/htmline.sh $t $numrun $numpend  $numfilesProduced $numfiles $warn Last_Merge_$key > ~/public/report/$key.html
+        echo Please Wait until all your jobs are finished: Jobs Running=$numrun  Jobs Pending=$numpend
         sleep 10
         done
-sleep 10
-rfcp Local.root $castorpad/$key.root
-rm Local.root
-echo "$key is done, time=$t, files=$numfiles, warning=($warn,$warn2), host=$HOST" > finbash.txt
+mv Local.root $wd/$key.root
+echo Is Done!!! Find your results under $wd as $key.root
+echo "Is Done!!! Find your results under $wd as $key.root" > finbash.txt
 mail 0041762210358@sms.switch.ch < finbash.txt
-cat finbash.txt
 rm finbash.txt
-~carrillo/public/for_All/cafDynamic/htmline.sh $t 0 0 $numfilesProduced $numfiles $warn done$key > ~/public/report/$key.html

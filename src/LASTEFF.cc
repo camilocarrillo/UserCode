@@ -37,6 +37,8 @@
 #include<string>
 #include<fstream>
 #include <DQMOffline/Muon/interface/RPCBookFolderStructure.h>
+#include <Geometry/CommonTopologies/interface/RectangularStripTopology.h>
+#include <Geometry/CommonTopologies/interface/TrapezoidalStripTopology.h>
 
 //Root
 #include "TFile.h"
@@ -66,6 +68,9 @@ public:
   TFile * theFileOut;
   
   TH1F * statistics;
+
+  TH2F * bxbarrel;
+  TH2F * bxendcap;
   
   TH1F * hGlobalResClu1La1;
   TH1F * hGlobalResClu1La2;
@@ -142,12 +147,17 @@ public:
   TH1F * EffDistroD3far;
 
   TH1F * histoRPC;
+  TH2F * histoRPC_2D;
   TH1F * histoDT;
+  TH2F * histoDT_2D;
   TH1F * histoCSC;
+  TH2F * histoCSC_2D;
   TH1F * histoPRO;
+  TH2F * histoPRO_2D;
   TH1F * histoRES;
   TH1F * BXDistribution;
   TH1F * histoRealRPC;
+  TH1F * histoResidual;
 
   TH1F * EffGlobWm2;
   TH1F * EffGlobWm1;
@@ -299,6 +309,7 @@ public:
       bool prodimages;
       bool makehtml;
       bool cosmics;
+      bool dosD;
       double threshold;
       bool endcap;
       bool barrel; 
@@ -314,6 +325,7 @@ LASTEFF::LASTEFF(const edm::ParameterSet& iConfig)
   prodimages=iConfig.getUntrackedParameter<bool>("prodimages");
   makehtml=iConfig.getUntrackedParameter<bool>("makehtml");
   cosmics=iConfig.getUntrackedParameter<bool>("cosmics");
+  dosD=iConfig.getUntrackedParameter<bool>("dosD");
   threshold=iConfig.getUntrackedParameter<double>("threshold");
   endcap=iConfig.getUntrackedParameter<bool>("endcap");
   barrel=iConfig.getUntrackedParameter<bool>("barrel");
@@ -354,9 +366,11 @@ void LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
   TCanvas * Ca2;
   TCanvas * Ca3;
   TCanvas * Ca4;
+  TCanvas * Ca5;
 
-
-
+  bxendcap= new TH2F ("BXEndCap","BX Distribution for the End Cap",51,-5.0,5.0,51,0.,4.);
+  bxbarrel= new TH2F ("BXBarrel","BX Distribution for the Barrel",51,-5.0,5.0,51,0.,4.);
+  Ca5 = new TCanvas("Ca5","BX by Regions",800,600);
   
   Ca2 = new TCanvas("Ca2","Global Efficiency",CanvaSizeX,CanvaSizeY);
 
@@ -662,7 +676,7 @@ void LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
   
   std::cout<<"Before Rolls Loop"<<std::endl;
   
-  Ca0 = new TCanvas("Ca0","Profile",800,600);
+  Ca0 = new TCanvas("Ca0","Profile",400,300);
   
   for (TrackingGeometry::DetContainer::const_iterator it=rpcGeo->dets().begin();it<rpcGeo->dets().end();it++){
     if( dynamic_cast< RPCChamber* >( *it ) != 0 ){
@@ -675,17 +689,37 @@ void LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
 	int sector = rpcId.sector();
 	int station = rpcId.station();
 
+	int nstrips = int((*r)->nstrips());
+
 	if(rpcId.region()==0 && barrel && (!cosmics||((sector!=1||sector!=7) && station!=4))){  
-	  std::string detUnitLabel, meIdRPC,meIdDT, meIdPRO, bxDistroId, meIdRealRPC  ;
+	  
+	  const RectangularStripTopology* top_= dynamic_cast<const RectangularStripTopology*> (&((*r)->topology()));
+	  float stripl = top_->stripLength();
+	  float stripw = top_->pitch();
+	     
+	  std::string detUnitLabel, meIdRPC, meIdRPC_2D, meIdDT, meIdDT_2D, meIdPRO, meIdPRO_2D, bxDistroId, meIdRealRPC, meIdResidual;
 	 
 	  RPCBookFolderStructure *  folderStr = new RPCBookFolderStructure(); //Anna
 	  std::string folder = "DQMData/Muons/MuonSegEff/" +  folderStr->folderStructure(rpcId);
 		
 	  meIdRPC = folder +"/RPCDataOccupancyFromDT_"+ rpcsrv.name();	
 	  meIdDT =folder+"/ExpectedOccupancyFromDT_"+ rpcsrv.name();
+
 	  bxDistroId =folder+"/BXDistribution_"+ rpcsrv.name();
 	  meIdRealRPC =folder+"/RealDetectedOccupancyFromDT_"+ rpcsrv.name();  
+
 	  meIdPRO = "Profile_For_"+rpcsrv.name();
+	  meIdPRO_2D = "Profile2D_For_"+rpcsrv.name();
+	  meIdResidual =folder+"/RPCResidualsFromDT_"+ rpcsrv.name();
+	  meIdDT_2D =folder+"/ExpectedOccupancy2DFromDT_"+ rpcsrv.name();
+	  meIdRPC_2D = folder +"/RPCDataOccupancy2DFromDT_"+ rpcsrv.name();	
+	  
+
+	  if(dosD){
+	    histoRPC_2D= (TH2F*)theFile->Get(meIdRPC_2D.c_str());
+	    histoDT_2D= (TH2F*)theFile->Get(meIdDT_2D.c_str());
+	    histoResidual= (TH1F*)theFile->Get(meIdResidual.c_str());
+	  }
 
 	  histoRPC= (TH1F*)theFile->Get(meIdRPC.c_str());
           histoDT= (TH1F*)theFile->Get(meIdDT.c_str());
@@ -693,6 +727,7 @@ void LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
           histoRealRPC = (TH1F*)theFile->Get(meIdRealRPC.c_str());
 	  
 	  histoPRO= new TH1F (meIdPRO.c_str(),meIdPRO.c_str(),int((*r)->nstrips()),0.5,int((*r)->nstrips())+0.5);
+	  histoPRO_2D= new TH2F (meIdPRO_2D.c_str(),meIdPRO.c_str(),nstrips,-0.5*nstrips*stripw,0.5*nstrips*stripw,nstrips,-0.5*stripl,0.5*stripl);
 	  
 	  std::cout <<folder<<"/"<<rpcsrv.name()<<std::endl;
 
@@ -704,6 +739,8 @@ void LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
 	  float mybxerror = 0;
 	  float ef =0;
 	  float er =0;
+	  float ef2D =0;
+	  float er2D =0;
 	  float buffef = 0;
 	  float buffer = 0;
 	  float sumbuffef = 0;
@@ -713,6 +750,22 @@ void LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
 
 	  int NumberStripsPointed = 0;
 	  double deadStripsContribution=0;
+
+	  if(dosD && histoRPC_2D && histoDT_2D && histoResidual){
+	    std::cout<<"Leidos los histogramas 2D!"<<std::endl;
+	    for(int i=1;i<=nstrips;++i){
+	      for(int j=1;j<=nstrips;++j){
+		if(histoDT_2D->GetBinContent(i,j) != 0){
+		  ef2D = histoRPC_2D->GetBinContent(i,j)/histoDT_2D->GetBinContent(i,j);
+		  er2D = sqrt(ef2D*(1-ef2D)/histoDT_2D->GetBinContent(i,j));
+		}	
+		histoPRO_2D->SetBinContent(i,j,ef2D*100.);
+		histoPRO_2D->SetBinError(i,j,er2D*100.);
+	      }//loop on the boxes
+	    }
+	  }else{
+	    std::cout<<"Warning!!! Alguno de los  histogramas 2D no fue leido!"<<std::endl;
+	  }
 	  
 	  if(histoRPC && histoDT && BXDistribution && histoRealRPC){
 	    std::cout<<"All Histograms Exists"<<std::endl;
@@ -742,7 +795,7 @@ void LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
 
 	      std::cout<<"\t \t Write in Histo PRO"<<histoPRO->GetBinContent(i)<<std::endl;
 	      std::cout<<"\t \t Strip="<<i<<" RealRPC="<<histoRealRPC->GetBinContent(i)<<" RPC="<<histoRPC->GetBinContent(i)<<" DT="<<histoDT->GetBinContent(i)<<" buffef="<<buffef<<" buffer="<<buffer<<" sumbuffef="<<sumbuffef<<" sumbuffer="<<sumbuffer<<" NumberStripsPointed="<<NumberStripsPointed<<" NumberWithOutPrediction"<<NumberWithOutPrediction<<" Number Masked="<<NumberMasked<<std::endl;
-	    }//Finishing loop over digis
+	    }//Finishing loop over the strips
 	    
 	    if(NumberStripsPointed!=0){
 	      averageeff = (sumbuffef/float(NumberStripsPointed))*100.;
@@ -777,30 +830,68 @@ void LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
 	    histoPRO->Write();
 
 	    if(prodimages){
+	      histoPRO->GetXaxis()->SetTitle("Strip");
+	      histoPRO->GetYaxis()->SetTitle("Efficiency (%)");
 	      histoPRO->Draw();
 	      std::string labeltoSave = rpcsrv.name() + "/Profile.png";
 	      Ca0->SaveAs(labeltoSave.c_str());
 	      Ca0->Clear();
-	      
+
+	      histoRPC->GetXaxis()->SetTitle("Strip");
+	      histoRPC->GetYaxis()->SetTitle("Occupancy Extrapolation");
 	      histoRPC->Draw();
 	      labeltoSave = rpcsrv.name() + "/RPCOccupancy.png";
 	      Ca0->SaveAs(labeltoSave.c_str());
 	      Ca0->Clear();
-	    
+
+	      histoRealRPC->GetXaxis()->SetTitle("Strip");
+	      histoRealRPC->GetYaxis()->SetTitle("RPC Occupancy");
 	      histoRealRPC->Draw();
 	      labeltoSave = rpcsrv.name() + "/DQMOccupancy.png";
 	      Ca0->SaveAs(labeltoSave.c_str());
 	      Ca0->Clear();
 	      
+	      histoDT->GetXaxis()->SetTitle("Strip");
+	      histoDT->GetYaxis()->SetTitle("Expected Occupancy");
 	      histoDT->Draw();
 	      labeltoSave = rpcsrv.name() + "/DTOccupancy.png";
 	      Ca0->SaveAs(labeltoSave.c_str());
 	      Ca0->Clear();
 	      
+	      BXDistribution->GetXaxis()->SetTitle("BX");
 	      BXDistribution->Draw();
 	      labeltoSave = rpcsrv.name() + "/BXDistribution.png";
 	      Ca0->SaveAs(labeltoSave.c_str());
 	      Ca0->Clear();
+	      
+	      if(dosD){
+		histoRPC_2D->GetXaxis()->SetTitle("cm");
+		histoRPC_2D->GetYaxis()->SetTitle("cm");
+		histoRPC_2D->Draw();
+		labeltoSave = rpcsrv.name() + "/RPCOccupancy_2D.png";
+		Ca0->SaveAs(labeltoSave.c_str());
+		Ca0->Clear();
+		
+		histoDT_2D->GetXaxis()->SetTitle("cm");
+		histoDT_2D->GetYaxis()->SetTitle("cm");
+		histoDT_2D->Draw();
+		labeltoSave = rpcsrv.name() + "/DTOccupancy_2D.png";
+		Ca0->SaveAs(labeltoSave.c_str());
+		Ca0->Clear();
+
+		histoPRO_2D->GetXaxis()->SetTitle("cm");
+		histoPRO_2D->GetYaxis()->SetTitle("cm");
+		histoPRO_2D->Draw();
+		labeltoSave = rpcsrv.name() + "/Profile_2D.png";
+		Ca0->SaveAs(labeltoSave.c_str());
+		Ca0->Clear();
+		
+		histoResidual->GetXaxis()->SetTitle("cm");
+		histoResidual->Draw();
+		labeltoSave = rpcsrv.name() + "/Residual.png";
+		Ca0->SaveAs(labeltoSave.c_str());
+		Ca0->Clear();
+	      }
 	    }
 
 	    int Ring = rpcId.ring();
@@ -863,13 +954,15 @@ void LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
 	    //exit(1);
 	    mybxhisto = 50.+BXDistribution->GetMean()*10;
 	    mybxerror = BXDistribution->GetRMS()*10;
+	    
+	    bxbarrel->Fill(BXDistribution->GetMean(),BXDistribution->GetRMS());
+	    
 	  }else{
 	    std::cout<<"One of the histograms Doesn't exist for Barrel!!!"<<std::endl;
 	    exit(1);
 	  }
 	  	  
-	  p=histoDT->Integral();
-	  //-deadStripsContribution;
+	  p=histoDT->Integral()-deadStripsContribution;
 	  o=histoRPC->Integral();
 	  
 	  if(p!=0){
@@ -1092,23 +1185,42 @@ void LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
 	}else if(endcap&&!cosmics){//ENDCAPs
 	  std::cout<<"In the EndCap"<<std::endl;
 
-	  std::string detUnitLabel, meIdRPC,meIdCSC, meIdPRO, bxDistroId, meIdRealRPC  ;
+	  const TrapezoidalStripTopology* top_= dynamic_cast<const TrapezoidalStripTopology*> (&((*r)->topology()));
+	  float stripl = top_->stripLength();
+	  float stripw = top_->pitch();
+	  
+	  std::string detUnitLabel, meIdRPC, meIdRPC_2D, meIdCSC, meIdCSC_2D, meIdPRO, meIdPRO_2D, bxDistroId, meIdRealRPC,meIdResidual;
 	 
 	  RPCBookFolderStructure *  folderStr = new RPCBookFolderStructure(); //Anna
 	  std::string folder = "DQMData/Muons/MuonSegEff/" +  folderStr->folderStructure(rpcId);
 	
 	  meIdRPC = folder +"/RPCDataOccupancyFromCSC_"+ rpcsrv.name();	
 	  meIdCSC =folder+"/ExpectedOccupancyFromCSC_"+ rpcsrv.name();
+
 	  bxDistroId =folder+"/BXDistribution_"+ rpcsrv.name();
 	  meIdRealRPC =folder+"/RealDetectedOccupancyFromCSC_"+ rpcsrv.name();
+	  
 	  meIdPRO = "Profile_For_"+rpcsrv.name();
+	  meIdPRO_2D = "Profile2D_For_"+rpcsrv.name();
+	  meIdResidual =folder+"/RPCResidualsFromCSC_"+ rpcsrv.name();
+	  meIdCSC_2D =folder+"/ExpectedOccupancy2DFromCSC_"+ rpcsrv.name();
+	  meIdRPC_2D = folder +"/RPCDataOccupancy2DFromCSC_"+ rpcsrv.name();
+	 
+	  if(dosD){
+	    histoRPC_2D= (TH2F*)theFile->Get(meIdRPC_2D.c_str());
+	    histoCSC_2D= (TH2F*)theFile->Get(meIdCSC_2D.c_str());
+	    histoResidual= (TH1F*)theFile->Get(meIdResidual.c_str());
+	  }
 
+	  
 	  histoRPC= (TH1F*)theFile->Get(meIdRPC.c_str()); if(!histoRPC) std::cout<<meIdRPC<<"Doesn't exist"<<std::endl; 
 	  histoCSC= (TH1F*)theFile->Get(meIdCSC.c_str());if(!histoCSC)std::cout<<meIdCSC<<"Doesn't exist"<<std::endl; 
 	  BXDistribution = (TH1F*)theFile->Get(bxDistroId.c_str());if(!BXDistribution)std::cout<<BXDistribution<<"Doesn't exist"<<std::endl; 
 	  histoRealRPC = (TH1F*)theFile->Get(meIdRealRPC.c_str());if(!histoRealRPC)std::cout<<meIdRealRPC<<"Doesn't exist"<<std::endl; 
 	  
 	  histoPRO= new TH1F (meIdPRO.c_str(),meIdPRO.c_str(),int((*r)->nstrips()),0.5,int((*r)->nstrips())+0.5);
+	  histoPRO_2D= new TH2F (meIdPRO_2D.c_str(),meIdPRO.c_str(),nstrips,-0.5*nstrips*stripw,0.5*nstrips*stripw,nstrips,-0.5*stripl,0.5*stripl);
+	  
 
 	  std::cout <<folder<<"/"<<rpcsrv.name()<<std::endl;
 	  
@@ -1120,6 +1232,8 @@ void LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
 	  float mybxerror = 0;
 	  float ef =0;
 	  float er =0;
+	  float ef2D =0;
+	  float er2D =0;
 	  float buffef = 0;
 	  float buffer = 0;
 	  float sumbuffef = 0;
@@ -1129,6 +1243,23 @@ void LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
 	  
 	  int NumberStripsPointed = 0;
 	  double deadStripsContribution = 0;
+	  
+	  if(dosD && histoRPC_2D && histoCSC_2D && histoResidual){
+	    std::cout<<"Leidos los histogramas 2D!"<<std::endl;
+	    for(int i=1;i<=nstrips;++i){
+	      for(int j=1;j<=nstrips;++j){
+		if(histoCSC_2D->GetBinContent(i,j) != 0){
+		  ef2D = histoRPC_2D->GetBinContent(i,j)/histoCSC_2D->GetBinContent(i,j);
+		  er2D = sqrt(ef2D*(1-ef2D)/histoCSC_2D->GetBinContent(i,j));
+		}	
+		histoPRO_2D->SetBinContent(i,j,ef2D*100.);
+		histoPRO_2D->SetBinError(i,j,er2D*100.);
+	      }//loop on the boxes
+	    }
+	  }else{
+	    std::cout<<"Warning!!! Alguno de los  histogramas 2D no fue leido!"<<std::endl;
+	  }
+
 	  
 	  if(histoRPC && histoCSC && BXDistribution && histoRealRPC){
 	    std::cout<<"All Histograms Exists"<<std::endl;
@@ -1189,33 +1320,72 @@ void LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
 		command = "mkdir " + rpcsrv.name();
 		system(command.c_str());
 	      }
+
 	      histoPRO->Write();
 
 	      if(prodimages){//ENDCAP
+		histoPRO->GetXaxis()->SetTitle("Strip");
+		histoPRO->GetYaxis()->SetTitle("Efficiency (%)");
 		histoPRO->Draw();
 		std::string labeltoSave = rpcsrv.name() + "/Profile.png";
 		Ca0->SaveAs(labeltoSave.c_str());
 		Ca0->Clear();
 	      
+		histoRPC->GetXaxis()->SetTitle("Strip");
+		histoRPC->GetYaxis()->SetTitle("Occupancy Extrapolation");
 		histoRPC->Draw();
 		labeltoSave = rpcsrv.name() + "/RPCOccupancy.png";
 		Ca0->SaveAs(labeltoSave.c_str());
 		Ca0->Clear();
 	    
+		histoRealRPC->GetXaxis()->SetTitle("Strip");
+		histoRealRPC->GetYaxis()->SetTitle("RPC Occupancy");
 		histoRealRPC->Draw();
 		labeltoSave = rpcsrv.name() + "/DQMOccupancy.png";
 		Ca0->SaveAs(labeltoSave.c_str());
 		Ca0->Clear();
 	      
+		histoCSC->GetXaxis()->SetTitle("Strip");
+		histoCSC->GetYaxis()->SetTitle("Expected Occupancy");
 		histoCSC->Draw();
 		labeltoSave = rpcsrv.name() + "/DTOccupancy.png";
 		Ca0->SaveAs(labeltoSave.c_str());
 		Ca0->Clear();
 	      
+		BXDistribution->GetXaxis()->SetTitle("BX");
 		BXDistribution->Draw();
 		labeltoSave = rpcsrv.name() + "/BXDistribution.png";
 		Ca0->SaveAs(labeltoSave.c_str());
 		Ca0->Clear();
+		
+		if(dosD){
+		  histoRPC_2D->GetXaxis()->SetTitle("cm");
+		  histoRPC_2D->GetYaxis()->SetTitle("cm");
+		  histoRPC_2D->Draw();
+		  labeltoSave = rpcsrv.name() + "/RPCOccupancy_2D.png";
+		  Ca0->SaveAs(labeltoSave.c_str());
+		  Ca0->Clear();
+		   
+		  histoCSC_2D->GetXaxis()->SetTitle("cm");
+		  histoCSC_2D->GetYaxis()->SetTitle("cm");
+		  histoCSC_2D->Draw();
+		  labeltoSave = rpcsrv.name() + "/DTOccupancy_2D.png";
+		  Ca0->SaveAs(labeltoSave.c_str());
+		  Ca0->Clear();
+		  
+		  histoPRO_2D->GetXaxis()->SetTitle("cm");
+		  histoPRO_2D->GetYaxis()->SetTitle("cm");
+		  histoPRO_2D->Draw();
+		  labeltoSave = rpcsrv.name() + "/Profile_2D.png";
+		  Ca0->SaveAs(labeltoSave.c_str());
+		  Ca0->Clear();
+		  
+		  histoResidual->GetXaxis()->SetTitle("cm");
+		  histoResidual->Draw();
+		  labeltoSave = rpcsrv.name() + "/Residual.png";
+		  Ca0->SaveAs(labeltoSave.c_str());
+		  Ca0->Clear();
+		}
 	      }
 	      
 	      int sector = rpcId.sector();
@@ -1282,13 +1452,16 @@ void LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
 	    
 	    mybxhisto = 50.+BXDistribution->GetMean()*10;
 	    mybxerror = BXDistribution->GetRMS()*10;
+	    
+	    bxendcap->Fill(BXDistribution->GetMean(),BXDistribution->GetRMS());
+
+	    
 	  }else{
 	    std::cout<<"One of the histograms Doesn't exist!!!"<<std::endl;
 	    exit(1);
 	  }
 	  
-	  p=histoCSC->Integral();
-	  //-deadStripsContribution;
+	  p=histoCSC->Integral()-deadStripsContribution;
 	  o=histoRPC->Integral();
 
 
@@ -1592,7 +1765,29 @@ void LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
   std::cout<<"Outside the loop of rolls"<<std::endl;
   
   //Producing Images
+
+  Ca5->Clear();
+  
+  bxbarrel->Draw();
+  bxbarrel->GetYaxis()->SetTitle("RMS (bx Units)");
+  bxbarrel->GetXaxis()->SetTitle("Mean (bx Units)");
+  Ca5->SaveAs("bxbarrel.png");
+  Ca5->SaveAs("bxbarrel.root");
+ 
+
+  Ca5->Clear();
+  
+  bxendcap->Draw();
+  bxendcap->GetYaxis()->SetTitle("RMS (bx Units)");
+  bxendcap->GetXaxis()->SetTitle("Mean (bx Units)");
+  Ca5->SaveAs("bxendcap.png");
+  Ca5->SaveAs("bxendcap.root");
+
+  
+ 
+
   if(barrel){
+
     std::cout<<"setting axis for Barrel"<<std::endl;
     
     EffGlobWm2->GetXaxis()->LabelsOption("v");
@@ -1930,7 +2125,7 @@ void LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
   bxAxis->SetName("bxAxis");
   bxAxis->SetTitle("Mean BX (bx Units)");
   bxAxis->SetTitleColor(9);
- bxAxis->CenterTitle();
+  bxAxis->CenterTitle();
  
  bxAxisFar->SetLabelColor(9);
  bxAxisFar->SetName("bxAxis");
@@ -1950,6 +2145,8 @@ void LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
 
  command = "mkdir Sides" ; system(command.c_str());
  command = "mkdir Distro" ; system(command.c_str());
+
+ 
 
  if(endcap){
    

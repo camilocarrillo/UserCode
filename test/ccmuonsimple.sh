@@ -37,7 +37,7 @@ export castor=`echo $CASTOR_HOME`
 rm $run.txt
 
 echo $casa/$run > $run.txt
-echo $castor/$run >> $run.txt
+echo $castor/RPCSegmentEff/$run >> $run.txt
 echo $dataset >> $run.txt
 echo $run >> $run.txt
 echo $queue >> $run.txt
@@ -45,7 +45,7 @@ echo "2000" >> $run.txt
 echo -1 >> $run.txt
 echo $project >> $run.txt
 echo $cfgtemplate >> $run.txt
-echo "eff$run" >> $run.txt
+echo "Resultsfor$run" >> $run.txt
 echo / >> $run.txt
 rm files
 /afs/cern.ch/user/c/carrillo/public/for_All/cafDynamic/DynamicPython.sh $run.txt
