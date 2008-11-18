@@ -130,6 +130,18 @@ public:
   TH1F * EffDistroW1far;
   TH1F * EffDistroW2far;
 
+  TH1F * DoubleGapDistroWm2;
+  TH1F * DoubleGapDistroWm1;
+  TH1F * DoubleGapDistroW0;
+  TH1F * DoubleGapDistroW1;
+  TH1F * DoubleGapDistroW2;
+
+  TH1F * DoubleGapDistroWm2far;
+  TH1F * DoubleGapDistroWm1far;
+  TH1F * DoubleGapDistroW0far;
+  TH1F * DoubleGapDistroW1far;
+  TH1F * DoubleGapDistroW2far;
+
   TH1F * EffEndCap;
 
   TH1F * EffDistroDm3;  
@@ -170,6 +182,18 @@ public:
   TH1F * EffGlobW0far;
   TH1F * EffGlobW1far;
   TH1F * EffGlobW2far;
+
+  TH1F * DoubleGapWm2;
+  TH1F * DoubleGapWm1;
+  TH1F * DoubleGapW0;
+  TH1F * DoubleGapW1;
+  TH1F * DoubleGapW2;
+
+  TH1F * DoubleGapWm2far;
+  TH1F * DoubleGapWm1far;
+  TH1F * DoubleGapW0far;
+  TH1F * DoubleGapW1far;
+  TH1F * DoubleGapW2far;
 
   TH1F * BXGlobWm2;
   TH1F * BXGlobWm1;
@@ -316,10 +340,8 @@ public:
 };
 
 
-LASTEFF::LASTEFF(const edm::ParameterSet& iConfig)
-
-{
-   //now do what ever initialization is needed
+LASTEFF::LASTEFF(const edm::ParameterSet& iConfig){
+  //now do what ever initialization is needed
   file=iConfig.getUntrackedParameter<std::string>("fileName");
   fileout=iConfig.getUntrackedParameter<std::string>("fileOut");  
   prodimages=iConfig.getUntrackedParameter<bool>("prodimages");
@@ -332,12 +354,10 @@ LASTEFF::LASTEFF(const edm::ParameterSet& iConfig)
 }
 
 
-LASTEFF::~LASTEFF()
-{}
+LASTEFF::~LASTEFF(){}
 
 void 
-LASTEFF::beginJob(const edm::EventSetup&)
-{
+LASTEFF::beginJob(const edm::EventSetup&){
   theFile = new TFile(file.c_str());
   if(!theFile)std::cout<<"The File Doesn't exist"<<std::endl;
   theFileOut = new TFile(fileout.c_str(), "RECREATE");
@@ -387,6 +407,18 @@ void LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
   EffDistroW0far= new TH1F ("EffDistroW0far","Efficieny Distribution For For Side Wheel 0",20,0.5,100.5);
   EffDistroW1far= new TH1F ("EffDistroW1far","Efficieny Distribution For Far Side Wheel 1",20,0.5,100.5);
   EffDistroW2far= new TH1F ("EffDistroW2far","Efficieny Distribution For Far Side Wheel 2",20,0.5,100.5);
+  
+  DoubleGapDistroWm2= new TH1F ("DoubleGapDistroWm2near","DoubleGapEfficieny Distribution For Near Side Wheel -2",20,0.5,100.5);
+  DoubleGapDistroWm1= new TH1F ("DoubleGapDistroWm1near","DoubleGapEfficieny Distribution For Near Side Wheel -1",20,0.5,100.5);
+  DoubleGapDistroW0= new TH1F ("DoubleGapDistroW0near","DoubleGapEfficieny Distribution For Near Side Wheel 0",20,0.5,100.5);
+  DoubleGapDistroW1= new TH1F ("DoubleGapDistroW1near","DoubleGapEfficieny Distribution For Near Side Wheel 1",20,0.5,100.5);
+  DoubleGapDistroW2= new TH1F ("DoubleGapDistroW2near","DoubleGapEfficieny Distribution For Near Side Wheel 2",20,0.5,100.5);
+  
+  DoubleGapDistroWm2far= new TH1F ("DoubleGapDistroWm2far","DoubleGapEfficieny Distribution For Far Side Wheel -2",20,0.5,100.5);
+  DoubleGapDistroWm1far= new TH1F ("DoubleGapDistroWm1far","DoubleGapEfficieny Distribution For Far Side Wheel -1",20,0.5,100.5);
+  DoubleGapDistroW0far= new TH1F ("DoubleGapDistroW0far","DoubleGapEfficieny Distribution For For Side Wheel 0",20,0.5,100.5);
+  DoubleGapDistroW1far= new TH1F ("DoubleGapDistroW1far","DoubleGapEfficieny Distribution For Far Side Wheel 1",20,0.5,100.5);
+  DoubleGapDistroW2far= new TH1F ("DoubleGapDistroW2far","DoubleGapEfficieny Distribution For Far Side Wheel 2",20,0.5,100.5);
 
   EffEndCap= new TH1F ("EffDistroEndCap ","Efficieny Distribution For All The EndCaps",60,0.5,100.5);
 
@@ -404,6 +436,8 @@ void LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
   EffDistroD2far= new TH1F ("EffDistroD2far","Efficieny Distribution For Far Side Disk 2",20,0.5,100.5);
   EffDistroD3far= new TH1F ("EffDistroD3far","Efficieny Distribution For Far Side Disk 3",20,0.5,100.5);
 
+  DoubleGapWm2= new TH1F ("DoubleGapEffWheel_-2near","Double Gap Efficiency Near Side Wheel -2",101,0.5,101.5);
+  DoubleGapWm2far= new TH1F ("DoubleGapEffWheel_-2far","Double Gap Efficiency Far Side Wheel -2",105,0.5,105.5);
   EffGlobWm2= new TH1F ("GlobEfficiencyWheel_-2near","Efficiency Near Side Wheel -2",101,0.5,101.5);
   EffGlobWm2far= new TH1F ("GlobEfficiencyWheel_-2far","Efficiency Far Side Wheel -2",105,0.5,105.5);
   BXGlobWm2=  new TH1F ("GlobBXWheel_-2near","BX Near Side Wheel -2",101,0.5,101.5);
@@ -415,6 +449,8 @@ void LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
   NoPredictionWm2= new TH1F ("NoPredictionWheel_-2near","No Predictions Near Side Wheel -2 ",101,0.5,101.5);
   NoPredictionWm2far= new TH1F ("NoPredictionWheel_-2far","No Predictions Efficiency Far Side Wheel -2 ",105,0.5,105.5);
   
+  DoubleGapWm1=  new TH1F ("DoubleGapEffWheel_-1near","Double Gap Efficiency Near Side Wheel -1",101,0.5,101.5);
+  DoubleGapWm1far= new TH1F ("DoubleGapEffWheel_-1far","Double Gap Efficiency Far Side Wheel -1",105,0.5,105.5);
   EffGlobWm1=  new TH1F ("GlobEfficiencyWheel_-1near","Efficiency Near Side Wheel -1",101,0.5,101.5);
   EffGlobWm1far= new TH1F ("GlobEfficiencyWheel_-1far","Efficiency Far Side Wheel -1",105,0.5,105.5);
   BXGlobWm1=  new TH1F ("GlobBXWheel_-1near","BX Near Side Wheel -1",101,0.5,101.5);
@@ -426,6 +462,8 @@ void LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
   NoPredictionWm1= new TH1F ("NoPredictionWheel_-1near","No Predictions Near Side Wheel -1 ",101,0.5,101.5);
   NoPredictionWm1far= new TH1F ("NoPredictionWheel_-1far","No Predictions Efficiency Far Side Wheel -1 ",105,0.5,105.5);
 
+  DoubleGapW0 =  new TH1F ("DoubleGapEffWheel_0near","Double Gap Efficiency Near Side Wheel 0",101,0.5,101.5);
+  DoubleGapW0far = new TH1F ("DoubleGapEffWheel_0far","Double Gap Efficiency Far Side Wheel 0",105,0.5,105.5);
   EffGlobW0 =  new TH1F ("GlobEfficiencyWheel_0near","Efficiency Near Side Wheel 0",101,0.5,101.5);
   EffGlobW0far = new TH1F ("GlobEfficiencyWheel_0far","Efficiency Far Side Wheel 0",105,0.5,105.5);
   BXGlobW0 =  new TH1F ("GlobBXWheel_0near","BX Near Side Wheel 0",101,0.5,101.5);
@@ -437,6 +475,8 @@ void LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
   NoPredictionW0= new TH1F ("NoPredictionWheel_0near","No Predictions Near Side Wheel 0 ",101,0.5,101.5);
   NoPredictionW0far= new TH1F ("NoPredictionWheel_0far","No Predictions Efficiency Far Side Wheel 0 ",105,0.5,105.5);
 
+  DoubleGapW1 =  new TH1F ("DoubleGapEffWheel_1near","Double Gap Efficiency Near Side Wheel 1",101,0.5,101.5);
+  DoubleGapW1far = new TH1F ("DoubleGapEffWheel_1far","Double Gap Efficiency Far Side Wheel 1",105,0.5,105.5);  
   EffGlobW1 =  new TH1F ("GlobEfficiencyWheel_1near","Efficiency Near Side Wheel 1",101,0.5,101.5);
   EffGlobW1far = new TH1F ("GlobEfficiencyWheel_1far","Efficiency Far Side Wheel 1",105,0.5,105.5);  
   BXGlobW1 =  new TH1F ("GlobBXWheel_1near","BX Near Side Wheel 1",101,0.5,101.5);
@@ -448,6 +488,8 @@ void LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
   NoPredictionW1= new TH1F ("NoPredictionWheel_1near","No Predictions Near Side Wheel 1 ",101,0.5,101.5);
   NoPredictionW1far= new TH1F ("NoPredictionWheel_1far","No Predictions Efficiency Far Side Wheel 1 ",105,0.5,105.5);
 
+  DoubleGapW2 =  new TH1F ("DoubleGapEffWheel_2near","Double Gap Efficiency Near Side Wheel 2",101,0.5,101.5);
+  DoubleGapW2far = new TH1F ("DoubleGapEffWheel_2far","Double Gap Efficiency Far Side Wheel 2",105,0.5,105.5);
   EffGlobW2 =  new TH1F ("GlobEfficiencyWheel_2near","Efficiency Near Side Wheel 2",101,0.5,101.5);
   EffGlobW2far = new TH1F ("GlobEfficiencyWheel_2far","Efficiency Far Side Wheel 2",105,0.5,105.5);
   BXGlobW2 =  new TH1F ("GlobBXWheel_2near","BX Near Side Wheel 2",101,0.5,101.5);
@@ -748,6 +790,12 @@ void LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
 	  float averageeff = 0;
 	  float averageerr = 0;
 
+	  float doublegapeff = 0;
+	  float doublegaperr = 0;
+
+	  float bufdoublegapeff = 0;
+	  float bufdoublegaperr = 0;
+	  
 	  int NumberStripsPointed = 0;
 	  double deadStripsContribution=0;
 
@@ -766,9 +814,47 @@ void LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
 	  }else{
 	    std::cout<<"Warning!!! Alguno de los  histogramas 2D no fue leido!"<<std::endl;
 	  }
-	  
+
+	  bool maskeffect[100];
+	  for(int i=0;i<100;i++) maskeffect[i]=false;
+	    
 	  if(histoRPC && histoDT && BXDistribution && histoRealRPC){
 	    std::cout<<"All Histograms Exists"<<std::endl;
+	    int nstrips=(*r)->nstrips();
+	    for(int i=1;i<=int(nstrips);++i){
+	      if(histoRealRPC->GetBinContent(i)==0){
+		if(i==1){
+		  maskeffect[1]=true;
+		  maskeffect[2]=true;
+		  maskeffect[3]=true;
+		}else if(i==2){
+		  maskeffect[1]=true;
+		  maskeffect[2]=true;
+		  maskeffect[3]=true;
+		  maskeffect[4]=true;
+		}else if(i==(*r)->nstrips()){
+		  maskeffect[nstrips-2]=true;
+		  maskeffect[nstrips-1]=true;
+		  maskeffect[nstrips]=true;
+		}else if(i==(*r)->nstrips()-1){
+		  maskeffect[nstrips-3]=true;
+		  maskeffect[nstrips-2]=true;
+		  maskeffect[nstrips-1]=true;
+		  maskeffect[nstrips]=true;
+		}else{
+		  maskeffect[i-2]=true;
+		  maskeffect[i-1]=true;
+		  maskeffect[i]=true;
+		  maskeffect[i+1]=true;
+		  maskeffect[i+2]=true;
+		}
+	      }
+	    }
+	    
+	    float withouteffect=0.;
+	    
+	    for(int i=0;i<=int((*r)->nstrips());i++) if(maskeffect[i]==false) withouteffect++;
+	    
 	    for(int i=1;i<=int((*r)->nstrips());++i){
 	      if(histoRealRPC->GetBinContent(i)==0){
 		NumberMasked++;
@@ -786,37 +872,44 @@ void LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
 		sumbuffef = sumbuffef + buffef;
 		sumbuffer = sumbuffer + buffer*buffer;
 		NumberStripsPointed++;
+		if(maskeffect[i]==false){
+		  bufdoublegapeff=bufdoublegapeff+buffef;
+		  bufdoublegaperr=bufdoublegaperr+buffer*buffer;
+		}
 	      }else{
 		NumberWithOutPrediction++;
 	      }
-	      
+
 	      histoPRO->SetBinContent(i,buffef);
 	      histoPRO->SetBinError(i,buffer);
-
+	      
 	      std::cout<<"\t \t Write in Histo PRO"<<histoPRO->GetBinContent(i)<<std::endl;
 	      std::cout<<"\t \t Strip="<<i<<" RealRPC="<<histoRealRPC->GetBinContent(i)<<" RPC="<<histoRPC->GetBinContent(i)<<" DT="<<histoDT->GetBinContent(i)<<" buffef="<<buffef<<" buffer="<<buffer<<" sumbuffef="<<sumbuffef<<" sumbuffer="<<sumbuffer<<" NumberStripsPointed="<<NumberStripsPointed<<" NumberWithOutPrediction"<<NumberWithOutPrediction<<" Number Masked="<<NumberMasked<<std::endl;
-	    }//Finishing loop over the strips
+	    }
 	    
 	    if(NumberStripsPointed!=0){
 	      averageeff = (sumbuffef/float(NumberStripsPointed))*100.;
 	      averageerr = sqrt(sumbuffer/float(NumberStripsPointed))*100.;
 	      EffBarrel->Fill(averageeff);
 	      
+	      doublegapeff=(bufdoublegapeff/withouteffect)*100.;
+	      doublegaperr=sqrt(bufdoublegaperr/withouteffect)*100.;
+	      
 	      int Ring = rpcId.ring();
 	      
 	      if(sector==1||sector==2||sector==3||sector==10||sector==11||sector==12){
-		if(Ring==-2){ EffDistroWm2->Fill(averageeff);
-		}else if(Ring==-1){ EffDistroWm1->Fill(averageeff);
-		}else if(Ring==0) { EffDistroW0->Fill(averageeff);
-		}else if(Ring==1) { EffDistroW1->Fill(averageeff);
-		}else if(Ring==2) { EffDistroW2->Fill(averageeff);
+		if(Ring==-2){ EffDistroWm2->Fill(averageeff);       DoubleGapDistroWm2->Fill(doublegapeff);
+		}else if(Ring==-1){ EffDistroWm1->Fill(averageeff); DoubleGapDistroWm1->Fill(doublegapeff);
+		}else if(Ring==0) { EffDistroW0->Fill(averageeff);  DoubleGapDistroW0->Fill(doublegapeff); 
+		}else if(Ring==1) { EffDistroW1->Fill(averageeff);  DoubleGapDistroW1->Fill(doublegapeff); 
+		}else if(Ring==2) { EffDistroW2->Fill(averageeff);  DoubleGapDistroW2->Fill(doublegapeff); 
 		}
 	      }else{
-		if(Ring==-2){ EffDistroWm2far->Fill(averageeff);
-		}else if(Ring==-1){ EffDistroWm1far->Fill(averageeff);
-		}else if(Ring==0) { EffDistroW0far->Fill(averageeff);
-		}else if(Ring==1) { EffDistroW1far->Fill(averageeff);
-		}else if(Ring==2) { EffDistroW2far->Fill(averageeff);
+		if(Ring==-2){ EffDistroWm2far->Fill(averageeff);       DoubleGapDistroWm2far->Fill(doublegapeff);
+		}else if(Ring==-1){ EffDistroWm1far->Fill(averageeff); DoubleGapDistroWm1far->Fill(doublegapeff);
+		}else if(Ring==0) { EffDistroW0far->Fill(averageeff);  DoubleGapDistroW0far->Fill(doublegapeff); 
+		}else if(Ring==1) { EffDistroW1far->Fill(averageeff);  DoubleGapDistroW1far->Fill(doublegapeff); 
+		}else if(Ring==2) { EffDistroW2far->Fill(averageeff);  DoubleGapDistroW2far->Fill(doublegapeff); 
 		}
 	      }
 	    }
@@ -978,7 +1071,7 @@ void LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
 	  float nopredictionsratio = (float(NumberWithOutPrediction)/float((*r)->nstrips()))*100.;
 	  
 	  std::cout<<"Filling Global with: Average Eff="<<averageeff<<" Ingegral Eff="<<ef<<" Strips Ratio"<<stripsratio<<" No Predictionratio="<<nopredictionsratio<<std::endl;
-
+	  
 	  //Near Side
 
 	  int Ring = rpcId.ring();
@@ -999,6 +1092,10 @@ void LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
 	      AverageEffWm2->SetBinContent(indexWheel[0],averageeff);
 	      AverageEffWm2->SetBinError(indexWheel[0],averageerr);  
 	      AverageEffWm2->GetXaxis()->SetBinLabel(indexWheel[0],camera.c_str());
+
+	      DoubleGapWm2->SetBinContent(indexWheel[0],doublegapeff);
+	      DoubleGapWm2->SetBinError(indexWheel[0],doublegaperr);  
+	      DoubleGapWm2->GetXaxis()->SetBinLabel(indexWheel[0],camera.c_str());
 	      
 	      NoPredictionWm2->SetBinContent(indexWheel[0],nopredictionsratio);
               NoPredictionWm2->GetXaxis()->SetBinLabel(indexWheel[0],camera.c_str());
@@ -1019,6 +1116,10 @@ void LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
 	      AverageEffWm1->SetBinError(indexWheel[1],averageerr);  
 	      AverageEffWm1->GetXaxis()->SetBinLabel(indexWheel[1],camera.c_str());
 	      
+	      DoubleGapWm1->SetBinContent(indexWheel[1],doublegapeff);
+	      DoubleGapWm1->SetBinError(indexWheel[1],doublegaperr);  
+	      DoubleGapWm1->GetXaxis()->SetBinLabel(indexWheel[1],camera.c_str());
+	      
 	      NoPredictionWm1->SetBinContent(indexWheel[1],nopredictionsratio);
               NoPredictionWm1->GetXaxis()->SetBinLabel(indexWheel[1],camera.c_str());
 
@@ -1038,6 +1139,10 @@ void LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
 	      AverageEffW0->SetBinContent(indexWheel[2],averageeff);
 	      AverageEffW0->SetBinError(indexWheel[2],averageerr);  
 	      AverageEffW0->GetXaxis()->SetBinLabel(indexWheel[2],camera.c_str());
+
+	      DoubleGapW0->SetBinContent(indexWheel[2],doublegapeff);
+	      DoubleGapW0->SetBinError(indexWheel[2],doublegaperr);  
+	      DoubleGapW0->GetXaxis()->SetBinLabel(indexWheel[2],camera.c_str());
 	      
 	      NoPredictionW0->SetBinContent(indexWheel[2],nopredictionsratio);
               NoPredictionW0->GetXaxis()->SetBinLabel(indexWheel[2],camera.c_str());	      
@@ -1057,6 +1162,10 @@ void LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
 	      AverageEffW1->SetBinContent(indexWheel[3],averageeff);
 	      AverageEffW1->SetBinError(indexWheel[3],averageerr);  
 	      AverageEffW1->GetXaxis()->SetBinLabel(indexWheel[3],camera.c_str());
+
+	      DoubleGapW1->SetBinContent(indexWheel[3],doublegapeff);
+	      DoubleGapW1->SetBinError(indexWheel[3],doublegaperr);  
+	      DoubleGapW1->GetXaxis()->SetBinLabel(indexWheel[3],camera.c_str());
 	      
 	      NoPredictionW1->SetBinContent(indexWheel[3],nopredictionsratio);
               NoPredictionW1->GetXaxis()->SetBinLabel(indexWheel[3],camera.c_str());	      
@@ -1076,6 +1185,10 @@ void LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
 	      AverageEffW2->SetBinContent(indexWheel[4],averageeff);
 	      AverageEffW2->SetBinError(indexWheel[4],averageerr);  
 	      AverageEffW2->GetXaxis()->SetBinLabel(indexWheel[4],camera.c_str());
+
+	      DoubleGapW2->SetBinContent(indexWheel[4],doublegapeff);
+	      DoubleGapW2->SetBinError(indexWheel[4],doublegaperr);  
+	      DoubleGapW2->GetXaxis()->SetBinLabel(indexWheel[4],camera.c_str());
 	      
 	      NoPredictionW2->SetBinContent(indexWheel[4],nopredictionsratio);
               NoPredictionW2->GetXaxis()->SetBinLabel(indexWheel[4],camera.c_str());	      
@@ -1098,10 +1211,13 @@ void LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
               AverageEffWm2far->SetBinError(indexWheelf[0],averageerr);
               AverageEffWm2far->GetXaxis()->SetBinLabel(indexWheelf[0],camera.c_str());
 
-              NoPredictionWm2far->SetBinContent(indexWheel[0],nopredictionsratio);
-              NoPredictionWm2far->GetXaxis()->SetBinLabel(indexWheel[0],camera.c_str());
+	      DoubleGapWm2far->SetBinContent(indexWheelf[0],doublegapeff);
+	      DoubleGapWm2far->SetBinError(indexWheelf[0],doublegaperr);  
+	      DoubleGapWm2far->GetXaxis()->SetBinLabel(indexWheelf[0],camera.c_str());
 
-
+              NoPredictionWm2far->SetBinContent(indexWheelf[0],nopredictionsratio);
+              NoPredictionWm2far->GetXaxis()->SetBinLabel(indexWheelf[0],camera.c_str());
+	      
 	    }else if(Ring==-1){
 	      indexWheelf[1]++;  
 	      EffGlobWm1far->SetBinContent(indexWheelf[1],ef);  
@@ -1118,6 +1234,10 @@ void LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
 	      AverageEffWm1far->SetBinContent(indexWheelf[1],averageeff);
               AverageEffWm1far->SetBinError(indexWheelf[1],averageerr);
               AverageEffWm1far->GetXaxis()->SetBinLabel(indexWheelf[1],camera.c_str());
+
+	      DoubleGapWm1far->SetBinContent(indexWheelf[1],doublegapeff);
+	      DoubleGapWm1far->SetBinError(indexWheelf[1],doublegaperr);  
+	      DoubleGapWm1far->GetXaxis()->SetBinLabel(indexWheelf[1],camera.c_str());
 
               NoPredictionWm1far->SetBinContent(indexWheelf[1],nopredictionsratio);
               NoPredictionWm1far->GetXaxis()->SetBinLabel(indexWheelf[1],camera.c_str());
@@ -1138,6 +1258,10 @@ void LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
 	      AverageEffW0far->SetBinContent(indexWheelf[2],averageeff);
               AverageEffW0far->SetBinError(indexWheelf[2],averageerr);
               AverageEffW0far->GetXaxis()->SetBinLabel(indexWheelf[2],camera.c_str());
+	      
+	      DoubleGapW0far->SetBinContent(indexWheelf[2],doublegapeff);
+	      DoubleGapW0far->SetBinError(indexWheelf[2],doublegaperr);  
+	      DoubleGapW0far->GetXaxis()->SetBinLabel(indexWheelf[2],camera.c_str());
 
               NoPredictionW0far->SetBinContent(indexWheelf[2],nopredictionsratio);
               NoPredictionW0far->GetXaxis()->SetBinLabel(indexWheelf[2],camera.c_str());
@@ -1157,7 +1281,11 @@ void LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
 	      AverageEffW1far->SetBinContent(indexWheelf[3],averageeff);
               AverageEffW1far->SetBinError(indexWheelf[3],averageerr);
               AverageEffW1far->GetXaxis()->SetBinLabel(indexWheelf[3],camera.c_str());
-
+	      
+	      DoubleGapW1far->SetBinContent(indexWheelf[3],doublegapeff);
+	      DoubleGapW1far->SetBinError(indexWheelf[3],doublegaperr);  
+	      DoubleGapW1far->GetXaxis()->SetBinLabel(indexWheelf[3],camera.c_str());
+	      
               NoPredictionW1far->SetBinContent(indexWheelf[3],nopredictionsratio);
               NoPredictionW1far->GetXaxis()->SetBinLabel(indexWheelf[3],camera.c_str());
 
@@ -1177,7 +1305,11 @@ void LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
 	      AverageEffW2far->SetBinContent(indexWheelf[4],averageeff);
               AverageEffW2far->SetBinError(indexWheelf[4],averageerr);
               AverageEffW2far->GetXaxis()->SetBinLabel(indexWheelf[4],camera.c_str());
-
+	      
+	      DoubleGapW2far->SetBinContent(indexWheelf[4],doublegapeff);
+	      DoubleGapW2far->SetBinError(indexWheelf[4],doublegaperr);  
+	      DoubleGapW2far->GetXaxis()->SetBinLabel(indexWheelf[4],camera.c_str());
+	      
               NoPredictionW2far->SetBinContent(indexWheelf[4],nopredictionsratio);
               NoPredictionW2far->GetXaxis()->SetBinLabel(indexWheelf[4],camera.c_str());
 	    }
@@ -2146,8 +2278,6 @@ void LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
  command = "mkdir Sides" ; system(command.c_str());
  command = "mkdir Distro" ; system(command.c_str());
 
- 
-
  if(endcap){
    
    Ca2->Clear();
@@ -2238,7 +2368,7 @@ void LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
  
  //Barrel
  if(barrel){
-
+   
    Ca2->Clear();
 
    EffGlobWm2->Draw();
@@ -2255,6 +2385,10 @@ void LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
    AverageEffWm2->SetMarkerColor(8);
    AverageEffWm2->SetLineColor(8);
    AverageEffWm2->Draw("same");
+
+   DoubleGapWm2->SetMarkerColor(6);
+   DoubleGapWm2->SetLineColor(6);
+   DoubleGapWm2->Draw("same");
 
    NoPredictionWm2->SetMarkerColor(5);
    NoPredictionWm2->SetLineColor(5);
@@ -2283,6 +2417,10 @@ void LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
    AverageEffWm2far->SetLineColor(8);
    AverageEffWm2far->Draw("same");
 
+   DoubleGapWm2far->SetMarkerColor(6);
+   DoubleGapWm2far->SetLineColor(6);
+   DoubleGapWm2far->Draw("same");
+
    NoPredictionWm2far->SetMarkerColor(5);
    NoPredictionWm2far->SetLineColor(5);
    NoPredictionWm2far->Draw("same");
@@ -2310,6 +2448,10 @@ void LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
    AverageEffWm1->SetLineColor(8);
    AverageEffWm1->Draw("same");
 
+   DoubleGapWm1->SetMarkerColor(6);
+   DoubleGapWm1->SetLineColor(6);
+   DoubleGapWm1->Draw("same");
+   
    NoPredictionWm1->SetMarkerColor(5);
    NoPredictionWm1->SetLineColor(5);
    NoPredictionWm1->Draw("same");
@@ -2336,6 +2478,10 @@ void LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
    AverageEffWm1far->SetMarkerColor(8);
    AverageEffWm1far->SetLineColor(8);
    AverageEffWm1far->Draw("same");
+
+   DoubleGapWm1far->SetMarkerColor(6);
+   DoubleGapWm1far->SetLineColor(6);
+   DoubleGapWm1far->Draw("same");
 
    NoPredictionWm1far->SetMarkerColor(5);
    NoPredictionWm1far->SetLineColor(5);
@@ -2364,6 +2510,10 @@ void LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
    AverageEffW0->SetLineColor(8);
    AverageEffW0->Draw("same");
 
+   DoubleGapW0->SetMarkerColor(6);
+   DoubleGapW0->SetLineColor(6);
+   DoubleGapW0->Draw("same");
+
    NoPredictionW0->SetMarkerColor(5);
    NoPredictionW0->SetLineColor(5);
    NoPredictionW0->Draw("same");
@@ -2390,6 +2540,10 @@ void LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
    AverageEffW0far->SetMarkerColor(8);
    AverageEffW0far->SetLineColor(8);
    AverageEffW0far->Draw("same");
+
+   DoubleGapW0far->SetMarkerColor(6);
+   DoubleGapW0far->SetLineColor(6);
+   DoubleGapW0far->Draw("same");
 
    NoPredictionW0far->SetMarkerColor(5);
    NoPredictionW0far->SetLineColor(5);
@@ -2418,6 +2572,10 @@ void LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
    AverageEffW1->SetLineColor(8);
    AverageEffW1->Draw("same");
 
+   DoubleGapW1->SetMarkerColor(6);
+   DoubleGapW1->SetLineColor(6);
+   DoubleGapW1->Draw("same");
+
    NoPredictionW1->SetMarkerColor(5);
    NoPredictionW1->SetLineColor(5);
    NoPredictionW1->Draw("same");
@@ -2444,6 +2602,10 @@ void LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
    AverageEffW1far->SetMarkerColor(8);
    AverageEffW1far->SetLineColor(8);
    AverageEffW1far->Draw("same");
+
+   DoubleGapW1far->SetMarkerColor(6);
+   DoubleGapW1far->SetLineColor(6);
+   DoubleGapW1far->Draw("same");
 
    NoPredictionW1far->SetMarkerColor(5);
    NoPredictionW1far->SetLineColor(5);
@@ -2472,6 +2634,10 @@ void LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
    AverageEffW2->SetLineColor(8);
    AverageEffW2->Draw("same");
 
+   DoubleGapW2->SetMarkerColor(6);
+   DoubleGapW2->SetLineColor(6);
+   DoubleGapW2->Draw("same");
+
    NoPredictionW2->SetMarkerColor(5);
    NoPredictionW2->SetLineColor(5);
    NoPredictionW2->Draw("same");
@@ -2498,6 +2664,10 @@ void LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
    AverageEffW2far->SetMarkerColor(8);
    AverageEffW2far->SetLineColor(8);
    AverageEffW2far->Draw("same");
+   
+   DoubleGapW2far->SetMarkerColor(6);
+   DoubleGapW2far->SetLineColor(6);
+   DoubleGapW2far->Draw("same");
 
    NoPredictionW2far->SetMarkerColor(5);
    NoPredictionW2far->SetLineColor(5);
@@ -2861,10 +3031,24 @@ void LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
    EffDistroW0far->GetXaxis()->SetTitle("%"); EffDistroW0far->Draw(); Ca1->SaveAs("Distro/EffDistroW0far.png");Ca1->SaveAs("EffDistroW0far.root"); 
    EffDistroW1far->GetXaxis()->SetTitle("%"); EffDistroW1far->Draw(); Ca1->SaveAs("Distro/EffDistroW1far.png");Ca1->SaveAs("EffDistroW1far.root"); 
    EffDistroW2far->GetXaxis()->SetTitle("%"); EffDistroW2far->Draw(); Ca1->SaveAs("Distro/EffDistroW2far.png");Ca1->SaveAs("EffDistroW2far.root"); 
+   
+   DoubleGapDistroWm2->GetXaxis()->SetTitle("%"); DoubleGapDistroWm2->Draw(); Ca1->SaveAs("Distro/DoubleGapDistroWm2.png");Ca1->SaveAs("DoubleGapDistroWm2.root"); 
+   DoubleGapDistroWm1->GetXaxis()->SetTitle("%"); DoubleGapDistroWm1->Draw(); Ca1->SaveAs("Distro/DoubleGapDistroWm1.png");Ca1->SaveAs("DoubleGapDistroWm1.root"); 
+   DoubleGapDistroW0->GetXaxis()->SetTitle("%"); DoubleGapDistroW0->Draw(); Ca1->SaveAs("Distro/DoubleGapDistroW0.png");Ca1->SaveAs("DoubleGapDistroW0.root"); 
+   DoubleGapDistroW1->GetXaxis()->SetTitle("%"); DoubleGapDistroW1->Draw(); Ca1->SaveAs("Distro/DoubleGapDistroW1.png");Ca1->SaveAs("DoubleGapDistroW1.root"); 
+   DoubleGapDistroW2->GetXaxis()->SetTitle("%"); DoubleGapDistroW2->Draw(); Ca1->SaveAs("Distro/DoubleGapDistroW2.png");Ca1->SaveAs("DoubleGapDistroW2.root"); 
+
+   DoubleGapDistroWm2far->GetXaxis()->SetTitle("%"); DoubleGapDistroWm2far->Draw(); Ca1->SaveAs("Distro/DoubleGapDistroWm2far.png");Ca1->SaveAs("DoubleGapDistroWm2far.root"); 
+   DoubleGapDistroWm1far->GetXaxis()->SetTitle("%"); DoubleGapDistroWm1far->Draw(); Ca1->SaveAs("Distro/DoubleGapDistroWm1far.png");Ca1->SaveAs("DoubleGapDistroWm1far.root"); 
+   DoubleGapDistroW0far->GetXaxis()->SetTitle("%"); DoubleGapDistroW0far->Draw(); Ca1->SaveAs("Distro/DoubleGapDistroW0far.png");Ca1->SaveAs("DoubleGapDistroW0far.root"); 
+   DoubleGapDistroW1far->GetXaxis()->SetTitle("%"); DoubleGapDistroW1far->Draw(); Ca1->SaveAs("Distro/DoubleGapDistroW1far.png");Ca1->SaveAs("DoubleGapDistroW1far.root"); 
+   DoubleGapDistroW2far->GetXaxis()->SetTitle("%"); DoubleGapDistroW2far->Draw(); Ca1->SaveAs("Distro/DoubleGapDistroW2far.png");Ca1->SaveAs("DoubleGapDistroW2far.root"); 
+
  }
 
  if(endcap){
    EffEndCap->GetXaxis()->SetTitle("%"); EffEndCap->Draw(); Ca1->SaveAs("Distro/EffDistroEndCap.png");Ca1->SaveAs("EffEndCap.root"); 
+
    EffDistroDm3->GetXaxis()->SetTitle("%"); EffDistroDm3->Draw(); Ca1->SaveAs("Distro/EffDistroDm3.png");Ca1->SaveAs("EffDistroDm3.root");   
    EffDistroDm2->GetXaxis()->SetTitle("%"); EffDistroDm2->Draw(); Ca1->SaveAs("Distro/EffDistroDm2.png");Ca1->SaveAs("EffDistroDm2.root"); 
    EffDistroDm1->GetXaxis()->SetTitle("%"); EffDistroDm1->Draw(); Ca1->SaveAs("Distro/EffDistroDm1.png");Ca1->SaveAs("EffDistroDm1.root"); 
@@ -3041,7 +3225,6 @@ void LASTEFF::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
 
 } 
 
-// ------------ method called once each job just after ending the event loop  ------------
 void 
 LASTEFF::endJob(){
     
