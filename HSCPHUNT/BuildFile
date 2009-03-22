@@ -1,0 +1,21 @@
+<use name=FWCore/Framework>
+<use name=FWCore/PluginManager>
+<use name=FWCore/ParameterSet>
+<use name=DataFormats/RPCDigi>
+<use name=DataFormats/RPCRecHit>
+<use name=Geometry/RPCGeometry>
+<use name=FWCore/ServiceRegistry>
+<use name=RecoMuon/DetLayers>
+<use name="RecoMuon/TrackingTools">
+<use name="RecoMuon/TransientTrackingRecHit">
+<use name="RecoMuon/Navigation">
+<use name="RecoMuon/Records">
+
+
+<flags EDM_PLUGIN=1>
+<export>
+   <lib name=betaHSCPHUNT>
+   <use name=FWCore/Framework>
+   <use name=FWCore/PluginManager>
+   <use name=FWCore/ParameterSet>
+</export>
