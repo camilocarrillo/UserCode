@@ -13,7 +13,7 @@
 //
 // Original Author:  Camilo Andres Carrillo Montoya
 //         Created:  Mon Feb 23 12:29:19 CET 2009
-// $Id$
+// $Id: RPCHSPCREADER.cc,v 1.1 2009/03/22 21:36:44 carrillo Exp $
 //
 //
 
@@ -23,6 +23,7 @@
 
 // user include files
 #include "FWCore/Framework/interface/Frameworkfwd.h"
+
 #include "FWCore/Framework/interface/EDAnalyzer.h"
 
 #include "FWCore/Framework/interface/Event.h"
