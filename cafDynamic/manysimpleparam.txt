@@ -1,0 +1,5 @@
+Run =-run-
+DataSet =/Cosmics/Commissioning08_CRAFT_ALL_V4_ReReco-v1/RECO
+quee =cmscaf
+project =/afs/cern.ch/user/c/carrillo/endcap/CMSSW_3_0_0_pre8/src
+pythonTemplate =/afs/cern.ch/user/c/carrillo/scratch0/CosmicsCommissioning08_CRAFT_ALL_V4_ReReco-v1RECO/seg2D.py

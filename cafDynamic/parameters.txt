@@ -1,0 +1,10 @@
+~/scratch0/PruebaDynamic/ 
+/castor/cern.ch/user/c/carrillo/PruebaDynamic/ 
+ByNowNoDataSet 
+ByNowNoRun
+cmscaf
+10
+2 `
+~/segments/CMSSW_2_0_10/src
+cfgtemplate.cfg
+EndCapBarrel

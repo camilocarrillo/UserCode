@@ -1,0 +1,24 @@
+#!/bin/tcsh -x
+
+setenv JobName -filename-.-key-
+
+set casa = `pwd`
+echo $casa
+setenv CORAL_AUTH_USER ""
+setenv CORAL_AUTH_PASSWORD ""
+
+cd -padtorun-
+echo `pwd`
+project CMSSW
+eval `scramv1 ru -csh`
+
+cd -currentpad-
+cp -filename-.cfg $casa
+cd $casa
+
+cmsRun -filename-.cfg > & output.txt
+
+rfcp -key-.-filename- -storepad-
+
+exit 0
+
