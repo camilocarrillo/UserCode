@@ -1,0 +1,26 @@
+#!/bin/sh
+
+set casa = `pwd`
+echo $casa
+
+nsls -padCASTOR- | grep Local > files
+
+for rootfile in `cat files`
+        do
+        echo $rootfile
+        rfcp -padCASTOR-/$rootfile .
+        done
+
+ls *.root > listoffilesLocalFinal.txt
+
+cd -padtorun-
+eval `scramv1 ru -sh`
+cd -
+
+hadd Local.root Local*
+
+cp listoffilesLocalFinal.txt -currentpad-
+rfcp Local.root -padCASTOR-
+
+exit 0
+
