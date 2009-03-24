@@ -145,7 +145,7 @@ ErrorSegments::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
        float dy = segment->localDirection().y();
        float dz = segment->localDirection().z();
        
-       if(DTId.sector()==4 && DTId.station() == 1 && DTId.wheel()==2 && segment->zSegment()->degreesOfFreedom()==2){
+       if(DTId.sector()==4 && DTId.station() == 1 && DTId.wheel()==2 /*&& segment->zSegment()->degreesOfFreedom()==2*/){
 	 std::cout<<"Filling Histo with "<<std::endl;
 	 int ndofz = segment->zSegment()->degreesOfFreedom();
 	 int ndofrp = segment->phiSegment()->degreesOfFreedom();
@@ -153,8 +153,8 @@ ErrorSegments::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 chi2histoRP->Fill(segment->phiSegment()->chi2()/ndofrp);
 
 	 //nhitsZ->Fill(ndofz+segment->zSegment()->specificRecHits().size());
-	 nhitsRP->Fill(ndofrp+segment->phiSegment()->dimension());
-	 nhitsZ->Fill(ndofz+segment->zSegment()->dimension());
+	 nhitsRP->Fill(ndofrp);
+	 nhitsZ->Fill(ndofz);
 
 	 float anglerp = asin(dx/sqrt(dz*dz+dx*dx));
 	 float anglez = asin(dy/sqrt(dz*dz+dy*dy));
