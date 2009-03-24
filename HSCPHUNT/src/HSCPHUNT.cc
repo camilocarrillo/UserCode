@@ -48,9 +48,63 @@
 #include <DataFormats/TrackingRecHit/interface/TrackingRecHit.h>
 #include "RecoMuon/TransientTrackingRecHit/interface/MuonTransientTrackingRecHit.h"
 
+#include "TFile.h"
+#include "TTree.h"
+#include "TKey.h"
 
 //
 // class decleration
+//
+
+class HSCPHUNT : public edm::EDAnalyzer {
+public:
+  explicit HSCPHUNT(const edm::ParameterSet&);
+  ~HSCPHUNT();
+  edm::ESHandle <RPCGeometry> rpcGeo;
+  virtual void beginRun(const edm::Run&, const edm::EventSetup&);
+  
+  int event;
+  float phi;
+  float beta;
+  float eta;
+
+  
+  typedef struct {
+    Int_t event;
+    Float_t eta,phi,beta;
+  } HSCP_RPC_CANDIDATE;
+  
+  HSCP_RPC_CANDIDATE myCandidate;
+  TTree *ttreeOutput;
+  TFile *f;
+  
+private:
+  virtual void analyze(const edm::Event&, const edm::EventSetup&);
+  virtual void endJob();
+  float etarange(float eta1,float eta2,float eta3);
+  float dist(float phi1,float phi2);
+  float dist3(float phi1,float phi2,float phi3);
+};
+
+
+HSCPHUNT::HSCPHUNT(const edm::ParameterSet& iConfig){
+  f = new TFile("HSCP_RPC_CANDIDATE.root", "RECREATE");
+  ttreeOutput = new TTree("HSCP_RPC_CANDIDATE", "HSCP_RPC_CANDIDATE");
+  ttreeOutput->Branch("event", &event, "event/I");
+  ttreeOutput->Branch("eta", &eta ,"eta/F");
+  ttreeOutput->Branch("phi", &phi, "phi/F");
+  ttreeOutput->Branch("beta", &beta, "beta/F");
+}
+
+
+HSCPHUNT::~HSCPHUNT()
+{
+  f->Write();
+  f->Close();
+}
+
+//
+// member functions
 //
 
 typedef struct {
@@ -60,61 +114,12 @@ typedef struct {
 } RPC4DHit;
 
 
-class HSCPHUNT : public edm::EDAnalyzer {
-   public:
-      explicit HSCPHUNT(const edm::ParameterSet&);
-      ~HSCPHUNT();
-      edm::ESHandle <RPCGeometry> rpcGeo;
-      virtual void beginRun(const edm::Run&, const edm::EventSetup&);
-
-   private:
-      virtual void analyze(const edm::Event&, const edm::EventSetup&);
-      virtual void endJob() ;
-
-
-      // ----------member data ---------------------------
-};
-
-//
-// constants, enums and typedefs
-//
-
-//
-// static data member definitions
-//
-
-//
-// constructors and destructor
-//
-HSCPHUNT::HSCPHUNT(const edm::ParameterSet& iConfig)
-
-{
-  //now do what ever initialization is needed
-
-}
-
-
-HSCPHUNT::~HSCPHUNT()
-{
- 
-   // do anything here that needs to be done at desctruction time
-   // (e.g. close files, deallocate resources etc.)
-
-}
-
-
-//
-// member functions
-//
-
 bool bigmag(const RPC4DHit &Point1,const RPC4DHit &Point2){
   if((Point2).gp.mag() > (Point1).gp.mag()) return true;
   else return false;
 }
 
-
-
-float etarange(float eta1,float eta2,float eta3){
+float HSCPHUNT::etarange(float eta1,float eta2,float eta3){
   float etamax = eta1; 
   if(eta2>etamax) etamax = eta2;
   if(eta3>etamax) etamax = eta3;
@@ -126,12 +131,12 @@ float etarange(float eta1,float eta2,float eta3){
   return fabs(etamax-etamin);
 } 
 
-float dist(float phi1,float phi2){
+float HSCPHUNT::dist(float phi1,float phi2){
   if(fabs(phi1-phi2)>3.14159265) return 2*3.1415926535-fabs(phi1-phi2);
   else return fabs(phi1-phi2);
 }
 
-float dist3(float phi1,float phi2,float phi3){
+float HSCPHUNT::dist3(float phi1,float phi2,float phi3){
   return dist(phi1,phi2)+dist(phi2,phi3)+dist(phi3,phi1);
 }
 
@@ -141,14 +146,11 @@ HSCPHUNT::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
    using namespace edm;
 
-   // ================
-   // RPC recHits
-   // ================
+   event = iEvent.id().event();
+
    Handle<RPCRecHitCollection> rpcRecHits; 
    iEvent.getByLabel("rpcRecHits","",rpcRecHits);
-   //   iEvent.getByType(rpcRecHits);
 
-   // count the number of RPC rechits
    int nRPC = 0;
 
 
@@ -160,9 +162,6 @@ HSCPHUNT::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
      nRPC++;
    }
 
-   //if(nRPC!=0) continue;
-   
-   //sort(sortRecHits.begin(), sortRecHits.end(), minibx);
 
    std::cout<<"The Number of Rec Hits is "<<nRPC<<std::endl;
 
@@ -198,9 +197,6 @@ HSCPHUNT::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
      std::cout<<"No Chances for HSCPs"<<std::endl;
    }   
    
-   float phi=0;
-   float eta=0;
-
    float minangularspread = 100.;
    float minetaspread = 100.;
    
@@ -250,7 +246,14 @@ HSCPHUNT::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
      std::cout<<std::endl;
    }
    
-   if(hscp) std::cout<<" Candidate phi="<<phi<<" eta="<<eta<<std::endl;
+   if(hscp){ 
+     std::cout<<" Candidate phi="<<phi<<" eta="<<eta<<std::endl;
+
+     beta =0;
+     ttreeOutput->Fill();
+     
+
+   }
    else std::cout<<"No Candidate HSCP"<<std::endl;
    
 }

@@ -13,7 +13,7 @@
 //
 // Original Author:  Camilo Andres Carrillo Montoya
 //         Created:  Mon Feb 23 12:29:19 CET 2009
-// $Id: RPCHSPCREADER.cc,v 1.1 2009/03/22 21:36:44 carrillo Exp $
+// $Id$
 //
 //
 
@@ -23,7 +23,6 @@
 
 // user include files
 #include "FWCore/Framework/interface/Frameworkfwd.h"
-
 #include "FWCore/Framework/interface/EDAnalyzer.h"
 
 #include "FWCore/Framework/interface/Event.h"
@@ -90,6 +89,10 @@
 #include "TMath.h"
 #include "TCanvas.h"
 
+#include "TFile.h"
+#include "TTree.h"
+#include "TKey.h"
+
 //Track
 #include "DataFormats/TrajectorySeed/interface/TrajectorySeedCollection.h"
 #include "TrackingTools/PatternTools/interface/Trajectory.h"
@@ -103,32 +106,50 @@
 //
 
 class RPCHSPCREADER : public edm::EDAnalyzer {
-   public:
-      explicit RPCHSPCREADER(const edm::ParameterSet&);
-      ~RPCHSPCREADER();
+public:
+  explicit RPCHSPCREADER(const edm::ParameterSet&);
+  ~RPCHSPCREADER();
+  
+  typedef struct {
+    Int_t event;
+    Float_t eta,phi,beta;
+  } HSCP_RPC_CANDIDATE;
 
-
-   private:
+  HSCP_RPC_CANDIDATE myCandidate;
+  TTree *ttreeOutput;
+  TFile *f;
+  
+  int event;
+  float phi;
+  float eta;
+  float beta;
+  
+private:
       virtual void beginJob(const edm::EventSetup&) ;
       virtual void analyze(const edm::Event&, const edm::EventSetup&);
       virtual void endJob() ;
 
       std::string partLabel;
+  
 
 };
 
 RPCHSPCREADER::RPCHSPCREADER(const edm::ParameterSet& iConfig)
 {
   partLabel = iConfig.getUntrackedParameter<std::string>("partLabel");
+  f = new TFile("HSCP_fromMC.root", "RECREATE");
+  ttreeOutput = new TTree("HSCP_fromMC", "HSCP_fromMC");
+  ttreeOutput->Branch("event", &event, "event/I");
+  ttreeOutput->Branch("eta", &eta ,"eta/F");
+  ttreeOutput->Branch("phi", &phi, "phi/F");
+  ttreeOutput->Branch("beta", &beta, "beta/F");
 }
 
 
 RPCHSPCREADER::~RPCHSPCREADER()
 {
- 
-   // do anything here that needs to be done at desctruction time
-   // (e.g. close files, deallocate resources etc.)
-
+  f->Write();
+  f->Close();
 }
 
 
@@ -160,7 +181,7 @@ RPCHSPCREADER::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       //ABOUT BETA
       float p=partIt->p();
       float e=partIt->energy();
-      float beta=p/e;
+      beta=p/e;
       //betaHisto->Fill(beta);
       //if(hscp)betaMyHisto->Fill(beta);
       float pt = partIt->pt();
@@ -171,6 +192,12 @@ RPCHSPCREADER::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       //if(count!=0)fileMatrix<<" eta="<<partIt->eta()<<" beta="<<beta<<"c Event "<<iEvent.id().event()<<"\n";
       //if(fabs(partIt->eta()>1.14))etaout++;
       std::cout<<"\t phi="<<partIt->phi()<<" eta="<<partIt->eta()<<"beta="<<beta<<" p="<<p<<"GeV pt="<<pt<<"GeV m="<<sqrt(e*e-p*p)<<"GeV"<<std::endl;
+      
+      event = iEvent.id().event();
+      eta = partIt->eta();
+      phi = partIt->phi();
+      ttreeOutput->Fill();
+
     }
   }
 
