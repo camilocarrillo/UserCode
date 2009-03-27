@@ -170,7 +170,7 @@ then
    echo !!! The merging was not submited because you just have one file find your results under Castor or here.
    export singlefile=`nsls $castorpad`
    echo $singlefile
-   rfcp $castorpad/$singlefile $wd/$key.root
+   rfcp $castorpad/$singlefile $castorpad/$key.root
    echo "!!! $key is done find it under $wd, time=$t, files=$numfiles, host=$HOST." > finbash.txt
    mail 0041762210358@sms.switch.ch < finbash.txt
    cat finbash.txt
@@ -249,7 +249,6 @@ until [[ $numrun -eq 0 && $numpend -eq 0 || -f Local.root ]]
         done
 sleep 10
 rfcp $castorpad/Local.root $castorpad/$key.root
-rm Local.root
 echo "$key is done, time=$t, files=$numfiles, warning=($warn,$warn2), host=$HOST" > finbash.txt
 mail 0041762210358@sms.switch.ch < finbash.txt
 cat finbash.txt
