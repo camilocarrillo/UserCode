@@ -18,6 +18,13 @@ do
 	echo "Calling PrepRunAndSet.sh"
 	echo "run = $run - dataset=$dataset - project = $project"
 	/afs/cern.ch/user/c/carrillo/public/for_All/cafDynamic/html/PrepRunAndSet.sh $run $dataset $project
+	rm MainIndex.html
+	wget http://cmsrpc402b20.cern.ch/efficiency/_Cosmics_Commissioning09-PromptReco-v1_RECO/80935/MainIndex.html
+	export sucess=`cat MainIndex.html | grep $run | wc -l`
+	if [[ $sucess -ne 0 ]]
+	then
+	   echo "Ready to send the email!"
+	fi
 	let "i=$i+1"
 done
 

@@ -20,6 +20,9 @@ process.demo = cms.EDFilter("RPCMonitorEfficiency",
 
     dosD = cms.untracked.bool(True),
 
+    CLSandBXY = cms.untracked.bool(True),
+    debug = cms.untracked.bool(False),
+
     cosmics = cms.untracked.bool(False),
     makehtml = cms.untracked.bool(False),
     prodimages = cms.untracked.bool(False),

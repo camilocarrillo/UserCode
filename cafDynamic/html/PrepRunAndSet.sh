@@ -8,4 +8,6 @@ htmltemplates/changeRun.sh $1
 cd Sides
 /tmp/carrillo/prodimages/$1/htmltemplates/rot.sh
 cd /tmp/carrillo/
-#scp -r prodimages/$1 webrpc@webcms.ba.infn.it:public_html/efficiency/$1
+export datasetpath=`echo $2 | sed -e "s|/|_|g"`
+echo "coping to destiny carrillo@CMSRPC402B20:/var/www/html/efficiency/$datasetpath/"
+scp -r prodimages/$1 carrillo@CMSRPC402B20:/var/www/html/efficiency/$datasetpath/

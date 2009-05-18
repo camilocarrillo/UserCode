@@ -144,7 +144,7 @@ until [[ $numrun -eq 0 && $numpend -eq 0 || $numfilesProduced -eq $numfiles ]]
         sleep 10
 	let "i=$i+1"
 	let "t=i*10"
-	echo t=$t s jobs: \| run=$numrun \| pend=$numpend \| in Castor=$numfilesProduced of $numfiles \| warn=$warn \|
+	echo t=$t s jobs: \| $key \| run=$numrun \| pend=$numpend \| in Castor=$numfilesProduced of $numfiles \| warn=$warn \|
 	~carrillo/public/for_All/cafDynamic/htmline.sh $t $numrun $numpend $numfilesProduced $numfiles $warn $key > ~/public/report/$key.html
         done
 
@@ -218,7 +218,7 @@ until [[ $numrun -eq 0 && $numpend -eq 0 || $expectedInCastorLocal -eq $filesInC
         sleep 10
         let "i=$i+1"
         let "t=i*10"
-        echo t=$t s jobs: \| run=$numrun \| pend=$numpend \| in Castor=$filesInCastorLocal of $expectedInCastorLocal \| warn2=$warn2 \|
+        echo t=$t s jobs: \| $key \| run=$numrun \| pend=$numpend \| in Castor=$filesInCastorLocal of $expectedInCastorLocal \| warn2=$warn2 \|
 	~carrillo/public/for_All/cafDynamic/htmline.sh $t $numrun $numpend $filesInCastorLocal $expectedInCastorLocal $warn2 Merg_$key > ~/public/report/$key.html
         sleep 10
         done
@@ -243,7 +243,7 @@ until [[ $numrun -eq 0 && $numpend -eq 0 || -f Local.root ]]
         export numpend=`bjobs | grep PEND | grep $queue | wc -l`
         let "i=$i+1"
         let "t=i*10"
-	echo t=$t s jobs: \| run=$numrun \| pend=$numpend \| merging $filesInCastor \|
+	echo t=$t s jobs: \| $key \| run=$numrun \| pend=$numpend \| merging $filesInCastor \|
 	~carrillo/public/for_All/cafDynamic/htmline.sh $t $numrun $numpend  $numfilesProduced $numfiles $warn Last_Merge_$key > ~/public/report/$key.html
         sleep 10
         done
@@ -253,4 +253,4 @@ echo "$key is done, time=$t, files=$numfiles, warning=($warn,$warn2), host=$HOST
 mail 0041762210358@sms.switch.ch < finbash.txt
 cat finbash.txt
 rm finbash.txt
-~carrillo/public/for_All/cafDynamic/htmline.sh $t 0 0 $numfilesProduced $numfiles $warn done$key > ~/public/report/$key.html
+~carrillo/public/for_All/cafDynamic/htmline.sh $t 0 0 $numfilesProduced $numfiles $warn done_$key > ~/public/report/$key.html

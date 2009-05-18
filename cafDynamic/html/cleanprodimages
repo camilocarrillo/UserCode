@@ -18,3 +18,5 @@ rm rollYeff.txt
 rm RPCDetId_Eff.dat
 rm Alignment.dat
 rm Greg/ -rf
+rm Pino* 
+rm CLS -rf
