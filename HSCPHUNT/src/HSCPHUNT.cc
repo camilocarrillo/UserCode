@@ -225,7 +225,8 @@ HSCPHUNT::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    }
 
    bool hscp = false;
-   
+   bool increasingbx = false;
+ 
    if(minetaspread!=100.){
      std::cout<<" candidate phi="<<phi<<" angularspread"<<minangularspread<<std::endl;
      std::cout<<" candidate eta="<<eta<<" etaspread"<<minetaspread<<std::endl;
@@ -237,22 +238,28 @@ HSCPHUNT::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
      hscp = true;
      
      for(std::vector<RPC4DHit>::iterator Point = BestAngularMatch.begin(); Point!=BestAngularMatch.end(); ++Point){
-       bool thisbx = false; 
-       std::cout<<Point->gp.mag()<<" "<<Point->bx<<" comparing "<<lastbx<<" with "<<Point->bx<<std::endl;
-       if(lastbx<=Point->bx) thisbx = true;
+       bool thisbx = false;           
+       if(lastbx<=Point->bx){
+	 thisbx = true;
+	 if(lastbx!= -7 && lastbx<Point->bx){
+	   increasingbx=true;
+	 }
+	 std::cout<<Point->gp.mag()<<" "<<Point->bx<<" comparing "<<lastbx<<" with "<<Point->bx<<" Increasing bool="<<increasingbx<<std::endl;
+       }
        hscp = hscp*thisbx;
        lastbx = Point->bx; 
      }
      std::cout<<std::endl;
    }
    
+   std::cout<<" bool Increasing BX "<<increasingbx<<std::endl;
+   
+   hscp = hscp*increasingbx;
+   
    if(hscp){ 
      std::cout<<" Candidate phi="<<phi<<" eta="<<eta<<std::endl;
-
      beta =0;
      ttreeOutput->Fill();
-     
-
    }
    else std::cout<<"No Candidate HSCP"<<std::endl;
    
