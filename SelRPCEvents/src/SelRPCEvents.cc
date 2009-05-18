@@ -59,13 +59,13 @@ private:
 SelRPCEvents::SelRPCEvents(const edm::ParameterSet& iConfig)
 {
 
-  std::string fname("/afs/cern.ch/user/c/carrillo/segments/CMSSW_2_1_10/src/Analysis/SelRPCEvents/python/inversionEvents.txt");
+  std::string fname("/afs/cern.ch/user/c/carrillo/scratch0/CSCFilter/70195/merged.txt");
   std::ifstream ifin(fname.c_str());
   int run;
   int eve;
   while (ifin.good()){
     run =0;
-    ifin >>eve >>run;
+    ifin >>run >>eve;
     if (run > 0){
       std::set<int> elis;
       if(evts.find(run) != evts.end()){
@@ -96,15 +96,17 @@ bool SelRPCEvents::filter(edm::Event& iEvent, const edm::EventSetup& iSetup){
   bool selected=false;
   int evt = iEvent.id().event();
   int run = iEvent.id().run();
-  //  std::cout <<"Event "<<run<<"   "<<evt<<std::endl;
+  std::cout <<"Filtering .... Event "<<run<<"   "<<evt<<std::endl;
   if(evts.find(run)!=evts.end()){
     std::set<int> elis=evts[run];
     if (elis.find(evt)!=elis.end()){
-      std::cout <<" ==> Good Event: RUN="<<run<<" EVT="<<evt<<std::endl;
-      return true;
+      std::cout <<" ==> Bad Event: RUN="<<run<<" EVT="<<evt<<std::endl;
+      std::cout <<"Skiped... "<<run<<"   "<<evt<<std::endl;
+      return false;
     }
   }
-  return false;
+  std::cout <<"Event passed to MuonSegEff"<<run<<"   "<<evt<<std::endl;
+  return true;
 }
 
 // ------------ method called once each job just before starting event loop  ------------
