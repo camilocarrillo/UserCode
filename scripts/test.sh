@@ -1,0 +1,1 @@
+compq; compt; !cmsy

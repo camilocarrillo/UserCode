@@ -1,0 +1,1 @@
+for i in `ls -1`; do convert $i `echo $i | sed "s|png|gif|g"` ; done
