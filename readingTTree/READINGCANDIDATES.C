@@ -5,7 +5,7 @@
 #include <TCanvas.h>
 #include <iostream.h>
 
-void READINGCANDIDATES::Loop()
+void READINGCANDIDATES::Loop(TH1F * phihisto)
 {
 //   In a ROOT session, you can do:
 //      Root > .L READINGCANDIDATES.C
@@ -39,6 +39,8 @@ void READINGCANDIDATES::Loop()
     nb = fChain->GetEntry(jentry);  nbytes += nb;
     // if (Cut(ientry) < 0) continue;
     std::cout<<event<<" "<<phi<<" "<<eta<<" "<<beta<<std::endl;
+
+    phihisto->Fill(phi);
     
   }
 }
