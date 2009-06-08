@@ -21,7 +21,7 @@ do
 	rm MainIndex.html
 	wget http://cmsrpc402b20.cern.ch/efficiency/_Cosmics_Commissioning09-PromptReco-v1_RECO/80935/MainIndex.html
 	export sucess=`cat MainIndex.html | grep $run | wc -l`
-	if [[ $sucess -ne 0 ]]
+	if [[ $sucess -eq 1 ]]
 	then
 	   echo "Ready to send the email!"
 	fi

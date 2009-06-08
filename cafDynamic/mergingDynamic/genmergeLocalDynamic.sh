@@ -13,6 +13,12 @@ export step=`awk 'NR==3' $1`
 export q=`awk 'NR==4' $1`
 export key=`awk 'NR==5' $1`
 
+echo castorPath $padCASTOR
+echo padtorun $padtorun
+echo step $step
+echo queue $q
+echo key $key
+
 export currentpad=`pwd`
 export numfiles=`nsls $padCASTOR | grep $key | wc -l`
 

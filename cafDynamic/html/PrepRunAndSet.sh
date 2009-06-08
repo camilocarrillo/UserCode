@@ -3,6 +3,13 @@
 cd $3 #this is the location of the project to analyze with seg2D2.py
 eval `scramv1 ru -sh`
 cd /tmp/carrillo/prodimages/$1/
+export rootfiles=`ls *.root | wc -l`
+if [[ $rootfiles -eq 0 ]]
+then
+   echo There is not root file produced skiping production of images.
+   ls /tmp/carrillo/prodimages/$1/
+   exit 0
+fi
 cmsRun seg2D2.py
 htmltemplates/changeRun.sh $1
 cd Sides

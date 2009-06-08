@@ -57,6 +57,15 @@ then
    rfmkdir $castorpad
 fi
 
+export projectExist=`ls $WhereIsTheProject 2>&1 | grep "No such file" | wc -l`
+
+if [[ $projectExist -eq 1 ]]
+then
+   echo !!! The project doesnt exist
+   ls $WhereIsTheProject
+   exit 0  
+fi
+
 export castorExist=`nsls $castorpad 2>&1 | grep "No such file" | wc -l`
 
 if [[ $castorExist -eq 1 ]]  
@@ -92,7 +101,6 @@ else
    echo Doing the query...
    echo The Data Set is $dataset
    echo The Run is $run
-   #/afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/cruzetDQM/CMSSW_2_0_6/src/Configuration/GlobalRuns/data/aSearchCLI --input "find file where run=$run and dataset=$dataset" --limit -1 > files
    ~carrillo/public/for_All/cafDynamic/aSearchCLI --dbsInst=cms_dbs_prod_global --limit=-1 --input "find file where dataset like $dataset and run = $run" > files
 
 fi
@@ -104,6 +112,13 @@ then
    echo empty files
    echo !!! The query to the Data Base for Data Set=$dataset and Run=$run was empty
    cat files
+   exit 0
+fi
+
+if [[ $numfiles -le 10 ]]
+then
+   echo too few files, does not have sense to submit jobs run due low statistics
+   echo $numfiles
    exit 0
 fi
 
