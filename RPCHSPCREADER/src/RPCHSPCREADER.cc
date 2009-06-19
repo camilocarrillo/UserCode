@@ -13,7 +13,7 @@
 //
 // Original Author:  Camilo Andres Carrillo Montoya
 //         Created:  Mon Feb 23 12:29:19 CET 2009
-// $Id$
+// $Id: RPCHSPCREADER.cc,v 1.3 2009/03/24 23:36:18 carrillo Exp $
 //
 //
 
@@ -46,7 +46,7 @@
 #include "DataFormats/DetId/interface/DetId.h"
 #include <Geometry/Records/interface/MuonGeometryRecord.h>
 #include "Geometry/Records/interface/GlobalTrackingGeometryRecord.h"
-#include "beta/BETA/interface/BETA.h"
+#include "RPCHSPCREADER/interface/BETA.h"
 
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
 #include "DataFormats/HepMCCandidate/interface/GenParticleFwd.h"
