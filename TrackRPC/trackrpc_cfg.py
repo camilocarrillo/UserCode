@@ -17,7 +17,10 @@ process.source = cms.Source("PoolSource",
 )
 
 process.demo = cms.EDAnalyzer('TrackRPC',
-  tracks = cms.untracked.string('standAloneMuons')
+  tracks = cms.untracked.string('standAloneMuons'),
+  partLabel = cms.untracked.string("genParticles"),
+  rootFileName = cms.untracked.string('/tmp/carrillo/hscp.root'),
+
 )
 
 

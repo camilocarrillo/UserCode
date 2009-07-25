@@ -10,7 +10,7 @@
 <use name=TrackingTools/GeomPropagators>
 <use name=TrackingTools/TrajectoryState>
 <use name=TrackingTools/PatternTools>
- <use name="TrackingTools/MeasurementDet">
+<use name="TrackingTools/MeasurementDet">
 
 <use name="DataFormats/MuonReco">
 <use name="DataFormats/TrackReco">
@@ -22,13 +22,10 @@
 <use name="RecoMuon/GlobalTrackingTools">
 <use name="RecoMuon/TransientTrackingRecHit">
 <use name="TrackingTools/DetLayers">
-<use name="TrackingTools/GeomPropagators">
 <use name="TrackingTools/KalmanUpdators">
-<use name="TrackingTools/PatternTools">
 <use name="TrackingTools/Records">
 <use name="TrackingTools/TrackFitters">
 <use name="TrackingTools/TrackRefitter">
-<use name="TrackingTools/TrajectoryState">
 <use name="TrackingTools/TransientTrackingRecHit">
 <use name=MagneticField/Engine>
 <use name=DQMServices/Core>
