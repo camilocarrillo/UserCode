@@ -53,22 +53,20 @@ echo $cfgtemplate >> $run.txt
 echo "eff$run" >> $run.txt
 echo / >> $run.txt
 
+export datasetcastorpath=`nsls $castor/$datasetpath | grep "No Such" | wc -l`
+
+if [[ $datasetcastorpadh -eq 1 ]]
+then
+   echo "path in castor for this dataset doesn't exist, creating the castor folder"
+   rfmkdir $castor/$datasetpath   
+fi
 
 if [ -d "~/scratch0/$datasetpath/" ]
 then
-   echo "Data set folder Exist"
+  echo "Data set folder Exist"
 else 
-  echo "Data set folder doesn't existm, creating folder"
+  echo "Data set folder doesn't exist, creating folder"
   mkdir ~/scratch0/$datasetpath/
-fi
-
-if [ -d "~/scratch0/$datasetpath/$run" ]
-then
-   echo "Run folder Exist, delete it to continue"
-   exit 0
-else 
-  echo "Run folder doesn't existm, creating folder"
-  mkdir ~/scratch0/$datasetpath/$run/
 fi
 
 mv $run.txt ~/scratch0/$datasetpath/

@@ -51,9 +51,9 @@ export castorExist=`nsls $castorpad 2>&1 | grep "No such file" | wc -l`
 
 if [[ $castorExist -eq 1 ]]
 then
-   echo !!! The Castor Folder doesnt exist
+   echo The Castor Folder doesnt exist
    nsls $castorpad
-   echo Doing the Folder
+   echo Creating the Folder
    rfmkdir $castorpad
 fi
 
@@ -61,7 +61,7 @@ export projectExist=`ls $WhereIsTheProject 2>&1 | grep "No such file" | wc -l`
 
 if [[ $projectExist -eq 1 ]]
 then
-   echo !!! The project doesnt exist
+   echo !!!!!!!!!!! The project doesnt exist
    ls $WhereIsTheProject
    exit 0  
 fi
@@ -70,39 +70,33 @@ export castorExist=`nsls $castorpad 2>&1 | grep "No such file" | wc -l`
 
 if [[ $castorExist -eq 1 ]]  
 then
-   echo !!! Please create the castor folder and run again
+   echo !!!!!!!!! The Castor folder was not possible to create, perhaps you are missing the dataset folder, create it and run again.
    nsls $castorpad
    exit 0
 fi
-
 
 export foldersInCastor=`nsls $castorpad | wc -l`
 echo Found $foldersInCastor files in CASTOR folder
 
 if [[ $foldersInCastor -ne 0 ]]
 then
-   echo !!! The Castor Folder Should be empty
+   echo !!!!!!!! The Castor Folder is not empty, please clean it and run again.
+   echo $castorpad
    nsls $castorpad
    exit 0
 fi
-export num=`bjobs | grep $queue | wc -l`
-if [[ $numrun -ne 0 ]]
-	then
-	echo Please wait until your $queue quee is finished
-	exit 0
-	fi
-
 
 if [ -f "files" ]
 then
-   echo Found file with list of files, skiping the query
+   echo Found file with list of files, skiping the query to dbs, please be sure that the file files belongs to the run you want to analyze.
+   head files
+   echo ...
 else
    echo "File files (with the list of files) does not exist."
-   echo Doing the query...
+   echo Doing the query to dbs...
    echo The Data Set is $dataset
    echo The Run is $run
    ~carrillo/public/for_All/cafDynamic/aSearchCLI --dbsInst=cms_dbs_prod_global --limit=-1 --input "find file where dataset like $dataset and run = $run" > files
-
 fi
 
 export numfiles=`cat files | grep .root | wc -l`
@@ -110,24 +104,24 @@ export numfiles=`cat files | grep .root | wc -l`
 if [[ $numfiles -eq 0 ]]
 then
    echo empty files
-   echo !!! The query to the Data Base for Data Set=$dataset and Run=$run was empty
+   echo !!! The query to the Data Base for Data Set=$dataset and Run=$run was empty please check if DBS is working
    cat files
    exit 0
 fi
 
-if [[ $numfiles -le 10 ]]
-then
-   echo too few files, does not have sense to submit jobs run due low statistics
-   echo $numfiles
-   exit 0
-fi
+#if [[ $numfiles -le 10 ]]
+#then
+#   echo too few files, does not have sense to submit jobs run due low statistics
+#   echo $numfiles
+#   exit 0
+#fi
 
 export firstline=`head -n 1 files`
 export fileexist=`nsls $firstpartpad/$firstline 2>&1 | grep "No such file" | wc -l`
 
 if [[ $fileexist -eq 1 ]]
 then
-   echo The first file  $firstpartpad/$firstline in files does not exist in CASTOR check your first part path or your file files
+   echo !!!!!!!!!!!!!!!! The first file  $firstpartpad/$firstline in files does not exist in CASTOR check your first part path or your file files.
    exit 0
 fi
 
@@ -142,14 +136,22 @@ echo $max >> parameters
 echo cfgtemplate >> parameters
 echo $key >> parameters
 sed -e "s|-input-|$firstpartpad-pad--filename-|g" -e "s|-output-|$key.-filename-|g" $cfgtemplate > cfgtemplate
+echo "Calling gencafNewDynamicPython"
 ~carrillo/public/for_All/cafDynamic/gencafNewDynamicPython.sh parameters #creating files for submit the jobs
-echo Submiting $key jobs
+echo Submiting $key in $numfiles jobs
 source corraBatch #submiting jobs
 sleep 10
 export numrun=`bjobs | grep RUN | grep $queue | wc -l`
 export numpend=`bjobs | grep PEND | grep $queue | wc -l`
 warn=0;
-mkdir ~/public/report/
+
+export folderexist=`ls ~/public/report/ 2>&1 | grep "No such file" | wc -l`
+if [[ $folderexist -eq 1 ]]
+	then
+	echo "creating ~/public/report/"
+	mkdir ~/public/report
+fi
+
 until [[ $numrun -eq 0 && $numpend -eq 0 || $numfilesProduced -eq $numfiles ]]
         do
 	export numrun=`bjobs | grep RUN | grep $queue | wc -l`
@@ -173,7 +175,7 @@ let "diff=$realnumfiles-$numfilesProduced"
 echo You had $realnumfiles files to analyze and you got $numfilesProduced
 if [[ $realnumfiles -ne $numfilesProduced ]]
 then
-   echo $diff jobs didnt produce a result.
+   echo ++++ Warning $diff jobs did not produce a result.
 else
    echo all the jobs were done.  
 fi
@@ -182,11 +184,12 @@ cd $wd/merging
 
 if [[ $numfilesProduced -eq 1 ]]
 then
-   echo !!! The merging was not submited because you just have one file find your results under Castor or here.
+   echo !!! The merging was not submited because you just have one file find your results under Castor.
+   echo $castorpad
    export singlefile=`nsls $castorpad`
    echo $singlefile
    rfcp $castorpad/$singlefile $castorpad/$key.root
-   echo "!!! $key is done find it under $wd, time=$t, files=$numfiles, host=$HOST." > finbash.txt
+   echo "!!! $key is done with one job find it under $wd, time=$t, files=$numfiles, host=$HOST." > finbash.txt
    mail 0041762210358@sms.switch.ch < finbash.txt
    cat finbash.txt
    rm finbash.txt
@@ -264,6 +267,8 @@ until [[ $numrun -eq 0 && $numpend -eq 0 || -f Local.root ]]
         done
 sleep 10
 rfcp $castorpad/Local.root $castorpad/$key.root
+echo $castorpad
+nsls $castorpad
 echo "$key is done, time=$t, files=$numfiles, warning=($warn,$warn2), host=$HOST" > finbash.txt
 mail 0041762210358@sms.switch.ch < finbash.txt
 cat finbash.txt
