@@ -13,7 +13,7 @@
 //
 // Original Author:  Camilo Andres Carrillo Montoya
 //         Created:  Mon Feb 23 15:41:52 CET 2009
-// $Id$
+// $Id: SIMHITANALIZER.cc,v 1.1 2009/03/22 21:39:40 carrillo Exp $
 //
 //
 
@@ -181,7 +181,9 @@ SIMHITANALIZER::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 
 	 GlobalPoint SimHitInGlobal = RPCSurface.toGlobal((*iHit).localPosition());
 	 
-	 std::cout<<"\t\t We have an RPC Sim Hit! in t="<<(*iHit).timeOfFlight()<<"ns "<<rpcsrv.name()<<" local postition="<<SimHitInGlobal<<std::endl;
+	 std::cout<<"\t\t We have an RPC Sim Hit! in t="<<(*iHit).timeOfFlight()<<"ns "<<rpcsrv.name()<<" Global postition="<<SimHitInGlobal<<std::endl;
+
+	 std::cout<<"\t\t r="<<SimHitInGlobal.mag()<<" phi="<<SimHitInGlobal.phi()<<" eta="<<SimHitInGlobal.eta()<<std::endl;
        }
      }
    }
