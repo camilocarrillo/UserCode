@@ -127,26 +127,36 @@ class TrackRPC : public edm::EDAnalyzer {
       std::string partLabel;
 
       std::string rootFileName;
+
+      int partid;
+
+
       
       TFile* theFile;
 
       TH1F * statistics;
+
+      TH1F * mass;
   
       TH1F * efficiencyeta;
       TH1F * efficiencyphi;
       TH1F * efficiencybeta;
+      TH1F * efficiencyp;
 
       TH1F * expectedeta;
       TH1F * expectedphi;
       TH1F * expectedbeta;
+      TH1F * expectedp;
 
       TH1F * observedeta;
       TH1F * observedphi;
       TH1F * observedbeta;
+      TH1F * observedp;
 
       TH1F * residualeta;
       TH1F * residualphi;
       TH1F * residualbeta;
+      TH1F * residualp;
 
        
       // ----------member data ---------------------------
@@ -168,12 +178,8 @@ TrackRPC::TrackRPC(const edm::ParameterSet& iConfig)
   m_trackTag = iConfig.getUntrackedParameter<std::string>("tracks");
   partLabel = iConfig.getUntrackedParameter<std::string>("partLabel");
   rootFileName = iConfig.getUntrackedParameter<std::string>("rootFileName");
+  partid = iConfig.getUntrackedParameter<int>("partid"); 
 
-
-  //  m_muonsTag = iConfig.getParameter<edm::InputTag>("muons");
-  //  m_muonsTOFTag = iConfig.getParameter<edm::InputTag>("muonsTOF");
-
-  //  maxChi2=iConfig.getParameter<double>("maxTkChi2"); //5
 }
 
 
@@ -186,6 +192,15 @@ TrackRPC::~TrackRPC()
 // member functions
 //
 
+float gamma(float b){
+  if(b<1 && b>0){
+    return 1./sqrt(1-b*b);
+  }else{
+    std::cout<<"error in the estimation of b="<<b<<std::endl;
+    return 0;
+  }
+}
+
 // ------------ method called to for each event  ------------
 void
 TrackRPC::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
@@ -197,7 +212,7 @@ TrackRPC::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   edm::Handle<reco::GenParticleCollection> genParticles;
   iEvent.getByLabel(partLabel,genParticles );
   
-  std::cout << " Number of Particles in this event: " << genParticles->size() << std::endl;
+  std::cout<<"Number of Particles in this event: " << genParticles->size() << std::endl;
 
   
   // information from the muon system: TOF
@@ -206,48 +221,57 @@ TrackRPC::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   iEvent.getByLabel(m_trackTag,trackCollectionHandle);
   std::vector<susybsm::RPCHit4D> HSCPRPCRecHits;
   
-  std::cout<<"We found "<<trackCollectionHandle->size()<<" tracks"<<std::endl;
-
   reco::GenParticleCollection::const_iterator partIt;
   for(partIt=genParticles->begin();partIt!=genParticles->end();++partIt) {
-    std::cout<<" Particle Id="<<partIt->pdgId()<<std::endl;
+    //std::cout<<"Particle Id="<<partIt->pdgId()<<std::endl;
     float etamc=0;
     float phimc=0;
     float betamc=0;
-    int partid = -2000015;
+    float pmc=0;
+    float mmc=0;
+    
     if(partIt->pdgId()==partid){
+      std::cout<<"This event contains one HSCP"<<std::endl;
       statistics->Fill(2);
-      float p=partIt->p();
+
       float e=partIt->energy();
       float pt = partIt->pt();
       //float betaT=pt/e;
-      
-      betamc=p/e;
+      pmc=partIt->p();
+
+      betamc=pmc/e;
 
       int event = iEvent.id().event();
       etamc = partIt->eta();
       phimc = partIt->phi();
+
+      mmc=sqrt(e*e-pmc*pmc);
+
+      std::cout<<"Filling expected"<<std::endl;
+
+      expectedeta->Fill(etamc);
+      expectedphi->Fill(phimc);
+      expectedbeta->Fill(betamc);
+      expectedp->Fill(pmc);
       
-      std::cout<<"\t EVENT="<<event<<"    phi="<<partIt->phi()<<" etamc="<<etamc<<" betamc="<<betamc<<" p="<<p<<"GeV pt="<<pt<<"GeV m="<<sqrt(e*e-p*p)<<"GeV"<<std::endl;
+      std::cout<<"ev="<<event<<" phimc="<<partIt->phi()<<" etamc="<<etamc<<" betamc="<<betamc<<" pmc="<<pmc<<"GeV pt="<<pt<<"GeV m="<<mmc<<"GeV"<<std::endl;
       
     }else{
-      std::cout<<"This is not a "<<partid<<" particle"<<std::endl;
       continue;
     }
     
     float eta=0;
     float phi=0;
+    float p=0;
     float beta = 1;
     
-    std::cout<<"Loop on all the reconstructed muons"<<std::endl;
+    std::cout<<"\t Loop on all the reconstructed muons"<<std::endl;
+    std::cout<<"\t We found "<<trackCollectionHandle->size()<<" muon tracks in this event"<<std::endl;
 
     for (reco::TrackCollection::const_iterator muon = trackCollectionHandle->begin(); muon!=trackCollectionHandle->end(); muon++) {
       eta=muon->eta();
       phi=muon->phi();
-      
-      std::cout<<" phi="<<phi
-	       <<" eta="<<eta
-	       <<" pt="<<muon->pt()<<std::endl;
+      p=muon->p();
 
       int rechitcounter = 0;
       for(trackingRecHit_iterator recHit2 = muon->recHitsBegin(); recHit2 != muon->recHitsEnd(); ++recHit2) {
@@ -255,13 +279,16 @@ TrackRPC::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       }
 
       if(rechitcounter==0){
-	std::cout<<"No RPC Rec recHits in this track"<<std::endl; 
-	continue;
+	std::cout<<"!!!!!!!!!!!!No recHits in this track"<<std::endl; 
       }
     
-      std::cout<<"\t Rechitcounter = "<<rechitcounter<<std::endl;
+      std::cout<<"\t \t Rechitcounter in this muon = "<<rechitcounter<<std::endl;
 
-      for(trackingRecHit_iterator recHit = muon->recHitsBegin(); recHit != muon->recHitsEnd(); ++recHit) {
+      std::cout<<"\t \t phimc="<<phimc<<" etamc="<<etamc<<std::endl;
+      std::cout<<"\t \t phi  ="<<phi<<" eta  ="<<eta<<std::endl;
+
+      HSCPRPCRecHits.clear();
+      for(trackingRecHit_iterator recHit = muon->recHitsBegin(); recHit != muon->recHitsEnd(); ++recHit){
 	if ( (*recHit)->geographicalId().subdetId() != MuonSubdetId::RPC ) continue;
 	if (!(*recHit)->isValid()) continue;
 	RPCDetId rollId = (RPCDetId)(*recHit)->geographicalId();
@@ -288,30 +315,36 @@ TrackRPC::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
       if(HSCPRPCRecHits.size()==0){
 	continue;
-	std::cout<<"no RPC RecHits in this muon"<<std::endl;
+	std::cout<<"\t NO RPC RecHits in this muon!!!"<<std::endl;
       }
       
+
+      
+      std::cout<<"\t \t loop on the RPCHit4D!!!"<<std::endl;
       for(std::vector<susybsm::RPCHit4D>::iterator point = HSCPRPCRecHits.begin(); point < HSCPRPCRecHits.end(); ++point) {
+	float r=point->gp.mag();
 	outOfTime |= (point->bx!=0); //condition 1: at least one measurement must have BX!=0
 	increasing &= (point->bx>=lastbx); //condition 2: BX must be increase when going inside-out.
 	anydifferentzero &= (!point->bx==0); //to check one knee withoutzeros
 	anydifferentone &= (!point->bx==1); //to check one knee withoutones
 	lastbx = point->bx;
-	float r=point->gp.mag();
-	std::cout<<" r="<<r<<" bx="<<point->bx<<" outOfTime"<<outOfTime<<" increasing"<<increasing<<" anydifferentzero"<<anydifferentzero<<std::endl;
+	std::cout<<"\t \t  r="<<r<<" phi="<<point->gp.phi()<<" eta="<<point->gp.eta()<<" bx="<<point->bx<<" outOfTime"<<outOfTime<<" increasing"<<increasing<<" anydifferentzero"<<anydifferentzero<<std::endl;
       }
-      std::cout<<"pattern "<<std::endl;
+      std::cout<<"\t \t";
     
       for(std::vector<susybsm::RPCHit4D>::iterator point = HSCPRPCRecHits.begin(); point < HSCPRPCRecHits.end(); ++point) {
 	std::cout<<point->bx;
       }
       std::cout<<std::endl;
 
+      
       bool Candidate = (outOfTime&&increasing);
+
+      std::cout<<"\t \t Is an HSCP?"<<std::endl;
 
       if(Candidate){
 	statistics->Fill(3);
-	std::cout<<"We found an HSCPs let's try to stimate beta"<<std::endl;
+	std::cout<<"\t \t \t yes! We found an HSCPs let's try to stimate beta"<<std::endl;
 	// here we should get some pattern-based estimate
 
 	//Counting knees
@@ -323,7 +356,7 @@ TrackRPC::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	  if(lastbx==-7){
 	    maginfirstknee = point->gp.mag();
 	  }else if((lastbx!=point->bx)){
-	    std::cout<<"one knee between"<<lastbx<<point->bx<<std::endl;
+	    std::cout<<"\t \t \t one knee between"<<lastbx<<point->bx<<std::endl;
 	    maginknee=point->gp.mag();
 	    knees++;
 	  }
@@ -331,13 +364,13 @@ TrackRPC::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	}
       
 	if(knees==0){
-	  std::cout<<"knees="<<knees<<std::endl;
+	  std::cout<<"\t \t \t \t knees="<<knees<<std::endl;
 	  beta=maginfirstknee/(25+maginfirstknee/30.)/30.;
 	}else if(knees==1){
 	  float beta1=0;
 	  float beta2=0;
-	  std::cout<<"knees="<<knees<<std::endl;
-	  std::cout<<" anydifferentzero="<<anydifferentzero<<" anydifferentone="<<anydifferentone<<std::endl;
+	  std::cout<<"\t \t \t \t knees="<<knees<<std::endl;
+	  std::cout<<"\t \t \t \t anydifferentzero="<<anydifferentzero<<" anydifferentone="<<anydifferentone<<std::endl;
 	  if(!anydifferentzero){
 	    beta=maginknee/(25+maginknee/30.)/30.;
 	  }else if(!anydifferentone){//i.e non zeros and no ones
@@ -346,27 +379,28 @@ TrackRPC::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	    beta1=maginknee/(25+maginknee/30.)/30.;
 	    float dr =(maginknee-maginfirstknee);
 	    beta2 = dr/(25.+dr/30.);
-	    std::cout<<"beta1="<<beta1<<" beta2="<<beta2<<std::endl;
+	    std::cout<<"\t \t \t \t \t not zero neither ones beta1="<<beta1<<" beta2="<<beta2<<std::endl;
 	    beta = (beta1 + beta2)*0.5;
 	  }
 	}else if(knees==2){
-	  std::cout<<"knees="<<knees<<std::endl;
+	  std::cout<<"\t \t \t \t knees="<<knees<<std::endl;
 	  knees=0;
 	  float beta1=0;
 	  float beta2=0;
 	  lastbx=-7;
+	  std::cout<<"\t \t \t \t looping again on the RPCRecHits4D="<<knees<<std::endl;
 	  for(std::vector<susybsm::RPCHit4D>::iterator point = HSCPRPCRecHits.begin(); point < HSCPRPCRecHits.end(); ++point) {
 	    if(lastbx==-7){
 	      maginfirstknee = point->gp.mag();
 	    }else if((lastbx!=point->bx)){
-	      std::cout<<"one knee between"<<lastbx<<point->bx<<std::endl;
+	      std::cout<<"\t \t \t \t \t one knee between"<<lastbx<<point->bx<<std::endl;
 	      knees++;
 	      if(knees==2){
 		float maginsecondknee=point->gp.mag();
 		beta1=maginknee/(25+maginknee/30.)/30.;
 		float dr =(maginknee-maginsecondknee);
 		beta2 = dr/(25.+dr/30.);
-		std::cout<<"beta1="<<beta1<<" beta2="<<beta2<<std::endl;
+		std::cout<<"\t \t \t \t \t beta1="<<beta1<<" beta2="<<beta2<<std::endl;
 	      }
 	    }
 	    lastbx=point->bx;
@@ -374,35 +408,45 @@ TrackRPC::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	  beta = (beta1 + beta2)*0.5;
 	}
       
-	std::cout<<"beta="<<beta<<std::endl;
+	//beta = beta+0.18; pata stau247
+
+	std::cout<<"\t \t \t beta="<<beta<<std::endl;
       }else{
-	std::cout<<"We didn't found an HSCPs"<<std::endl;
+	std::cout<<"\t \t \t No we didn't find an HSCPs"<<std::endl;
       }
     
-      std::cout<<"etamc="<<etamc<<" phimc="<<phimc<<" betamc="<<betamc<<std::endl;
-      expectedeta->Fill(etamc);
-      expectedphi->Fill(phimc);
-      expectedbeta->Fill(betamc);
-      
       if(Candidate){
-	std::cout<<"eta  ="<<eta<<" phi  ="<<phi<<" beta  ="<<beta<<std::endl;
+	std::cout<<"\t \t \t Now filling residuals and efficiency histograms if muon matches with an HSCP"<<std::endl;
+
+	std::cout<<"\t \t \t etamc="<<etamc<<" phimc="<<phimc<<" betamc="<<betamc<<" pmc="<<pmc<<std::endl;
+	std::cout<<"\t \t \t eta  ="<<eta<<" phi  ="<<phi<<" beta  ="<<beta<<" p  ="<<p<<std::endl;
+	
       	float diffeta = etamc - eta;
 	float diffphi = phimc - phi;
 	float diffbeta = betamc - beta;
-	
-	if(fabs(diffeta)<=0.3 && fabs(diffphi)<=0.03){
-	  std::cout<<"Coincidence!!"<<std::endl;
-	  observedeta->Fill(eta);
-	  observedphi->Fill(phi);
-	  observedbeta->Fill(beta);
+	float diffp = pmc - p;
+
+	if(fabs(diffeta)<=0.3 && fabs(diffphi)<=0.03){ //assertion in the same cone?
+	  std::cout<<"\t \t \t Coincidence candidate with MC"<<std::endl;
+	  observedeta->Fill(etamc);
+	  observedphi->Fill(phimc);
+	  observedbeta->Fill(betamc);
+	  observedp->Fill(pmc);
 	  residualphi->Fill(diffphi);
 	  residualeta->Fill(diffeta);
 	  residualbeta->Fill(diffbeta);
+	  residualp->Fill(diffp);
+	  //Estimation of the mass
+	  std::cout<<"\t \t \t Estimating the mass"<<std::endl;
+	  float m=p/(gamma(beta)*beta);
+	  std::cout<<"\t \t \t mmc="<<m<<std::endl;
+	  std::cout<<"\t \t \t m  ="<<mmc<<std::endl;
+	  mass->Fill(m);
 	}else{
-	  std::cout<<" Identified but in different direction"<<std::endl;
+	  std::cout<<"\t \t \t Identified but in different direction this is noise!"<<std::endl;
 	}
       }else{
-	std::cout<<" Muon Not mateched with an HSCP"<<std::endl;
+	std::cout<<"\t \t \t Muon Not mateched with an HSCP in MC"<<std::endl;
       }
     }
   }
@@ -417,23 +461,27 @@ TrackRPC::beginJob(const edm::EventSetup& iSetup)
     theFile = new TFile(rootFileName.c_str(),"RECREATE");
 
     statistics = new TH1F("statistics","Some Information",10,0.5,10.5);		 
+    mass = new TH1F("mass","Mass estimation",25,0,1000);		 
     
     efficiencyeta = new TH1F("EtaEff","Eta Efficiency",100,-2.5,2.5);		 
     efficiencyphi = new TH1F("PhiEff","Phi Efficiency",100,-3.1415926,3.1415926); 
     efficiencybeta = new TH1F("BetaEff","Beta Efficiency",100,0,1);                
-    
+    efficiencyp = new TH1F("PEfficiency","P Efficiency",100,0,1500);
+  
     expectedeta = new TH1F("EtaExpected","Eta Expected",100,-2.5,2.5);		 
     expectedphi = new TH1F("PhiExpected","Phi Expected",100,-3.1415926,3.1415926); 
     expectedbeta = new TH1F("BetaExpected","Beta Expected",100,0,1);                
+    expectedp = new TH1F("PExpected","P Expected",100,0,1500);
     
     observedeta = new TH1F("EtaObserved","Eta Observed",100,-2.5,2.5);		 
     observedphi = new TH1F("PhiObserved","Phi Observed",100,-3.1415926,3.1415926); 
     observedbeta = new TH1F("BetaObserved","Beta Observed",100,0,1);                
-    
-    residualeta = new TH1F("Residual Eta","Eta Residuals",100,-0.2,0.2);
-    residualphi = new TH1F("Residual Phi","Phi Residuals",100,-0.05,0.05);
-    residualbeta = new TH1F("Residual Beta","Beta Residuals",100,-0.5,0.5);
+    observedp = new TH1F("PObserved","P Observed",100,0,1500);    
 
+    residualeta = new TH1F("ResidualEta","Eta Residuals",100,-0.2,0.2);
+    residualphi = new TH1F("ResidualPhi","Phi Residuals",100,-0.05,0.05);
+    residualbeta = new TH1F("ResidualBeta","Beta Residuals",100,-0.5,0.5);
+    residualp = new TH1F("ResidualP","P Residuals",100,-750,750);
   }
 
 // ------------ method called once each job just after ending the event loop  ------------
@@ -441,8 +489,8 @@ void
 TrackRPC::endJob() {
 
   statistics->GetXaxis()->SetBinLabel(1,"Events");
-  statistics->GetXaxis()->SetBinLabel(2,"Events with HSCP");
-  statistics->GetXaxis()->SetBinLabel(3,"Events with HSCPs in Mu/RPC");
+  statistics->GetXaxis()->SetBinLabel(2,"Events with HSCP in MC");
+  statistics->GetXaxis()->SetBinLabel(3,"Events with HSCP in Mu/RPC");
     
   for(int k=1;k<=100;k++){
     float effeta = 0;
@@ -471,6 +519,15 @@ TrackRPC::endJob() {
     }
     efficiencybeta->SetBinContent(k,effbeta);
     efficiencybeta->SetBinError(k,errbeta);
+
+    float effp = 0;
+    float errp = 0;
+    if(expectedp->GetBinContent(k)!=0){
+      effp = observedp->GetBinContent(k)/expectedp->GetBinContent(k);
+      errp = sqrt(effp*(1-effp)/expectedp->GetBinContent(k));
+    }
+    efficiencyp->SetBinContent(k,effp);
+    efficiencyp->SetBinError(k,errp);
     
 
   }
@@ -478,22 +535,27 @@ TrackRPC::endJob() {
   theFile->cd();
 
   statistics->Write();
+  mass->Write();
   
   efficiencyeta->Write();
   efficiencyphi->Write();
   efficiencybeta->Write();
+  efficiencyp->Write();
 
   expectedeta->Write();
   expectedphi->Write();
-  expectedbeta->Write();
+  expectedbeta->Write();  
+  expectedp->Write();
 
   observedeta->Write();
   observedphi->Write();
   observedbeta->Write();
+  observedp->Write();
 
   residualeta->Write();
   residualphi->Write();
   residualbeta->Write();
+  residualp->Write();
 
   theFile->Close();
 
