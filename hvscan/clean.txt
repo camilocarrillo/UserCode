@@ -1,0 +1,4 @@
+rm W* -rf
+rm *.png
+rm *.root
+

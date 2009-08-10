@@ -1,0 +1,11 @@
+./genhtml.sh outputW2near.txt
+./genhtml.sh outputW2far.txt
+./genhtml.sh outputW1far.txt
+./genhtml.sh outputW1near.txt
+./genhtml.sh outputW0near.txt
+./genhtml.sh outputW0far.txt
+./genhtml.sh outputWm1far.txt
+./genhtml.sh outputWm1near.txt
+./genhtml.sh outputWm2near.txt
+./genhtml.sh outputWm2far.txt
+#scp -r *.html webrpc@webcms.ba.infn.it:public_html/efficiency/hvscanCRAFT/
