@@ -17,7 +17,6 @@
 //
 //
 
-
 // system include files
 #include <memory>
 
@@ -192,11 +191,21 @@ TrackRPC::~TrackRPC()
 // member functions
 //
 
-float gamma(float b){
+float gamma(float b){//gamma from beta
   if(b<1 && b>0){
     return 1./sqrt(1-b*b);
   }else{
     std::cout<<"error in the estimation of b="<<b<<std::endl;
+    return 0;
+  }
+}
+
+float betapm(float p,float m){//beta from mass and 3 momentum
+  float beta = 1./sqrt(1+((m*m)/(p*p)));
+  if(beta<=1 && beta>=0){
+    return beta;
+  }else{
+    std::cout<<"p and m are not relativistic variables=p"<<p<<" m="<<m<<std::endl;
     return 0;
   }
 }
@@ -247,6 +256,12 @@ TrackRPC::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
       mmc=sqrt(e*e-pmc*pmc);
 
+      if(abs(partid) == 2000015){
+	betamc = betapm(pmc,303.27); //bug in random gun for kktaus
+	mmc = 303.27;
+	std::cout<<"warning correcting theoretical beta and mass for kktaus due to the error on the mass for the sample"<<std::endl;
+      }
+      
       std::cout<<"Filling expected"<<std::endl;
 
       expectedeta->Fill(etamc);
@@ -254,7 +269,7 @@ TrackRPC::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       expectedbeta->Fill(betamc);
       expectedp->Fill(pmc);
       
-      std::cout<<"ev="<<event<<" phimc="<<partIt->phi()<<" etamc="<<etamc<<" betamc="<<betamc<<" pmc="<<pmc<<"GeV pt="<<pt<<"GeV m="<<mmc<<"GeV"<<std::endl;
+      std::cout<<"ev="<<event<<" phimc="<<partIt->phi()<<" etamc="<<etamc<<" betamc="<<betamc<<" pmc="<<pmc<<"GeV pt="<<pt<<"GeV mmc="<<mmc<<"GeV"<<std::endl;
       
     }else{
       continue;
@@ -287,9 +302,13 @@ TrackRPC::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       std::cout<<"\t \t phimc="<<phimc<<" etamc="<<etamc<<std::endl;
       std::cout<<"\t \t phi  ="<<phi<<" eta  ="<<eta<<std::endl;
 
+
+      std::cout<<"\t \t Loop on the rechits"<<std::endl;
       HSCPRPCRecHits.clear();
       for(trackingRecHit_iterator recHit = muon->recHitsBegin(); recHit != muon->recHitsEnd(); ++recHit){
+	//std::cout<<"\t \t Is an RPCRecHit?"<<(*recHit)->geographicalId().subdetId()<<std::endl;
 	if ( (*recHit)->geographicalId().subdetId() != MuonSubdetId::RPC ) continue;
+	//std::cout<<"\t \t Is a valid rechit"<<std::endl;
 	if (!(*recHit)->isValid()) continue;
 	RPCDetId rollId = (RPCDetId)(*recHit)->geographicalId();
 	RPCGeomServ rpcsrv(rollId);
@@ -337,6 +356,12 @@ TrackRPC::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       }
       std::cout<<std::endl;
 
+      bool pp = true;
+      float delay = 0;
+      if(pp){
+	delay=12.5; //half bunch crossing delay for pp collisions
+      }
+
       
       bool Candidate = (outOfTime&&increasing);
 
@@ -365,20 +390,20 @@ TrackRPC::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       
 	if(knees==0){
 	  std::cout<<"\t \t \t \t knees="<<knees<<std::endl;
-	  beta=maginfirstknee/(25+maginfirstknee/30.)/30.;
+	  beta=maginfirstknee/(25-delay+maginfirstknee/30.)/30.;
 	}else if(knees==1){
 	  float beta1=0;
 	  float beta2=0;
 	  std::cout<<"\t \t \t \t knees="<<knees<<std::endl;
 	  std::cout<<"\t \t \t \t anydifferentzero="<<anydifferentzero<<" anydifferentone="<<anydifferentone<<std::endl;
 	  if(!anydifferentzero){
-	    beta=maginknee/(25+maginknee/30.)/30.;
+	    beta=maginknee/(25-delay+maginknee/30.)/30.;
 	  }else if(!anydifferentone){//i.e non zeros and no ones
-	    beta=maginknee/(50+maginknee/30.)/30.;
+	    beta=maginknee/(50-delay+maginknee/30.)/30.;
 	  }else{
-	    beta1=maginknee/(25+maginknee/30.)/30.;
+	    beta1=maginknee/(25-delay+maginknee/30.)/30.;
 	    float dr =(maginknee-maginfirstknee);
-	    beta2 = dr/(25.+dr/30.);
+	    beta2 = dr/(25.-delay+dr/30.);
 	    std::cout<<"\t \t \t \t \t not zero neither ones beta1="<<beta1<<" beta2="<<beta2<<std::endl;
 	    beta = (beta1 + beta2)*0.5;
 	  }
@@ -397,7 +422,7 @@ TrackRPC::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	      knees++;
 	      if(knees==2){
 		float maginsecondknee=point->gp.mag();
-		beta1=maginknee/(25+maginknee/30.)/30.;
+		beta1=maginknee/(25-delay+maginknee/30.)/30.;
 		float dr =(maginknee-maginsecondknee);
 		beta2 = dr/(25.+dr/30.);
 		std::cout<<"\t \t \t \t \t beta1="<<beta1<<" beta2="<<beta2<<std::endl;
@@ -408,8 +433,6 @@ TrackRPC::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	  beta = (beta1 + beta2)*0.5;
 	}
       
-	//beta = beta+0.18; pata stau247
-
 	std::cout<<"\t \t \t beta="<<beta<<std::endl;
       }else{
 	std::cout<<"\t \t \t No we didn't find an HSCPs"<<std::endl;
@@ -439,8 +462,8 @@ TrackRPC::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	  //Estimation of the mass
 	  std::cout<<"\t \t \t Estimating the mass"<<std::endl;
 	  float m=p/(gamma(beta)*beta);
-	  std::cout<<"\t \t \t mmc="<<m<<std::endl;
-	  std::cout<<"\t \t \t m  ="<<mmc<<std::endl;
+	  std::cout<<"\t \t \t mmc="<<mmc<<std::endl;
+	  std::cout<<"\t \t \t m  ="<<m<<std::endl;
 	  mass->Fill(m);
 	}else{
 	  std::cout<<"\t \t \t Identified but in different direction this is noise!"<<std::endl;
@@ -456,12 +479,11 @@ void
 TrackRPC::beginJob(const edm::EventSetup& iSetup)
   {
     iSetup.get<MuonGeometryRecord>().get(rpcGeo);
-
-
+    
     theFile = new TFile(rootFileName.c_str(),"RECREATE");
 
     statistics = new TH1F("statistics","Some Information",10,0.5,10.5);		 
-    mass = new TH1F("mass","Mass estimation",25,0,1000);		 
+    mass = new TH1F("mass","Mass estimation",25,0,1500);		 
     
     efficiencyeta = new TH1F("EtaEff","Eta Efficiency",100,-2.5,2.5);		 
     efficiencyphi = new TH1F("PhiEff","Phi Efficiency",100,-3.1415926,3.1415926); 
@@ -478,9 +500,9 @@ TrackRPC::beginJob(const edm::EventSetup& iSetup)
     observedbeta = new TH1F("BetaObserved","Beta Observed",100,0,1);                
     observedp = new TH1F("PObserved","P Observed",100,0,1500);    
 
-    residualeta = new TH1F("ResidualEta","Eta Residuals",100,-0.2,0.2);
+    residualeta = new TH1F("ResidualEta","Eta Residuals",25,-0.2,0.2);
     residualphi = new TH1F("ResidualPhi","Phi Residuals",100,-0.05,0.05);
-    residualbeta = new TH1F("ResidualBeta","Beta Residuals",100,-0.5,0.5);
+    residualbeta = new TH1F("ResidualBeta","Beta Residuals",25,-0.5,0.5);
     residualp = new TH1F("ResidualP","P Residuals",100,-750,750);
   }
 
