@@ -483,7 +483,7 @@ TrackRPC::beginJob(const edm::EventSetup& iSetup)
     theFile = new TFile(rootFileName.c_str(),"RECREATE");
 
     statistics = new TH1F("statistics","Some Information",10,0.5,10.5);		 
-    mass = new TH1F("mass","Mass estimation",25,0,1500);		 
+    mass = new TH1F("mass","Mass estimation",75,0,1500);		 
     
     efficiencyeta = new TH1F("EtaEff","Eta Efficiency",100,-2.5,2.5);		 
     efficiencyphi = new TH1F("PhiEff","Phi Efficiency",100,-3.1415926,3.1415926); 
