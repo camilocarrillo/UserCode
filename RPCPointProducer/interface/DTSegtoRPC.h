@@ -1,40 +1,29 @@
-#include <Geometry/RPCGeometry/interface/RPCGeometry.h>
-#include <Geometry/DTGeometry/interface/DTGeometry.h>
-#include <DataFormats/DTRecHit/interface/DTRecSegment4DCollection.h>
-#include <Geometry/CommonDetUnit/interface/GeomDet.h>
-#include <Geometry/Records/interface/MuonGeometryRecord.h>
-#include <Geometry/CommonTopologies/interface/RectangularStripTopology.h>
-#include <FWCore/Framework/interface/EDAnalyzer.h>
-#include "FWCore/Framework/interface/ESHandle.h"
-#include <Geometry/RPCGeometry/interface/RPCGeomServ.h>
+#ifndef  DTSEGTORPC_H
+#define  DTSEGTORPC_H
 
-class RPCPoint{
- public:
-  float x(){return _x;}
-  float y(){return _y;}
-  uint32_t rawId(){return _rawId;}
- 
-  RPCPoint(uint32_t rawId,float x, float y){
-    _rawId=rawId;
-    _x=x;
-    _y=y;
-  }
- private:
-  uint32_t _rawId;
-  float _x;
-  float _y;
-};
+
+#include "FWCore/Framework/interface/EDAnalyzer.h"
+#include "DataFormats/RPCRecHit/interface/RPCRecHit.h"
+#include "DataFormats/RPCRecHit/interface/RPCRecHitCollection.h"
+
 
 class DTSegtoRPC {
 public:
   explicit DTSegtoRPC(edm::Handle<DTRecSegment4DCollection> all4DSegments,const edm::EventSetup& iSetup, const edm::Event& iEvent);
   ~DTSegtoRPC();
-  int numberofsegments() {return _numberofsegments;}
-  std::vector<RPCPoint> GetThePoints(){return _ThePoints;}
+  RPCRecHitCollection* thePoints(){return _ThePoints;}
    
 private:
-  int _numberofsegments;
-  std::vector<RPCPoint> _ThePoints; 
+  RPCRecHitCollection* _ThePoints; 
+  edm::OwnVector<RPCRecHit> RPCPointVector;
+  bool incldt;
+  bool incldtMB4;
+  bool inclcsc;
+  bool debug;
+  double MinCosAng;
+  double MaxD;
+  double MaxDrb4;
+
 };
 
 class DTStationIndex{
@@ -80,3 +69,4 @@ private:
   static ObjectMap* mapInstance;
 }; 
 
+#endif
