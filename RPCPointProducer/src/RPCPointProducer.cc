@@ -13,13 +13,14 @@
 //
 // Original Author:  Camilo Andres Carrillo Montoya
 //         Created:  Wed Sep 16 14:56:18 CEST 2009
-// $Id$
+// $Id: RPCPointProducer.cc,v 1.1 2009/09/28 10:23:40 carrillo Exp $
 //
 //
 
 
 // system include files
 #include <memory>
+#include <ctime>
 
 // user include files
 #include "FWCore/Framework/interface/Frameworkfwd.h"
@@ -30,13 +31,10 @@
 
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include <DataFormats/DTRecHit/interface/DTRecSegment4DCollection.h>
-#include <Geometry/DTGeometry/interface/DTGeometry.h>
 #include "FWCore/Framework/interface/ESHandle.h"
-#include <Geometry/CommonDetUnit/interface/GeomDet.h>
-#include <Geometry/Records/interface/MuonGeometryRecord.h>
+#include <DataFormats/RPCRecHit/interface/RPCRecHit.h>
+#include "DataFormats/MuonDetId/interface/RPCDetId.h"
 #include <Analysis/RPCPointProducer/interface/DTSegtoRPC.h>
-
-
 //
 // class decleration
 //
@@ -68,59 +66,64 @@ class RPCPointProducer : public edm::EDProducer {
 //
 RPCPointProducer::RPCPointProducer(const edm::ParameterSet& iConfig)
 {
-  std::cout<<"In the constructor"<<std::endl;
   dt4DSegments=iConfig.getUntrackedParameter<std::string>("dt4DSegments","dt4DSegments");
-  //register your products
-  /* Examples
-     produces<ExampleData2>();
-     
-     //if do put with a label
-     produces<ExampleData2>("label");
-  */
-  //now do what ever other initialization is needed
+  produces<RPCRecHitCollection>("rpcPoints");
 }
 
 
-RPCPointProducer::~RPCPointProducer()
-{
-  // do anything here that needs to be done at desctruction time
-  // (e.g. close files, deallocate resources etc.)
+RPCPointProducer::~RPCPointProducer(){
+
 }
 
-
-//
-// member functions
-//
-
-// ------------ method called to produce the data  ------------
 void
-RPCPointProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
-{
-  std::cout<<"Getting the DT Segments"<<std::endl;
+RPCPointProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup){
+  /*
+  struct timespec start_time, stop_time;
+  time_t fs;
+  time_t fn;
+  time_t ls;
+  time_t ln;
+  clock_gettime(CLOCK_REALTIME, &start_time);  
+  */
+
   edm::Handle<DTRecSegment4DCollection> all4DSegments;
   iEvent.getByLabel(dt4DSegments, all4DSegments);
   
-  std::cout<<"calling the class that extrapolates"<<std::endl;
+  /*
+  clock_gettime(CLOCK_REALTIME, &stop_time);
+  fs=start_time.tv_sec;
+  fn=start_time.tv_nsec;
+  ls=stop_time.tv_sec;
+  ln=stop_time.tv_nsec;
+  std::cout <<" =============++| "<<ls-fs<<" sec "<<ln-fn<<" us"<<std::endl;
+  clock_gettime(CLOCK_REALTIME, &start_time);
+  */
+  
   DTSegtoRPC test(all4DSegments,iSetup,iEvent);
-  std::cout<<"number of segments = "<<test.numberofsegments()<<std::endl;
   
-  std::vector<RPCPoint> ThePoints = test.GetThePoints();
-
-  std::cout<<"Number of extrapolations = "<<ThePoints.size()<<std::endl;
+  /*
+  clock_gettime(CLOCK_REALTIME, &stop_time);
+  fs=start_time.tv_sec;
+  fn=start_time.tv_nsec;
+  ls=stop_time.tv_sec;
+  ln=stop_time.tv_nsec;
+  std::cout <<" =============++|| "<<ls-fs<<" sec "<<ln-fn<<" us"<<std::endl;
+  clock_gettime(CLOCK_REALTIME, &start_time);
+  */
   
-  if(ThePoints.size()!=0){
-
-    std::vector<RPCPoint>::iterator itVectorData;
-
-    for(itVectorData = ThePoints.begin(); itVectorData != ThePoints.end(); itVectorData++){
-      RPCPoint Point = *(itVectorData);
-      std::cout<<Point.rawId()<<" "<<Point.x()<<" "<<Point.y()<<std::endl;
-    }
-
-    //iEvent.put(ThePoints); ????????????????????
-    
-  }
+  std::auto_ptr<RPCRecHitCollection> ThePoints(test.thePoints());  
   
+  iEvent.put(ThePoints,"rpcPoints"); 
+  
+  /*
+  clock_gettime(CLOCK_REALTIME, &stop_time);
+  fs=start_time.tv_sec;
+  fn=start_time.tv_nsec;
+  ls=stop_time.tv_sec;
+  ln=stop_time.tv_nsec;
+  std::cout <<" =============++||| "<<ls-fs<<" sec "<<ln-fn<<" us"<<std::endl;
+  */
+
 }
 
 // ------------ method called once each job just before starting event loop  ------------
