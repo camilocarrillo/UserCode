@@ -4,11 +4,14 @@
 <use name=RecoMuon/DetLayers>
 <use name=Geometry/RPCGeometry>
 <use name=RecoMuon/DetLayers>
+<use name=DataFormats/RPCRecHit>
 <flags EDM_PLUGIN=1>
 <export>
+
    <lib name=AnalysisRPCPointProducer>
    <use name=FWCore/Framework>
    <use name=FWCore/PluginManager>
    <use name=FWCore/ParameterSet>
    <use name=RecoMuon/DetLayers>
+   <use name=DataFormats/RPCRecHit>
 </export>
