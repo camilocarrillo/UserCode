@@ -106,17 +106,35 @@ HEPMCPRODUCTSANALYZER::analyze(const edm::Event& iEvent, const edm::EventSetup& 
    
    Handle<HepMCProduct> genEvent;
    iEvent.getByLabel(hepMCProduct_label_, genEvent);
+   std::cout<<"before the if genEvents.isValid()"<<std::endl;
    if (genEvent.isValid())
    {
      float genLeadTrackPt=-100;
-     for (HepMC::GenEvent::particle_const_iterator iter=(*(genEvent->GetEvent())).particles_begin();
-          iter!=(*(genEvent->GetEvent())).particles_end(); 
-          ++iter)
-     {
+     std::cout<<"before the loop of all particles"<<std::endl;
+     for (HepMC::GenEvent::particle_const_iterator iter=(*(genEvent->GetEvent())).particles_begin(); iter!=(*(genEvent->GetEvent())).particles_end(); ++iter) {
        HepMC::GenParticle* theParticle=*iter;
        double pt=pow(pow(theParticle->momentum().px(),2)+pow(theParticle->momentum().py(),2), 0.5);
        double charge=pdt->particle(theParticle->pdg_id())->charge();
-       std::cout<<" pdgId="<<theParticle->pdg_id()<<" pt="<<pt<<" status="<<theParticle->status()<<std::endl;
+       if(abs(theParticle->pdg_id())==11 
+	  || abs(theParticle->pdg_id())==13
+	  || abs(theParticle->pdg_id())==15
+	  ) continue;
+       std::cout<<"pdgId="<<theParticle->pdg_id()<<" charge"<<charge<<" pt="<<pt<<" status="<<theParticle->status()<<std::endl;
+       std::cout<<"Is the end_vertexValid and has daughters particles?"<<std::endl;
+       if ( /*theParticle->status() == 2 &&*/ theParticle->end_vertex() &&  theParticle->end_vertex()->particles_out_size() ){
+	 std::cout<<"Yes "<<std::endl;
+	 int counter =0;
+	 std::cout<<"Loop on the daughters"<<std::endl;
+	 for (HepMC::GenVertex::particles_out_const_iterator daughit = theParticle->end_vertex()->particles_out_const_begin(); daughit != theParticle->end_vertex()->particles_out_const_end(); ++daughit ) {
+	   counter++;
+	   HepMC::GenParticle* daugh = *daughit;
+	   double ptd=pow(pow(daugh->momentum().px(),2)+pow(daugh->momentum().py(),2), 0.5);
+	   std::cout<<"\t Daughter pdgId="<<daugh->pdg_id()<<" status="<<daugh->status()<<" pt="<<ptd<<std::endl;
+	 }
+	 std::cout<<" endVertex.position.mag()="<<theParticle->end_vertex()->position().mag()<<" Number of Daughters = "<<counter<<std::endl;
+       }else{
+	 std::cout<<"No "<<std::endl;
+       }
      }
    }
    else 
