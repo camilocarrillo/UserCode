@@ -9,7 +9,7 @@
 
 class DTSegtoRPC {
 public:
-  explicit DTSegtoRPC(edm::Handle<DTRecSegment4DCollection> all4DSegments,const edm::EventSetup& iSetup, const edm::Event& iEvent);
+  explicit DTSegtoRPC(edm::Handle<DTRecSegment4DCollection> all4DSegments,const edm::EventSetup& iSetup, const edm::Event& iEvent,bool debug, double eyr);
   ~DTSegtoRPC();
   RPCRecHitCollection* thePoints(){return _ThePoints;}
    
@@ -18,12 +18,10 @@ private:
   edm::OwnVector<RPCRecHit> RPCPointVector;
   bool incldt;
   bool incldtMB4;
-  bool inclcsc;
-  bool debug;
   double MinCosAng;
   double MaxD;
   double MaxDrb4;
-
+  double MaxDistanceBetweenSegments;
 };
 
 class DTStationIndex{

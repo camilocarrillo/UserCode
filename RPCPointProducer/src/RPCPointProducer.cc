@@ -31,10 +31,14 @@
 
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include <DataFormats/DTRecHit/interface/DTRecSegment4DCollection.h>
+#include <DataFormats/CSCRecHit/interface/CSCSegmentCollection.h>
+
 #include "FWCore/Framework/interface/ESHandle.h"
 #include <DataFormats/RPCRecHit/interface/RPCRecHit.h>
 #include "DataFormats/MuonDetId/interface/RPCDetId.h"
 #include <Analysis/RPCPointProducer/interface/DTSegtoRPC.h>
+#include <Analysis/RPCPointProducer/interface/CSCSegtoRPC.h>
+
 //
 // class decleration
 //
@@ -44,30 +48,40 @@ class RPCPointProducer : public edm::EDProducer {
       explicit RPCPointProducer(const edm::ParameterSet&);
       ~RPCPointProducer();
       std::string dt4DSegments;
+      std::string cscSegments;
    private:
       virtual void beginJob() ;
       virtual void produce(edm::Event&, const edm::EventSetup&);
       virtual void endJob() ;
-      
+      bool incldt;
+      bool inclcsc;
+      bool debug;
+      double MinCosAng;
+      double MaxD;
+      double MaxDrb4;
+      double MaxDistanceBetweenSegments;
+      double ExtrapolatedRegion;
+  
       // ----------member data ---------------------------
 };
 
-//
-// constants, enums and typedefs
-//
-
-
-//
-// static data member definitions
-//
-
-//
-// constructors and destructor
-//
 RPCPointProducer::RPCPointProducer(const edm::ParameterSet& iConfig)
 {
   dt4DSegments=iConfig.getUntrackedParameter<std::string>("dt4DSegments","dt4DSegments");
-  produces<RPCRecHitCollection>("rpcPoints");
+  cscSegments=iConfig.getUntrackedParameter<std::string>("cscSegments","cscSegments");
+
+  debug=iConfig.getUntrackedParameter<bool>("debug",false);
+  incldt=iConfig.getUntrackedParameter<bool>("incldt",true);
+  inclcsc=iConfig.getUntrackedParameter<bool>("inclcsc",true);
+  MinCosAng=iConfig.getUntrackedParameter<double>("MinCosAng",0.95);
+  MaxD=iConfig.getUntrackedParameter<double>("MaxD",80.);
+  MaxDrb4=iConfig.getUntrackedParameter<double>("MaxDrb4",150.);
+  MaxDistanceBetweenSegments=iConfig.getUntrackedParameter<double>("",150.);
+  ExtrapolatedRegion=iConfig.getUntrackedParameter<double>("ExtrapolatedRegion",0.5);
+
+  produces<RPCRecHitCollection>("RPCDTExtrapolatedPoints");
+  produces<RPCRecHitCollection>("RPCCSCExtrapolatedPoints");
+  
 }
 
 
@@ -75,8 +89,7 @@ RPCPointProducer::~RPCPointProducer(){
 
 }
 
-void
-RPCPointProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup){
+void RPCPointProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup){
   /*
   struct timespec start_time, stop_time;
   time_t fs;
@@ -86,44 +99,24 @@ RPCPointProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup){
   clock_gettime(CLOCK_REALTIME, &start_time);  
   */
 
-  edm::Handle<DTRecSegment4DCollection> all4DSegments;
-  iEvent.getByLabel(dt4DSegments, all4DSegments);
-  
-  /*
-  clock_gettime(CLOCK_REALTIME, &stop_time);
-  fs=start_time.tv_sec;
-  fn=start_time.tv_nsec;
-  ls=stop_time.tv_sec;
-  ln=stop_time.tv_nsec;
-  std::cout <<" =============++| "<<ls-fs<<" sec "<<ln-fn<<" us"<<std::endl;
-  clock_gettime(CLOCK_REALTIME, &start_time);
-  */
-  
-  DTSegtoRPC test(all4DSegments,iSetup,iEvent);
-  
-  /*
-  clock_gettime(CLOCK_REALTIME, &stop_time);
-  fs=start_time.tv_sec;
-  fn=start_time.tv_nsec;
-  ls=stop_time.tv_sec;
-  ln=stop_time.tv_nsec;
-  std::cout <<" =============++|| "<<ls-fs<<" sec "<<ln-fn<<" us"<<std::endl;
-  clock_gettime(CLOCK_REALTIME, &start_time);
-  */
-  
-  std::auto_ptr<RPCRecHitCollection> ThePoints(test.thePoints());  
-  
-  iEvent.put(ThePoints,"rpcPoints"); 
-  
-  /*
-  clock_gettime(CLOCK_REALTIME, &stop_time);
-  fs=start_time.tv_sec;
-  fn=start_time.tv_nsec;
-  ls=stop_time.tv_sec;
-  ln=stop_time.tv_nsec;
-  std::cout <<" =============++||| "<<ls-fs<<" sec "<<ln-fn<<" us"<<std::endl;
-  */
+  if(incldt){
+    edm::Handle<DTRecSegment4DCollection> all4DSegments;
+    iEvent.getByLabel(dt4DSegments, all4DSegments);
+    DTSegtoRPC DTClass(all4DSegments,iSetup,iEvent,debug,ExtrapolatedRegion);
+    std::auto_ptr<RPCRecHitCollection> TheDTPoints(DTClass.thePoints());  
+    
+    iEvent.put(TheDTPoints,"RPCDTExtrapolatedPoints"); 
+  }
 
+  if(inclcsc){
+    edm::Handle<CSCSegmentCollection> allCSCSegments;
+    iEvent.getByLabel(cscSegments, allCSCSegments);
+    CSCSegtoRPC CSCClass(allCSCSegments,iSetup,iEvent,debug,ExtrapolatedRegion);
+    std::auto_ptr<RPCRecHitCollection> TheCSCPoints(CSCClass.thePoints());  
+  
+    iEvent.put(TheCSCPoints,"RPCCSCExtrapolatedPoints"); 
+  }
+  
 }
 
 // ------------ method called once each job just before starting event loop  ------------
