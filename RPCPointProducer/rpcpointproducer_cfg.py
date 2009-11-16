@@ -14,26 +14,28 @@ process.GlobalTag.globaltag = 'MC_31X_V1::All'
 
 process.load("FWCore.MessageService.MessageLogger_cfi")
 
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(20) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(10) )
 
 process.source = cms.Source("PoolSource",
+    firstEvent =cms.untracked.uint32(11670244),
     fileNames = cms.untracked.vstring(
         '//store/data/CRAFT09/Cosmics/RECO/v1/000/111/125/8A62785E-158D-DE11-884B-0030486730C6.root'
+#        'file:/tmp/carrillo/RPCEvents.root'
     )
 )
 
 process.rpcPointProducer = cms.EDProducer('RPCPointProducer',
   incldt = cms.untracked.bool(True),
-  incldtMB4 = cms.untracked.bool(True),
   inclcsc = cms.untracked.bool(True),
 
-  debug = cms.untracked.bool(True),
+  debug = cms.untracked.bool(False),
 
   rangestrips = cms.untracked.double(4.),
   rangestripsRB4 = cms.untracked.double(4.),
   MinCosAng = cms.untracked.double(0.85),
   MaxD = cms.untracked.double(80.0),
   MaxDrb4 = cms.untracked.double(150.0),
+  ExtrapolatedRegion = cms.untracked.double(0.6), #in stripl/2 in Y and stripw*nstrips/2 in X
 
   cscSegments = cms.untracked.string('cscSegments'),
   dt4DSegments = cms.untracked.string('dt4DSegments')
@@ -45,9 +47,8 @@ process.out = cms.OutputModule("PoolOutputModule",
         'keep *_cscSegments_*_*',
         'keep *_rpcPointProducer_*_*',
         'keep *_rpcRecHits_*_*'),
-  fileName = cms.untracked.string('/tmp/carrillo/output.root')
+  fileName = cms.untracked.string('/tmp/carrillo/outs/output.root')
 )
-process.Timing = cms.Service("Timing")
   
 process.p = cms.Path(process.rpcPointProducer)
 
