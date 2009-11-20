@@ -1,0 +1,2147 @@
+// -*- C++ -*-
+//
+// Package:    L1Analyzer
+// Class:      L1DataDrivenMC
+// 
+/**\class L1DataDrivenMC L1DataDrivenMC.cc L1TriggerOffline/L1Analyzer/src/L1DataDrivenMC.cc
+
+Implementation:
+<Notes on implementation>
+*/
+
+
+// system include files
+#include <memory>
+#include <cmath>
+
+// user include files
+#include "L1TriggerOffline/L1Analyzer/interface/L1DataDrivenMC.h"
+
+// // Data formats 
+#include "DataFormats/Candidate/interface/CandMatchMap.h"
+
+#include "DataFormats/Math/interface/deltaPhi.h"
+#include "DataFormats/Math/interface/deltaR.h"
+
+#include "DataFormats/L1GlobalTrigger/interface/L1GlobalTriggerReadoutSetupFwd.h"
+#include "DataFormats/L1GlobalTrigger/interface/L1GlobalTriggerReadoutSetup.h"
+#include "DataFormats/L1GlobalTrigger/interface/L1GlobalTriggerReadoutRecord.h"
+#include "DataFormats/L1GlobalTrigger/interface/L1GlobalTriggerObjectMapRecord.h"
+#include "DataFormats/L1GlobalTrigger/interface/L1GlobalTriggerObjectMap.h"
+
+#include "DataFormats/L1GlobalMuonTrigger/interface/L1MuGMTReadoutCollection.h"
+#include "DataFormats/L1GlobalMuonTrigger/interface/L1MuGMTCand.h"
+#include "DataFormats/L1GlobalMuonTrigger/interface/L1MuGMTExtendedCand.h"
+#include "DataFormats/L1GlobalMuonTrigger/interface/L1MuRegionalCand.h"
+
+#include <DataFormats/Candidate/interface/Candidate.h>
+//#include <PhysicsTools/RecoAlgos/src/CandidateProducer.h>
+#include "DataFormats/HepMCCandidate/interface/GenParticle.h"
+#include "DataFormats/MuonReco/interface/Muon.h"
+#include "DataFormats/MuonReco/interface/MuonFwd.h"
+#include "DataFormats/TrackReco/interface/Track.h"
+#include "DataFormats/TrackReco/interface/TrackFwd.h"
+#include <DataFormats/TrackCandidate/interface/TrackCandidateCollection.h>
+
+#include "SimDataFormats/Track/interface/SimTrackContainer.h"
+#include "SimDataFormats/TrackingHit/interface/PSimHitContainer.h"
+
+#include "TFile.h"
+#include "TH1F.h"
+#include "TH2F.h"
+#include "TProfile.h"
+
+#include <stdio.h>
+#include <stdlib.h>
+
+using namespace std;
+using namespace edm;
+using namespace reco;
+using namespace l1extra;
+
+L1DataDrivenMC::L1DataDrivenMC(const edm::ParameterSet& iConfig):
+  m_daqGtInputTag(iConfig.getUntrackedParameter<edm::InputTag>("DaqGtInputTag", edm::InputTag("l1GtEmulDigis"))),
+  m_gtObjectMapTag(iConfig.getUntrackedParameter<edm::InputTag>("GtObjectMapTag", edm::InputTag("l1GtEmulDigis"))),
+  m_muGmtInputTag(iConfig.getUntrackedParameter<edm::InputTag>("GmtInputTag", edm::InputTag("l1GmtEmulDigis"))),
+  occFileName(iConfig.getUntrackedParameter<std::string>("occFileName")),
+  reco(iConfig.getUntrackedParameter<bool>("reco")),
+  rpcMaj(iConfig.getUntrackedParameter<int>("rpcMaj")),
+  dtMaj(iConfig.getUntrackedParameter<int>("dtMaj")),
+  ptCut(iConfig.getUntrackedParameter<double>("ptmin")),
+  radToDeg(180./3.141593),eta1(0.),eta2(0.2),nEvents(0)
+{
+  histoFile=new TFile(occFileName.c_str(),"RECREATE");
+
+  const double gmt_etascale[63] = {  -2.40, -2.35, -2.30, -2.25, -2.20, -2.15, -2.10, 
+				     -2.05, -2.00, -1.95, -1.90, -1.85, -1.80, -1.75,
+				     -1.70, -1.60, -1.50, -1.40, -1.30, -1.20, -1.10,
+				     -1.00, -0.90, -0.80, -0.70, -0.60, -0.50, -0.40,
+				     -0.30, -0.20, -0.10, 0.00, 0.10,  0.20,  0.30,
+				     0.40, 0.50, 0.60, 0.70, 0.80, 0.90, 1.00,
+				     1.10, 1.20, 1.30, 1.40, 1.50, 1.60, 1.70,
+				     1.75, 1.80, 1.85, 1.90, 1.95, 2.00, 2.05,
+				     2.10, 2.15, 2.20, 2.25, 2.30, 2.35, 2.40 };
+
+  const double ptscale[33] = { 
+    -1.,   0.0,   1.5,   2.0,   2.5,   3.0,   3.5,   4.0,
+    4.5,   5.0,   6.0,   7.0,   8.0,  10.0,  12.0,  14.0,  
+    16.0,  18.0,  20.0,  25.0,  30.0,  35.0,  40.0,  45.0, 
+    50.0,  60.0,  70.0,  80.0,  90.0, 100.0, 120.0, 140.0, 
+    180. };
+
+  const double simmptscale[63] = {
+              -180., -140.0, -120.0, -100.0, -90.0, -80.0,
+    -70.0, -60.0, -50.0, -45.0, -40.0, -35.0, -30.0, -25.0,
+    -20.0, -18.0, -16.0, -14.0, -12.0, -10.0, -8.0,  -7.0,
+    -6.0,  -5.0,  -4.5,  -4.0,  -3.5,  -3.0,  -2.5,  -2.0,
+    -1.5,   0.0,   1.5,   2.0,   2.5,   3.0,   3.5,   4.0,
+     4.5,   5.0,   6.0,   7.0,   8.0,  10.0,  12.0,  14.0,
+    16.0,  18.0,  20.0,  25.0,  30.0,  35.0,  40.0,  45.0,
+    50.0,  60.0,  70.0,  80.0,  90.0, 100.0, 120.0, 140.0,
+    180. };
+
+  regMat_dPt=new TH1F("regMatdPt","#Delta p_{T} for matched regional cands;DT p_{T}-RPC p_{T}",62,simmptscale);
+  genMat_dPt=new TH1F("genMatdPt","#Delta p_{T} for GMT RPC cands and gen muons;Gen p_{T}-RPC p_{T}",62,simmptscale);
+  genMat_dPhi=new TH1F("genMatdPhi","#Delta #phi for GMT RPC cands and gen muons;Gen #phi-RPC #phi",210,-10.5,10.5);
+  genMat_dEta=new TH1F("genMatdEta","#Delta #eta for GMT RPC cands and gen muons;Gen #eta-RPC #eta",210,-10.5,10.5);
+  regMat_dtPtrpcPt=new TH2F("regMat_dtPtrpcPt","p_{T} comparison for DT and RPC reg Cands;DT p_{T};RPC p_{T}",32,ptscale,32,ptscale);
+  genMat_genPtrpcPt=new TH2F("genMat_genPtrpcPt","p_{T} comparison for gen muons and GTM RPC Cands;Gen p_{T};RPC p_{T}",32,ptscale,32,ptscale);
+  regMat_cscPtrpcPt=new TH2F("regMat_cscPtrpcPt","p_{T} comparison for CSC and RPC reg Cands;CSC p_{T};RPC p_{T}",32,ptscale,32,ptscale);
+  regMat_dPtgmtPt=new TH2F("regMat_dPtgmtPt","#Delta p_{T} vs GMT p_{T} for matched regional cands;DT p_{T}-R{C p_{T};GMT p_{T}",62,simmptscale,32,ptscale);
+  regMat_dEtadPhi=new TH2F("regMat_dEtadPhi","#Delta #eta vs #Delta #phi for matched regional cands(DT-RPC);#Delta #eta;#Delta #phi",210,-10.5,10.5,210,-10.5,10.5);
+  regMat_DRdPt=new TH2F("regMat_DRdPt","#Delta R vs #Delta p_{T} for matched regional cands;#Delta R;#Delta p_{T}(DT-RPC)",100,0.,10.,62,simmptscale);
+  genMat_DRdPt=new TH2F("genMat_DRdPt","#Delta R vs #Delta p_{T} for gen and GMT RPC cands;#Delta R;#Delta p_{T}(Gen-RPC)",100,0.,10.,62,simmptscale);
+  
+  expCSC_eta=new TH1F("expCSC_eta","L1MuGMT CSC exp vs eta;#eta;Entries",62,gmt_etascale);
+  expCSC_phi=new TH1F("expCSC_phi","L1MuGMT CSC exp vs phi",144,0.,360.);
+  expCSC_pt=new TH1F("expCSC_pt","L1MuGMT CSC exp vs pt",32,ptscale);
+  expDT_eta=new TH1F("expDT_eta","L1MuGMT DT exp vs eta;#eta;Entries",62,gmt_etascale);
+  expDT_phi=new TH1F("expDT_phi","L1MuGMT DT exp vs phi",144,0.,360.);
+  expDT_pt=new TH1F("expDT_pt","L1MuGMT DT exp vs pt",32,ptscale);
+  expRPC_eta=new TH1F("expRPC_eta","L1MuGMT RPC exp vs eta;#eta;Entries",62,gmt_etascale);
+  expRPC_phi=new TH1F("expRPC_phi","L1MuGMT RPC exp vs phi",144,0.,360.);
+  expRPC_pt=new TH1F("expRPC_pt","L1MuGMT RPC exp vs pt",32,ptscale);
+
+  effCSC_eta=new TH1F("effCSC_eta","L1MuGMT CSC exp vs eta;#eta;Entries",62,gmt_etascale);
+  effCSC_phi=new TH1F("effCSC_phi","L1MuGMT CSC exp vs phi",144,0.,360.);
+  effCSC_pt=new TH1F("effCSC_pt","L1MuGMT CSC exp vs pt",32,ptscale);
+  effDT_eta=new TH1F("effDT_eta","L1MuGMT DT exp vs eta;#eta;Entries",62,gmt_etascale);
+  effDT_phi=new TH1F("effDT_phi","L1MuGMT DT exp vs phi",144,0.,360.);
+  effDT_pt=new TH1F("effDT_pt","L1MuGMT DT exp vs pt",32,ptscale);
+  effRPC_eta=new TH1F("effRPC_eta","L1MuGMT RPC exp vs eta;#eta;Entries",62,gmt_etascale);
+  effRPC_phi=new TH1F("effRPC_phi","L1MuGMT RPC exp vs phi",144,0.,360.);
+  effRPC_pt=new TH1F("effRPC_pt","L1MuGMT RPC exp vs pt",32,ptscale);
+
+  expDThipt_eta=new TH1F("expDThipt_eta","Expected DT Hi p_{T} eta occup",62,gmt_etascale);
+  expDThipt_phi=new TH1F("expDThipt_phi","Expected DT Hi p_{T} phi occup",144,0.,360.);
+  effDThipt_eta=new TH1F("effDThipt_eta","Effective DT Hi p_{T} eta occup",62,gmt_etascale);
+  effDThipt_phi=new TH1F("effDThipt_phi","Effective DT Hi p_{T} phi occup",144,0.,360.);
+  exp_WF_DThipt_eta=new TH1F("exp_WF_DThipt_eta","Expected DT Hi p_{T} WF eta occup",62,gmt_etascale);
+  exp_WF_DThipt_phi=new TH1F("exp_WF_DThipt_phi","Expected DT Hi p_{T} WF phi occup",144,0.,360.);
+  exp_SF_DThipt_eta=new TH1F("exp_SF_DThipt_eta","Expected DT Hi p_{T} SF eta occup",62,gmt_etascale);
+  exp_SF_DThipt_phi=new TH1F("exp_SF_DThipt_phi","Expected DT Hi p_{T} SF phi occup",144,0.,360.);
+  exp_WSF_DThipt_eta=new TH1F("exp_WSF_DThipt_eta","Expected DT Hi p_{T} WSF eta occup",62,gmt_etascale);
+  exp_WSF_DThipt_phi=new TH1F("exp_WSF_DThipt_phi","Expected DT Hi p_{T} WSF phi occup",144,0.,360.);
+  eff_WF_DThipt_eta=new TH1F("eff_WF_DThipt_eta","Effective DT Hi p_{T} WF eta occup",62,gmt_etascale);
+  eff_WF_DThipt_phi=new TH1F("eff_WF_DThipt_phi","Effective DT Hi p_{T} WF phi occup",144,0.,360.);
+  eff_SF_DThipt_eta=new TH1F("eff_SF_DThipt_eta","Effective DT Hi p_{T} SF eta occup",62,gmt_etascale);
+  eff_SF_DThipt_phi=new TH1F("eff_SF_DThipt_phi","Effective DT Hi p_{T} SF phi occup",144,0.,360.);
+  eff_WSF_DThipt_eta=new TH1F("eff_WSF_DThipt_eta","Effective DT Hi p_{T} WSF eta occup",62,gmt_etascale);
+  eff_WSF_DThipt_phi=new TH1F("eff_WSF_DThipt_phi","Effective DT Hi p_{T} WSF phi occup",144,0.,360.);
+  
+  exp_WF_CSC_eta=new TH1F("exp_WF_CSC_eta","Expected DT WF eta occups",62,gmt_etascale);
+  exp_WF_CSC_phi=new TH1F("exp_WF_CSC_phi","Expected DT WF phi occups",144,0.,360.);
+  exp_WF_CSC_pt=new TH1F("exp_WF_CSC_pt","Expected DT WF pt occups",32,ptscale);
+  exp_SF_CSC_eta=new TH1F("exp_SF_CSC_eta","Expected DT SF eta occups",62,gmt_etascale);
+  exp_SF_CSC_phi=new TH1F("exp_SF_CSC_phi","Expected DT SF phi occups",144,0.,360.);
+  exp_SF_CSC_pt=new TH1F("exp_SF_CSC_pt","Expected DT SF pt occups",32,ptscale);
+  exp_WSF_CSC_eta=new TH1F("exp_WSF_CSC_eta","Expected DT WSF eta occups",62,gmt_etascale);
+  exp_WSF_CSC_phi=new TH1F("exp_WSF_CSC_phi","Expected DT WSF phi occups",144,0.,360.);
+  exp_WSF_CSC_pt=new TH1F("exp_WSF_CSC_pt","Expected DT WSF pt occups",32,ptscale);
+  eff_WF_CSC_eta=new TH1F("eff_WF_CSC_eta","Effective DT WF eta occups",62,gmt_etascale);
+  eff_WF_CSC_phi=new TH1F("eff_WF_CSC_phi","Effective DT WF phi occups",144,0.,360.);
+  eff_WF_CSC_pt=new TH1F("eff_WF_CSC_pt","Effective DT WF pt occups",32,ptscale);
+  eff_SF_CSC_eta=new TH1F("eff_SF_CSC_eta","Effective DT SF eta occups#eta;Entries",62,gmt_etascale);
+  eff_SF_CSC_phi=new TH1F("eff_SF_CSC_phi","Effective DT SF phi occups;p_{T};Entries",144,0.,360.);
+  eff_SF_CSC_pt=new TH1F("eff_SF_CSC_pt","Effective DT SF pt occups;p_{T};Entries",32,ptscale);
+  eff_WSF_CSC_eta=new TH1F("eff_WSF_CSC_eta","Effective DT WSF eta occups",62,gmt_etascale);
+  eff_WSF_CSC_phi=new TH1F("eff_WSF_CSC_phi","Effective DT WSF phi occups;p_{T};Entries",144,0.,360.);
+  eff_WSF_CSC_pt=new TH1F("eff_WSF_CSC_pt","Effective DT WSF pt occups;p_{T};Entries",32,ptscale);
+
+  exp_WF_DT_eta=new TH1F("exp_WF_DT_eta","Expected DT WF eta occups",62,gmt_etascale);
+  exp_WF_DT_phi=new TH1F("exp_WF_DT_phi","Expected DT WF phi occups",144,0.,360.);
+  exp_WF_DT_pt=new TH1F("exp_WF_DT_pt","Expected DT WF pt occups",32,ptscale);
+  exp_SF_DT_eta=new TH1F("exp_SF_DT_eta","Expected DT SF eta occups",62,gmt_etascale);
+  exp_SF_DT_phi=new TH1F("exp_SF_DT_phi","Expected DT SF phi occups",144,0.,360.);
+  exp_SF_DT_pt=new TH1F("exp_SF_DT_pt","Expected DT SF pt occups",32,ptscale);
+  exp_WSF_DT_eta=new TH1F("exp_WSF_DT_eta","Expected DT WSF eta occups",62,gmt_etascale);
+  exp_WSF_DT_phi=new TH1F("exp_WSF_DT_phi","Expected DT WSF phi occups",144,0.,360.);
+  exp_WSF_DT_pt=new TH1F("exp_WSF_DT_pt","Expected DT WSF pt occups",32,ptscale);
+  eff_WF_DT_eta=new TH1F("eff_WF_DT_eta","Effective DT WF eta occups",62,gmt_etascale);
+  eff_WF_DT_phi=new TH1F("eff_WF_DT_phi","Effective DT WF phi occups",144,0.,360.);
+  eff_WF_DT_pt=new TH1F("eff_WF_DT_pt","Effective DT WF pt occups",32,ptscale);
+  eff_SF_DT_eta=new TH1F("eff_SF_DT_eta","Effective DT SF eta occups#eta;Entries",62,gmt_etascale);
+  eff_SF_DT_phi=new TH1F("eff_SF_DT_phi","Effective DT SF phi occups;p_{T};Entries",144,0.,360.);
+  eff_SF_DT_pt=new TH1F("eff_SF_DT_pt","Effective DT SF pt occups;p_{T};Entries",32,ptscale);
+  eff_WSF_DT_eta=new TH1F("eff_WSF_DT_eta","Effective DT WSF eta occups",62,gmt_etascale);
+  eff_WSF_DT_phi=new TH1F("eff_WSF_DT_phi","Effective DT WSF phi occups;p_{T};Entries",144,0.,360.);
+  eff_WSF_DT_pt=new TH1F("eff_WSF_DT_pt","Effective DT WSF pt occups;p_{T};Entries",32,ptscale);
+
+  exp_WF_RPC_eta=new TH1F("exp_WF_RPC_eta","Expected RPC WF eta occups",62,gmt_etascale);
+  exp_WF_RPC_phi=new TH1F("exp_WF_RPC_phi","Expected RPC WF phi occups",144,0.,360.);
+  exp_WF_RPC_pt=new TH1F("exp_WF_RPC_pt","Expected RPC WF pt occups",32,ptscale);
+  exp_SF_RPC_eta=new TH1F("exp_SF_RPC_eta","Expected RPC SF eta occups",62,gmt_etascale);
+  exp_SF_RPC_phi=new TH1F("exp_SF_RPC_phi","Expected RPC SF phi occups",144,0.,360.);
+  exp_SF_RPC_pt=new TH1F("exp_SF_RPC_pt","Expected RPC SF pt occups",32,ptscale);
+  exp_WSF_RPC_eta=new TH1F("exp_WSF_RPC_eta","Expected RPC WSF eta occups",62,gmt_etascale);
+  exp_WSF_RPC_phi=new TH1F("exp_WSF_RPC_phi","Expected RPC WSF phi occups",144,0.,360.);
+  exp_WSF_RPC_pt=new TH1F("exp_WSF_RPC_pt","Expected RPC WSF pt occups",32,ptscale);
+  eff_WF_RPC_eta=new TH1F("eff_WF_RPC_eta","Effective RPC WF eta occups",62,gmt_etascale);
+  eff_WF_RPC_phi=new TH1F("eff_WF_RPC_phi","Effective RPC WF phi occups",144,0.,360.);
+  eff_WF_RPC_pt=new TH1F("eff_WF_RPC_pt","Effective RPC WF pt occups",32,ptscale);
+  eff_SF_RPC_eta=new TH1F("eff_SF_RPC_eta","Effective RPC SF eta occups#eta;Entries",62,gmt_etascale);
+  eff_SF_RPC_phi=new TH1F("eff_SF_RPC_phi","Effective RPC SF phi occups;p_{T};Entries",144,0.,360.);
+  eff_SF_RPC_pt=new TH1F("eff_SF_RPC_pt","Effective RPC SF pt occups;p_{T};Entries",32,ptscale);
+  eff_WSF_RPC_eta=new TH1F("eff_WSF_RPC_eta","Effective RPC WSF eta occups",62,gmt_etascale);
+  eff_WSF_RPC_phi=new TH1F("eff_WSF_RPC_phi","Effective RPC WSF phi occups;p_{T};Entries",144,0.,360.);
+  eff_WSF_RPC_pt=new TH1F("eff_WSF_RPC_pt","Effective RPC WSF pt occups;p_{T};Entries",32,ptscale);
+
+  expRPCQ_eta=new TH1F("expRPCQ_eta","Expected RPC Q-selected eta occupancies",62,gmt_etascale);
+  expRPCQ_phi=new TH1F("expRPCQ_phi","Expected RPC Q-selected phi occupancies",144,0.,360.);
+  expRPCQ_pt=new TH1F("expRPCQ_pt","Expected RPC Q-selected pt occupancies",32,ptscale);
+  effRPCQ_eta=new TH1F("effRPCQ_eta","Effective RPC Q-selected eta occupancies",62,gmt_etascale);
+  effRPCQ_phi=new TH1F("effRPCQ_phi","Effective RPC Q-selected phi occupancies",144,0.,360.);
+  effRPCQ_pt=new TH1F("effRPCQ_pt","Effective RPC Q-selected pt occupancies",32,ptscale);
+  
+  expRPC_DTQ_eta=new TH1F("expRPC_DTQ_eta","Expected RPC DTQ-selected eta occupancies",62,gmt_etascale);
+  expRPC_DTQ_phi=new TH1F("expRPC_DTQ_phi","Expected RPC DTQ-selected phi occupancies",144,0.,360.);
+  expRPC_DTQ_pt=new TH1F("expRPC_DTQ_pt","Expected RPC DTQ-selected pt occupancies",32,ptscale);
+  effRPC_DTQ_eta=new TH1F("effRPC_DTQ_eta","Effective RPC DTQ-selected eta occupancies",62,gmt_etascale);
+  effRPC_DTQ_phi=new TH1F("effRPC_DTQ_phi","Effective RPC DTQ-selected phi occupancies",144,0.,360.);
+  effRPC_DTQ_pt=new TH1F("effRPC_DTQ_pt","Effective RPC DTQ-selected pt occupancies",32,ptscale);
+
+  expCSC_etaphi=new TH2F("expCSC_etaphi","Expected CSC #eta-#phi Occupancies",62,gmt_etascale,144,0.,360.);
+  expDT_etaphi=new TH2F("expDT_etaphi","Expected DT #eta-#phi Occupancies",62,gmt_etascale,144,0.,360.);
+  expRPC_etaphi=new TH2F("expRPC_etaphi","Expected RPC #eta-#phi Occupancies",62,gmt_etascale,144,0.,360.);
+  expRPCQ_etaphi=new TH2F("expRPCQ_etaphi","Expected RPC Q-selected #eta-#phi Occupancies",62,gmt_etascale,144,0.,360.);
+  expRPC_DTQ_etaphi=new TH2F("expRPC_DTQ_etaphi","Expected RPC DTQ-selected #eta-#phi Occupancies",62,gmt_etascale,144,0.,360.);
+  effCSC_etaphi=new TH2F("effCSC_etaphi","Effective CSC #eta-#phi Occupancies",62,gmt_etascale,144,0.,360.);
+  effDT_etaphi=new TH2F("effDT_etaphi","Effective DT #eta-#phi Occupancies",62,gmt_etascale,144,0.,360.);
+  effRPC_etaphi=new TH2F("effRPC_etaphi","Effective RPC #eta-#phi Occupancies",62,gmt_etascale,144,0.,360.);
+  effRPCQ_etaphi=new TH2F("effRPCQ_etaphi","Effective RPC Q-selected #eta-#phi Occupancies",62,gmt_etascale,144,0.,360.);
+  effRPC_DTQ_etaphi=new TH2F("effRPC_DTQ_etaphi","Effective RPC DTQ-selected #eta-#phi Occupancies",62,gmt_etascale,144,0.,360.);
+  
+  simExpEta=new TH1F("simExpEta","SimTracks expected vs #eta;#eta;Entries",62,gmt_etascale);
+  simExpPhi=new TH1F("simExpPhi","SimTracks expected vs #phi",144,0.,360.);
+  simExpPt=new TH1F("simExpPt","SimTracks expected vs p_{T}",32,ptscale);
+  simEffEta=new TH1F("simEffEta","SimTracks effective vs #eta;#eta;Entries",62,gmt_etascale);
+  simEffPhi=new TH1F("simEffPhi","SimTracks effective vs #phi",144,0.,360.);
+  simEffPt=new TH1F("simEffPt","SimTracks effective vs p_{T}",32,ptscale);
+
+  matchExpL1Eta=new TH1F("matchExpL1Eta","L1MuGMT Expected #eta Dist",62,gmt_etascale);
+  matchExpL1Pt=new TH1F("matchExpL1Pt","L1MuGMT Expected p_{T} Dist",32,ptscale);
+  matchExpL1Phi=new TH1F("matchExpL1Phi","L1MuGMT Expected #phi Dist",144,0.,360.);
+  matchExpCSCEta=new TH1F("matchExpCSCEta","CSCMuGMT Expected #eta Dist",62,gmt_etascale);
+  matchExpCSCPt=new TH1F("matchExpCSCPt","CSCMuGMT Expected p_{T} Dist",32,ptscale);
+  matchExpCSCPhi=new TH1F("matchExpCSCPhi","CSCMuGMT Expected #phi Dist",144,0.,360.);
+  matchExpDTEta=new TH1F("matchExpDTEta","DTMuGMT Expected #eta Dist",62,gmt_etascale);
+  matchExpDTPt=new TH1F("matchExpDTPt","DTMuGMT Expected p_{T} Dist",32,ptscale);
+  matchExpDTPhi=new TH1F("matchExpDTPhi","DTMuGMT Expected #phi Dist",144,0.,360.);
+  matchExpRPCEta=new TH1F("matchExpRPCEta","RPCMuGMT Expected #eta Dist",62,gmt_etascale);
+  matchExpRPCPt=new TH1F("matchExpRPCPt","RPCMuGMT Expected p_{T} Dist",32,ptscale);
+  matchExpRPCPhi=new TH1F("matchExpRPCPhi","RPCMuGMT Expected #phi Dist",144,0.,360.);
+
+  matchEffL1Eta=new TH1F("matchEffL1Eta","L1MuGMT Effective #eta Dist",62,gmt_etascale);
+  matchEffL1Pt=new TH1F("matchEffL1Pt","L1MuGMT Effective p_{T} Dist",32,ptscale);
+  matchEffL1Phi=new TH1F("matchEffL1Phi","L1MuGMT Effective #phi Dist",144,0.,360.);
+  matchEffCSCEta=new TH1F("matchEffCSCEta","CSCMuGMT Effective #eta Dist",62,gmt_etascale);
+  matchEffCSCPt=new TH1F("matchEffCSCPt","CSCMuGMT Effective p_{T} Dist",32,ptscale);
+  matchEffCSCPhi=new TH1F("matchEffCSCPhi","CSCMuGMT Effective #phi Dist",144,0.,360.);
+  matchEffDTEta=new TH1F("matchEffDTEta","DTMuGMT Effective #eta Dist",62,gmt_etascale);
+  matchEffDTPt=new TH1F("matchEffDTPt","DTMuGMT Effective p_{T} Dist",32,ptscale);
+  matchEffDTPhi=new TH1F("matchEffDTPhi","DTMuGMT Effective #phi Dist",144,0.,360.);
+  matchEffRPCEta=new TH1F("matchEffRPCEta","RPCMuGMT Effective #eta Dist",62,gmt_etascale);
+  matchEffRPCPt=new TH1F("matchEffRPCPt","RPCMuGMT Effective p_{T} Dist",32,ptscale);
+  matchEffRPCPhi=new TH1F("matchEffRPCPhi","RPCMuGMT Effective #phi Dist",144,0.,360.);
+
+  matchExpDThiptEta=new TH1F("matchExpDThiptEta","Expected DT Hi p_{T} eta occup",62,gmt_etascale);
+  matchExpDThiptPhi=new TH1F("matchExpDThiptPhi","Expected DT Hi p_{T} phi occup",144,0.,360.);
+  matchEffDThiptEta=new TH1F("matchEffDThiptEta","Effective DT Hi p_{T} eta occup",62,gmt_etascale);
+  matchEffDThiptPhi=new TH1F("matchEffDThiptPhi","Effective DT Hi p_{T} phi occup",144,0.,360.);
+  matchExp_WF_DThiptEta=new TH1F("matchExp_WF_DThiptEta","Expected DT Hi p_{T} eta occup",62,gmt_etascale);
+  matchExp_WF_DThiptPhi=new TH1F("matchExp_WF_DThiptPhi","Expected DT Hi p_{T} phi occup",144,0.,360.);
+  matchExp_SF_DThiptEta=new TH1F("matchExp_SF_DThiptEta","Expected DT Hi p_{T} eta occup",62,gmt_etascale);
+  matchExp_SF_DThiptPhi=new TH1F("matchExp_SF_DThiptPhi","Expected DT Hi p_{T} phi occup",144,0.,360.);
+  matchExp_WSF_DThiptEta=new TH1F("matchExp_WSF_DThiptEta","Expected DT Hi p_{T} eta occup",62,gmt_etascale);
+  matchExp_WSF_DThiptPhi=new TH1F("matchExp_WSF_DThiptPhi","Expected DT Hi p_{T} phi occup",144,0.,360.);
+  matchEff_WF_DThiptEta=new TH1F("matchEff_WF_DThiptEta","Effective DT Hi p_{T} eta occup",62,gmt_etascale);
+  matchEff_WF_DThiptPhi=new TH1F("matchEff_WF_DThiptPhi","Effective DT Hi p_{T} phi occup",144,0.,360.);
+  matchEff_SF_DThiptEta=new TH1F("matchEff_SF_DThiptEta","Effective DT Hi p_{T} eta occup",62,gmt_etascale);
+  matchEff_SF_DThiptPhi=new TH1F("matchEff_SF_DThiptPhi","Effective DT Hi p_{T} phi occup",144,0.,360.);
+  matchEff_WSF_DThiptEta=new TH1F("matchEff_WSF_DThiptEta","Effective DT Hi p_{T} eta occup",62,gmt_etascale);
+  matchEff_WSF_DThiptPhi=new TH1F("matchEff_WSF_DThiptPhi","Effective DT Hi p_{T} phi occup",144,0.,360.);
+
+  matchExp_WF_CSCEta=new TH1F("matchExp_WF_CSCEta","Expected L1GMTDT WF #eta occups",62,gmt_etascale);
+  matchExp_WF_CSCPhi=new TH1F("matchExp_WF_CSCPhi","Expected L1GMTDT WF #phi occups",144,0.,360.);
+  matchExp_WF_CSCPt=new TH1F("matchExp_WF_CSCPt","Expected L1GMTDT WF p_{T} occups",32,ptscale);
+  matchExp_SF_CSCEta=new TH1F("matchExp_SF_CSCEta","Expected L1GMTDT SF #eta occups",62,gmt_etascale);
+  matchExp_SF_CSCPhi=new TH1F("matchExp_SF_CSCPhi","Expected L1GMTDT SF #phi occups",144,0.,360.);
+  matchExp_SF_CSCPt=new TH1F("matchExp_SF_CSCPt","Expected L1GMTDT SF p_{T} occups",32,ptscale);
+  matchExp_WSF_CSCEta=new TH1F("matchExp_WSF_CSCEta","Expected L1GMTDT WSF #eta occups",62,gmt_etascale);
+  matchExp_WSF_CSCPhi=new TH1F("matchExp_WSF_CSCPhi","Expected L1GMTDT WSF #phi occups",144,0.,360.);
+  matchExp_WSF_CSCPt=new TH1F("matchExp_WSF_CSCPt","Expected L1GMTDT WSF p_{T} occups",32,ptscale);
+  matchEff_WF_CSCEta=new TH1F("matchEff_WF_CSCEta","Effective L1GMTDT WF #eta occups",62,gmt_etascale);
+  matchEff_WF_CSCPhi=new TH1F("matchEff_WF_CSCPhi","Effective L1GMTDT WF #phi occups",144,0.,360.);
+  matchEff_WF_CSCPt=new TH1F("matchEff_WF_CSCPt","Effective L1GMTDT WF p_{T} occups",32,ptscale);
+  matchEff_SF_CSCEta=new TH1F("matchEff_SF_CSCEta","Effective L1GMTDT SF #eta occups",62,gmt_etascale);
+  matchEff_SF_CSCPhi=new TH1F("matchEff_SF_CSCPhi","Effective L1GMTDT SF #phi occups",144,0.,360.);
+  matchEff_SF_CSCPt=new TH1F("matchEff_SF_CSCPt","Effective L1GMTDT SF p_{T} occups",32,ptscale);
+  matchEff_WSF_CSCEta=new TH1F("matchEff_WSF_CSCEta","Effective L1GMTDT WSF #eta_{T} occups",62,gmt_etascale);
+  matchEff_WSF_CSCPhi=new TH1F("matchEff_WSF_CSCPhi","Effective L1GMTDT WSF #phi occups",144,0.,360.);
+  matchEff_WSF_CSCPt=new TH1F("matchEff_WSF_CSCPt","Effective L1GMTDT WSF p_{T} occups",32,ptscale);
+
+  matchExp_WF_DTEta=new TH1F("matchExp_WF_DTEta","Expected L1GMTDT WF #eta occups",62,gmt_etascale);
+  matchExp_WF_DTPhi=new TH1F("matchExp_WF_DTPhi","Expected L1GMTDT WF #phi occups",144,0.,360.);
+  matchExp_WF_DTPt=new TH1F("matchExp_WF_DTPt","Expected L1GMTDT WF p_{T} occups",32,ptscale);
+  matchExp_SF_DTEta=new TH1F("matchExp_SF_DTEta","Expected L1GMTDT SF #eta occups",62,gmt_etascale);
+  matchExp_SF_DTPhi=new TH1F("matchExp_SF_DTPhi","Expected L1GMTDT SF #phi occups",144,0.,360.);
+  matchExp_SF_DTPt=new TH1F("matchExp_SF_DTPt","Expected L1GMTDT SF p_{T} occups",32,ptscale);
+  matchExp_WSF_DTEta=new TH1F("matchExp_WSF_DTEta","Expected L1GMTDT WSF #eta occups",62,gmt_etascale);
+  matchExp_WSF_DTPhi=new TH1F("matchExp_WSF_DTPhi","Expected L1GMTDT WSF #phi occups",144,0.,360.);
+  matchExp_WSF_DTPt=new TH1F("matchExp_WSF_DTPt","Expected L1GMTDT WSF p_{T} occups",32,ptscale);
+  matchEff_WF_DTEta=new TH1F("matchEff_WF_DTEta","Effective L1GMTDT WF #eta occups",62,gmt_etascale);
+  matchEff_WF_DTPhi=new TH1F("matchEff_WF_DTPhi","Effective L1GMTDT WF #phi occups",144,0.,360.);
+  matchEff_WF_DTPt=new TH1F("matchEff_WF_DTPt","Effective L1GMTDT WF p_{T} occups",32,ptscale);
+  matchEff_SF_DTEta=new TH1F("matchEff_SF_DTEta","Effective L1GMTDT SF #eta occups",62,gmt_etascale);
+  matchEff_SF_DTPhi=new TH1F("matchEff_SF_DTPhi","Effective L1GMTDT SF #phi occups",144,0.,360.);
+  matchEff_SF_DTPt=new TH1F("matchEff_SF_DTPt","Effective L1GMTDT SF p_{T} occups",32,ptscale);
+  matchEff_WSF_DTEta=new TH1F("matchEff_WSF_DTEta","Effective L1GMTDT WSF #eta_{T} occups",62,gmt_etascale);
+  matchEff_WSF_DTPhi=new TH1F("matchEff_WSF_DTPhi","Effective L1GMTDT WSF #phi occups",144,0.,360.);
+  matchEff_WSF_DTPt=new TH1F("matchEff_WSF_DTPt","Effective L1GMTDT WSF p_{T} occups",32,ptscale);
+
+  matchExp_WF_RPCEta=new TH1F("matchExp_WF_RPCEta","Expected L1GMTRPC WF #eta occups",62,gmt_etascale);
+  matchExp_WF_RPCPhi=new TH1F("matchExp_WF_RPCPhi","Expected L1GMTRPC WF #phi occups",144,0.,360.);
+  matchExp_WF_RPCPt=new TH1F("matchExp_WF_RPCPt","Expected L1GMTRPC WF p_{T} occups",32,ptscale);
+  matchExp_SF_RPCEta=new TH1F("matchExp_SF_RPCEta","Expected L1GMTRPC SF #eta occups",62,gmt_etascale);
+  matchExp_SF_RPCPhi=new TH1F("matchExp_SF_RPCPhi","Expected L1GMTRPC SF #phi occups",144,0.,360.);
+  matchExp_SF_RPCPt=new TH1F("matchExp_SF_RPCPt","Expected L1GMTRPC SF p_{T} occups",32,ptscale);
+  matchExp_WSF_RPCEta=new TH1F("matchExp_WSF_RPCEta","Expected L1GMTRPC WSF #eta occups",62,gmt_etascale);
+  matchExp_WSF_RPCPhi=new TH1F("matchExp_WSF_RPCPhi","Expected L1GMTRPC WSF #phi occups",144,0.,360.);
+  matchExp_WSF_RPCPt=new TH1F("matchExp_WSF_RPCPt","Expected L1GMTRPC WSF p_{T} occups",32,ptscale);
+  matchEff_WF_RPCEta=new TH1F("matchEff_WF_RPCEta","Effective L1GMTRPC WF #eta occups",62,gmt_etascale);
+  matchEff_WF_RPCPhi=new TH1F("matchEff_WF_RPCPhi","Effective L1GMTRPC WF #phi occups",144,0.,360.);
+  matchEff_WF_RPCPt=new TH1F("matchEff_WF_RPCPt","Effective L1GMTRPC WF p_{T} occups",32,ptscale);
+  matchEff_SF_RPCEta=new TH1F("matchEff_SF_RPCEta","Effective L1GMTRPC SF #eta occups",62,gmt_etascale);
+  matchEff_SF_RPCPhi=new TH1F("matchEff_SF_RPCPhi","Effective L1GMTRPC SF #phi occups",144,0.,360.);
+  matchEff_SF_RPCPt=new TH1F("matchEff_SF_RPCPt","Effective L1GMTRPC SF p_{T} occups",32,ptscale);
+  matchEff_WSF_RPCEta=new TH1F("matchEff_WSF_RPCEta","Expected L1GMTRPC WSF #eta_{T} occups",62,gmt_etascale);
+  matchEff_WSF_RPCPhi=new TH1F("matchEff_WSF_RPCPhi","Effective L1GMTRPC WSF #phi occups",144,0.,360.);
+  matchEff_WSF_RPCPt=new TH1F("matchEff_WSF_RPCPt","Effective L1GMTRPC WSF p_{T} occups",32,ptscale);
+
+  matchExpRPCQEta=new TH1F("matchExpRPCQEta","Expected RPC Q-selected eta occupancies",62,gmt_etascale);
+  matchExpRPCQPhi=new TH1F("matchExpRPCQPhi","Expected RPC Q-selected phi occupancies",144,0.,360.);
+  matchExpRPCQPt=new TH1F("matchExpRPCQPt","Expected RPC Q-selected pt occupancies",32,ptscale);
+  matchEffRPCQEta=new TH1F("matchEffRPCQEta","Effective RPC Q-selected eta occupancies",62,gmt_etascale);
+  matchEffRPCQPhi=new TH1F("matchEffRPCQPhi","Effective RPC Q-selected phi occupancies",144,0.,360.);
+  matchEffRPCQPt=new TH1F("matchEffRPCQPt","Effective RPC Q-selected pt occupancies",32,ptscale);
+  matchExpRPC_DTQEta=new TH1F("matchExpRPC_DTQEta","Expected RPC DTQ-selected eta occupancies",62,gmt_etascale);
+  matchExpRPC_DTQPhi=new TH1F("matchExpRPC_DTQPhi","Expected RPC DTQ-selected phi occupancies",144,0.,360.);
+  matchExpRPC_DTQPt=new TH1F("matchExpRPC_DTQPt","Expected RPC DTQ-selected pt occupancies",32,ptscale);
+  matchEffRPC_DTQEta=new TH1F("matchEffRPC_DTQEta","Effective RPC DTQ-selected eta occupancies",62,gmt_etascale);
+  matchEffRPC_DTQPhi=new TH1F("matchEffRPC_DTQPhi","Effective RPC DTQ-selected phi occupancies",144,0.,360.);
+  matchEffRPC_DTQPt=new TH1F("matchEffRPC_DTQPt","Effective RPC DTQ-selected pt occupancies",32,ptscale);
+
+  matchExpL1EtaPhi=new TH2F("matchExpL1EtaPhi","Expected L1 #eta-#phi Occupancies",62,gmt_etascale,144,0.,360.);
+  matchExpCSCEtaPhi=new TH2F("matchExpCSCEtaPhi","Expected CSC #eta-#phi Occupancies",62,gmt_etascale,144,0.,360.);
+  matchExpDTEtaPhi=new TH2F("matchExpDTEtaPhi","Expected DT #eta-#phi Occupancies",62,gmt_etascale,144,0.,360.);
+  matchExpRPCEtaPhi=new TH2F("matchExpRPCEtaPhi","Expected RPC #eta-#phi Occupancies",62,gmt_etascale,144,0.,360.);
+  matchExpRPCQEtaPhi=new TH2F("matchExpRPCQEtaPhi","Expected RPC Q-selected #eta-#phi Occupancies",62,gmt_etascale,144,0.,360.);
+  matchEffL1EtaPhi=new TH2F("matchEffL1EtaPhi","Effective L1 #eta-#phi Occupancies",62,gmt_etascale,144,0.,360.);
+  matchEffCSCEtaPhi=new TH2F("matchEffCSCEtaPhi","Effective CSC #eta-#phi Occupancies",62,gmt_etascale,144,0.,360.);
+  matchEffDTEtaPhi=new TH2F("matchEffDTEtaPhi","Effective DT #eta-#phi Occupancies",62,gmt_etascale,144,0.,360.);
+  matchEffRPCEtaPhi=new TH2F("matchEffRPCEtaPhi","Effective RPC #eta-#phi Occupancies",62,gmt_etascale,144,0.,360.);
+  matchEffRPCQEtaPhi=new TH2F("matchEffRPCQEtaPhi","Effective RPC Q-selected #eta-#phi Occupancies",62,gmt_etascale,144,0.,360.);
+  
+  motherMuons=new TH1F("motherMuons","PDG ID of the muons mothers",1000,-0.5,999.5);
+  genMu1_pt=new TH1F("genMu1_pt","Pt of Gen Muons in status 1",300,0.,300.);
+  genMu3_pt=new TH1F("genMu3_pt","Pt of Gen Muons in status 3",300,0.,300.);
+  genWMu1_pt=new TH1F("genWMu1_pt","Pt of Gen Muons from W in status 1",300,0.,300.);
+  genWMu3_pt=new TH1F("genWMu3_pt","Pt of Gen Muons from W in status 3",300,0.,300.);
+  recoMu_pt=new TH1F("recoMu_pt","Pt of Reco Muons",300,0.,300.);
+  bx_GMT_RR=new TH1F("bx_GMT_RR","BX of the GMT Readout Record",11,-5.5,5.5);
+  nBX_perEvt=new TH1F("nBX_perEvt","Number of BX per Event",10,-0.5,9.5);
+  dtPtDistr=new TH1F("dtPtDistr","p_{T} of L1DT Muons",32,ptscale);
+  cscPtDistr=new TH1F("cscPtDistr","p_{T} of L1CSC Muons",32,ptscale);
+  rpcPtDistr=new TH1F("rpcPtDistr","p_{T} of L1RPC Muons",32,ptscale);
+	
+  deltaR_L1=new TH1F("deltaR_L1","#DeltaR L1GMT-Gen",200,0.,10.);
+  deltaR_CSC=new TH1F("deltaR_CSC","#DeltaR L1CSC-Gen",200,0.,10.);
+  deltaR_DT=new TH1F("deltaR_DT","#DeltaR L1DT-Gen",200,0.,10.);
+  deltaR_RPC=new TH1F("deltaR_RPC","#DeltaR LRPC-Gen",200,0.,10.);
+  genMu1_ptGMT=new TH1F("genMu1_ptGMT","p_{T} of Gen Muons with GMT resolution",32,ptscale);
+  recoMu_ptGMT=new TH1F("recoMu_ptGMT","p_{T} of Reco Muons with GMT resolution",32,ptscale);
+	
+  etaResol=new TH1F("etaResol","L1 #eta resolution;#Delta#eta",420,-10.5,10.5);
+  phiResol=new TH1F("phiresol","L1 #phi resolution;#Delta#phi",420,-10.5,10.5);
+  ptResol=new TH1F("ptResol","L1 p_{T} resolution;p_{T}",32,ptscale);
+  l1PtDist=new TH1F("l1PtDist","L1 p_{T} distribution;p_{T}",32,ptscale);
+
+  etaResDeltaR=new TH2F("etaResDeltaR","#DeltaR vs L1 #eta resolution;#Delta#eta_{L1-GEN};#DeltaR",210,-10.5,10.5,100,0.,10.);
+  phiResDeltaR=new TH2F("phiResDeltaR","#DeltaR vs L1 #phi resolution;#Delta#phi_{L1-GEN};#DeltaR",210,-10.5,10.5,100,0.,10.);
+  deltaEtaDeltaPhi=new TH2F("deltaEtaDeltaPhi","#Delta#eta vs #Delta#phi;#Delta#phi_{L1-GEN};#Delta#eta_{L1-GEN}",210,-10.5,10.5,210,-10.5,10.5);
+  deltaEtaSQdeltaPhiSQ=new TH2F("deltaEtaSQdeltaPhiSQ","#Delta#eta^{2} vs #Delta#phi^{2};#Delta#phi_{L1-GEN}^{2};#Delta#eta_{L1-GEN}^{2}",100,0.,10.,100,0.,10.);
+
+  l1GenEtaRes=new TProfile("l1GenEtaRes","#eta L1 Resolution;#eta",62,gmt_etascale);
+  l1GenPhiRes=new TProfile("l1GenPhiRes","#phi L1 Resolution;#phi",144,0.,360.);
+  l1GenPhiResRad=new TProfile("l1GenPhiResRad","#phi L1 Resolution;#phi",288,-2*M_PI,2*M_PI);
+  l1GenPtRes=new TProfile("l1GenPtRes","p_{T} L1 Resolution;p_{T}",32,ptscale);
+  cscGenEtaRes=new TProfile("cscGenEtaRes","#eta CSC Resolution;#eta",62,gmt_etascale);
+  cscGenPhiRes=new TProfile("cscGenPhiRes","#phi CSC Resolution;#phi",144,0.,360.);
+  cscGenPtRes=new TProfile("cscGenPtRes","p_{T} CSC Resolution;p_{T}",32,ptscale);
+  dtGenEtaRes=new TProfile("dtGenEtaRes","#eta DT Resolution;#eta",62,gmt_etascale);
+  dtGenPhiRes=new TProfile("dtGenPhiRes","#phi DT Resolution;#phi",144,0.,360.);
+  dtGenPtRes=new TProfile("dtGenPtRes","p_{T} DT Resolution;p_{T}",32,ptscale);
+  rpcGenEtaRes=new TProfile("rpcGenEtaRes","#eta RPC Resolution;#eta",62,gmt_etascale);
+  rpcGenPhiRes=new TProfile("rpcGenPhiRes","#phi RPC Resolution;#phi",144,0.,360.);
+  rpcGenPtRes=new TProfile("rpcGenPtRes","p_{T} RPC Resolution;p_{T}",32,ptscale);
+  
+  selDeltaR_L1=new TH1F("selDeltaR_L1","Selected #DeltaR L1GMT-Gen",200,0.,10.);
+  selDeltaR_CSC=new TH1F("selDeltaR_CSC","Selected #DeltaR L1CSC-Gen",200,0.,10.);
+  selDeltaR_DT=new TH1F("selDeltaR_DT","Selected #DeltaR L1DT-Gen",200,0.,10.);
+  selDeltaR_RPC=new TH1F("selDeltaR_RPC","Selected #DeltaR LRPC-Gen",200,0.,10.);
+  selChi2_ST=new TH1F("selchi2_ST","Selected #chi^{2} ST-GEn",200,0.,10.);
+  
+  qGMT_qBrlRPConly=new TH2F("qGMT_qBrlRPConly","qGMT_qBrlRPConly;Q_{GMT};Q_{RPC}",8,-0.5,7.5,8,-0.5,7.5);
+  qGMT_qFwdRPConly=new TH2F("qGMT_qFwdRPConly","qGMT_qFwdRPConly;Q_{GMT};Q_{RPC}",8,-0.5,7.5,8,-0.5,7.5);
+  qGMT_qDTonly=new TH2F("qGMT_qDTonly","qGMT_qDTonly;Q_{GMT};Q_{DT}",8,-0.5,7.5,8,-0.5,7.5);
+  qGMT_qCSConly=new TH2F("qGMT_qCSConly","qGMT_qCSConly;Q_{GMT};Q_{CSC}",8,-0.5,7.5,8,-0.5,7.5);
+  qGMT_qBrlRPCmatch=new TH2F("qGMT_qBrlRPCmatch","qGMT_qBrlRPCmatch;Q_{GMT};Q_{RPC}",8,-0.5,7.5,8,-0.5,7.5);
+  qGMT_qFwdRPCmatch=new TH2F("qGMT_qFwdRPCmatch","qGMT_qFwdRPCmatch;Q_{GMT};Q_{RPC}",8,-0.5,7.5,8,-0.5,7.5);
+  qGMT_qDTmatch=new TH2F("qGMT_qDTmatch","qGMT_qDTmatch;Q_{GMT};Q_{DT}",8,-0.5,7.5,8,-0.5,7.5);
+  qGMT_qCSCmatch=new TH2F("qGMT_qCSCmatch","qGMT_qCSCmatch;Q_{GMT};Q_{CSC}",8,-0.5,7.5,8,-0.5,7.5);
+  qRPC_qDTmatch=new TH2F("qRPC_qDTmatch","qRPC_qDTmatch;Q_{RPC};Q_{DT}",8,-0.5,7.5,8,-0.5,7.5);
+  qRPC_qCSCmatch=new TH2F("qRPC_qCSCmatch","qRPC_qCSCmatch;Q_{RPC};Q_{CSC}",8,-0.5,7.5,8,-0.5,7.5);
+
+  totalGen_etaphi=new TH2F("totalGen_etaphi","totalGen_etaphi",62,gmt_etascale,144,0.,360.);
+  matchedCSCGen_etaphi=new TH2F("matchedCSCGen_etaphi","matchedCSCGen_etaphi",62,gmt_etascale,144,0.,360.);
+  matchedDTGen_etaphi=new TH2F("matchedDTGen_etaphi","matchedDTGen_etaphi",62,gmt_etascale,144,0.,360.);
+  matchedRPCGen_etaphi=new TH2F("matchedRPCGen_etaphi","matchedRPCGen_etaphi",62,gmt_etascale,144,0.,360.);
+  matchedGen_etaphi=new TH2F("matchedGen_etaphi","matchedGen_etaphi",62,gmt_etascale,144,0.,360.);
+  onlyCSCGen_etaphi=new TH2F("onlyCSCGen_etaphi","onlyCSCGen_etaphi",62,gmt_etascale,144,0.,360.);
+  onlyDTGen_etaphi=new TH2F("onlyDTGen_etaphi","onlyDTGen_etaphi",62,gmt_etascale,144,0.,360.);
+  onlyRPCGen_etaphi=new TH2F("onlyRPCGen_etaphi","onlyRPCGen_etaphi",62,gmt_etascale,144,0.,360.);
+  onlyGen_etaphi=new TH2F("onlyGen_etaphi","onlyGen_etaphi",62,gmt_etascale,144,0.,360.);
+
+  matchedGen_pt=new TH1F("matchedGen_pt","MC p_{T} for Matched GenCand;p_{T} (GeV)",32,ptscale);
+  onlyGen_pt=new TH1F("onlyGen_pt","MC p_{T} for Unmatched GenCand;p_{T} (GeV)",32,ptscale);
+  matchedDTGen_pt=new TH1F("matchedDTGen_pt","MC p_{T} for DT-Matched GenCand;p_{T} (GeV)",32,ptscale);
+  matchedRPCGen_pt=new TH1F("matchedRPCGen_pt","MC p_{T} for RPC-Matched GenCand;p_{T} (GeV)",32,ptscale);
+  matchedCSCGen_pt=new TH1F("matchedCSCGen_pt","MC p_{T} for CSC-Matched GenCad",32,ptscale);
+  onlyDTGen_pt=new TH1F("onlyDTGen_pt","MC p_{T} for DT-Unmatched GenCand;p_{T} (GeV)",32,ptscale);
+  onlyRPCGen_pt=new TH1F("onlyRPCGen_pt","MC p_{T} for RPC-Unmatched GenCand;p_{T} (GeV)",32,ptscale);
+  onlyCSCGen_pt=new TH1F("onlyCSCGen_pt","MC p_{T} for CSC-Unmatched GenCand;p_{T} (GeV)",32,ptscale);
+    
+  onlyRPC_QunM_etaphi=new TH2F("onlyRPC_QunM_etaphi","onlyRPC_QunM_etaphi;#eta#phi",62,gmt_etascale,144,0.,360.);
+  onlyRPC_QovM_etaphi=new TH2F("onlyRPC_QovM_etaphi","onlyRPC_QovM_etaphi;#eta#phi",62,gmt_etascale,144,0.,360.);
+  matchedRPC_QunM_etaphi=new TH2F("matchedRPC_QunM_etaphi","matchedRPC_QunM_etaphi;#eta#phi",62,gmt_etascale,144,0.,360.);
+  matchedRPC_QovM_etaphi=new TH2F("matchedRPC_QovM_etaphi","matchedRPC_QovM_etaphi;#eta#phi",62,gmt_etascale,144,0.,360.);
+  RPC_QunM_etaphi=new TH2F("RPC_QunM_etaphi","RPC_QunM_etaphi;#eta;#phi",62,gmt_etascale,144,0.,360.);
+  RPC_QovM_etaphi=new TH2F("RPC_QovM_etaphi","RPC_QovM_etaphi;#eta;#phi",62,gmt_etascale,144,0.,360.);
+
+  onlyRPC_QunM_pt=new TH1F("onlyRPC_QunM_pt","onlyRPC_QunM_pt;p_{T} (GeV)",32,ptscale);
+  onlyRPC_QovM_pt=new TH1F("onlyRPC_QovM_pt","onlyRPC_QovM_pt;p_{T} (GeV)",32,ptscale);
+  RPC_QunM_pt=new TH1F("RPC_QunM_pt","RPC_QunM_pt;p_{T} (GeV)",32,ptscale);
+  RPC_QovM_pt=new TH1F("RPC_QovM_pt","RPC_QovM_pt;p_{T} (GeV)",32,ptscale);
+  matcheDTQ_RPC_QunM_pt=new TH1F("matchedDTQ_RPC_QunM_pt","matchedDTQ_RPC_QunM_pt;p_{T} (GeV)",32,ptscale);
+  matcheDTQ_RPC_QovM_pt=new TH1F("matchedDTQ_RPC_QovM_pt","matchedDTQ_RPC_QovM_pt;p_{T} (GeV)",32,ptscale);
+  matchedRPC_QunM_pt=new TH1F("matchedRPC_QunM_pt","matchedRPC_QunM_pt;p_{T} (GeV)",32,ptscale);
+  matchedRPC_QovM_pt=new TH1F("matchedRPC_QovM_pt","matchedRPC_QovM_pt;p_{T} (GeV)",32,ptscale);
+
+  matcheDTQ_RPC_QunM_etaphi=new TH2F("matcheDTQ_RPC_QunM_etaphi","RPCQ over Maj in DTQmatch cases",62,gmt_etascale,144,0.,360.);
+  matcheDTQ_RPC_QovM_etaphi=new TH2F("matcheDTQ_RPC_QovM_etaphi","RPCQ under Maj in DTQmatch cases",62,gmt_etascale,144,0.,360.);
+
+  matchedRPC_Q3_etaphi=new TH2F("matchedRPC_Q3_etaphi","matchedRPC_Q3_etaphi;#eta;#phi",62,gmt_etascale,144,0.,360.);
+  matchedRPC_Q2_etaphi=new TH2F("matchedRPC_Q2_etaphi","matchedRPC_Q2_etaphi;#eta;#phi",62,gmt_etascale,144,0.,360.);
+  matchedRPC_Q1_etaphi=new TH2F("matchedRPC_Q1_etaphi","matchedRPC_Q1_etaphi;#eta;#phi",62,gmt_etascale,144,0.,360.);
+  matchedRPC_Q0_etaphi=new TH2F("matchedRPC_Q0_etaphi","matchedRPC_Q0_etaphi;#eta;#phi",62,gmt_etascale,144,0.,360.);
+
+  onlyRPC_Q3_etaphi=new TH2F("onlyRPC_Q3_etaphi","onlyRPC_Q3_etaphi;#eta;#phi",62,gmt_etascale,144,0.,360.);
+  onlyRPC_Q2_etaphi=new TH2F("onlyRPC_Q2_etaphi","onlyRPC_Q2_etaphi;#eta;#phi",62,gmt_etascale,144,0.,360.);
+  onlyRPC_Q1_etaphi=new TH2F("onlyRPC_Q1_etaphi","onlyRPC_Q1_etaphi;#eta;#phi",62,gmt_etascale,144,0.,360.);
+  onlyRPC_Q0_etaphi=new TH2F("onlyRPC_Q0_etaphi","onlyRPC_Q0_etaphi;#eta;#phi",62,gmt_etascale,144,0.,360.);
+
+  RPC_Q3_etaphi=new TH2F("RPC_Q3_etaphi","RPC_Q3_etaphi;#eta;#phi",62,gmt_etascale,144,0.,360.);
+  RPC_Q2_etaphi=new TH2F("RPC_Q2_etaphi","RPC_Q2_etaphi;#eta;#phi",62,gmt_etascale,144,0.,360.);
+  RPC_Q1_etaphi=new TH2F("RPC_Q1_etaphi","RPC_Q1_etaphi;#eta;#phi",62,gmt_etascale,144,0.,360.);
+  RPC_Q0_etaphi=new TH2F("RPC_Q0_etaphi","RPC_Q0_etaphi;#eta;#phi",62,gmt_etascale,144,0.,360.);
+
+  onlyDT_Q7_etaphi=new TH2F("onlyDT_Q7_etaphi","onlyDT_Q7_etaphi;#eta;#phi",62,gmt_etascale,144,0.,360.);
+  onlyDT_Q6_etaphi=new TH2F("onlyDT_Q6_etaphi","onlyDT_Q6_etaphi;#eta;#phi",62,gmt_etascale,144,0.,360.);
+  onlyDT_Q5_etaphi=new TH2F("onlyDT_Q5_etaphi","onlyDT_Q5_etaphi;#eta;#phi",62,gmt_etascale,144,0.,360.);
+  onlyDT_Q4_etaphi=new TH2F("onlyDT_Q4_etaphi","onlyDT_Q4_etaphi;#eta;#phi",62,gmt_etascale,144,0.,360.);
+  matchedDT_Q7_etaphi=new TH2F("matchedDT_Q7_etaphi","matchedDT_Q7_etaphi;#eta;#phi",62,gmt_etascale,144,0.,360.);
+  matchedDT_Q6_etaphi=new TH2F("matchedDT_Q6_etaphi","matchedDT_Q6_etaphi;#eta;#phi",62,gmt_etascale,144,0.,360.);
+  matchedDT_Q5_etaphi=new TH2F("matchedDT_Q5_etaphi","matchedDT_Q5_etaphi;#eta;#phi",62,gmt_etascale,144,0.,360.);
+  matchedDT_Q4_etaphi=new TH2F("matchedDT_Q4_etaphi","matchedDT_Q4_etaphi;#eta;#phi",62,gmt_etascale,144,0.,360.);
+  DT_Q7_etaphi=new TH2F("DT_Q7_etaphi","DT_Q7_etaphi;#eta;#phi",62,gmt_etascale,144,0.,360.);
+  DT_Q6_etaphi=new TH2F("DT_Q6_etaphi","DT_Q6_etaphi;#eta;#phi",62,gmt_etascale,144,0.,360.);
+  DT_Q5_etaphi=new TH2F("DT_Q5_etaphi","DT_Q5_etaphi;#eta;#phi",62,gmt_etascale,144,0.,360.);
+  DT_Q4_etaphi=new TH2F("DT_Q4_etaphi","DT_Q4_etaphi;#eta;#phi",62,gmt_etascale,144,0.,360.);
+
+  onlyRPC_Q3_pt=new TH1F("onlyRPC_Q3_pt","onlyRPC_Q3_pt;p_{T} (GeV)",32,ptscale);
+  onlyRPC_Q2_pt=new TH1F("onlyRPC_Q2_pt","onlyRPC_Q2_pt;p_{T} (GeV)",32,ptscale);
+  onlyRPC_Q1_pt=new TH1F("onlyRPC_Q1_pt","onlyRPC_Q1_pt;p_{T} (GeV)",32,ptscale);
+  onlyRPC_Q0_pt=new TH1F("onlyRPC_Q0_pt","onlyRPC_Q0_pt;p_{T} (GeV)",32,ptscale);
+  matchedRPC_Q3_pt=new TH1F("matchedRPC_Q3_pt","matchedRPC_Q3_pt;p_{T} (GeV)",32,ptscale);
+  matchedRPC_Q2_pt=new TH1F("matchedRPC_Q2_pt","matchedRPC_Q2_pt;p_{T} (GeV)",32,ptscale);
+  matchedRPC_Q1_pt=new TH1F("matchedRPC_Q1_pt"," matchedRPC_Q1_pt;p_{T} (GeV)",32,ptscale);
+  matchedRPC_Q0_pt=new TH1F("matchedRPC_Q0_pt","matchedRPC_Q0_pt;p_{T} (GeV)",32,ptscale);
+  RPC_Q3_pt=new TH1F("RPC_Q3_pt","RPC_Q3_pt;p_{T} (GeV)",32,ptscale);
+  RPC_Q2_pt=new TH1F("RPC_Q2__pt","RPC_Q2_pt;p_{T} (GeV)",32,ptscale);
+  RPC_Q1_pt=new TH1F("RPC_Q1_pt","RPC_Q1_pt;p_{T} (GeV)",32,ptscale);
+  RPC_Q0_pt=new TH1F("RPC_Q0_pt","RPC_Q0_pt;p_{T} (GeV)",32,ptscale);
+  onlyDT_Q7_pt=new TH1F("onlyDT_Q7_pt","onlyDT_Q7_pt;p_{T} (GeV)",32,ptscale);
+  onlyDT_Q6_pt=new TH1F("onlyDT_Q6_pt","onlyDT_Q6_pt;p_{T} (GeV)",32,ptscale);
+  onlyDT_Q5_pt=new TH1F("onlyDT_Q5_pt","onlyDT_Q5_pt;p_{T} (GeV)",32,ptscale);
+  onlyDT_Q4_pt=new TH1F("onlyDT_Q4_pt","onlyDT_Q4_pt;p_{T} (GeV)",32,ptscale);
+  matchedDT_Q7_pt=new TH1F("matchedDT_Q7_pt","matchedDT_Q7_pt;p_{T} (GeV)",32,ptscale);
+  matchedDT_Q6_pt=new TH1F("matchedDT_Q6_pt","matchedDT_Q6_pt;p_{T} (GeV)",32,ptscale);
+  matchedDT_Q5_pt=new TH1F("matchedDT_Q5_pt","matchedDT_Q5_pt;p_{T} (GeV)",32,ptscale);
+  matchedDT_Q4_pt=new TH1F("matchedDT_Q4_pt","matchedDT_Q4_pt;p_{T} (GeV)",32,ptscale);
+  DT_Q7_pt=new TH1F("DT_Q7_pt","DT_Q7_pt;p_{T} (GeV)",32,ptscale);
+  DT_Q6_pt=new TH1F("DT_Q6_pt","DT_Q6_pt;p_{T} (GeV)",32,ptscale);
+  DT_Q5_pt=new TH1F("DT_Q5_pt","DT_Q5_pt;p_{T} (GeV)",32,ptscale);
+  DT_Q4_pt=new TH1F("DT_Q4_pt","DT_Q4_pt;p_{T} (GeV)",32,ptscale);
+
+}
+
+L1DataDrivenMC::~L1DataDrivenMC(){}
+
+bool
+L1DataDrivenMC::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
+{
+
+  static const double pi = 3.141592653589793238462643383279502884197;
+  nEvents++;
+
+  std::cout<<"******************** Run "<<iEvent.id().run()<<" event "<<iEvent.id().event()<<"*****************************"<<std::endl;
+
+  //   Handle<L1GlobalTriggerReadoutRecord> gtReadoutRecord;
+  //   iEvent.getByLabel(m_daqGtInputTag.label(), gtReadoutRecord);
+
+  Handle<L1MuGMTReadoutCollection> muCollRefProd;
+  iEvent.getByLabel(m_muGmtInputTag,muCollRefProd);
+
+  //   const edm::RefProd<L1MuGMTReadoutCollection> muCollRefProd = gtReadoutRecord->muCollectionRefProd();
+
+  vector<L1MuGMTExtendedCand> gmtCands;
+  vector<pair<L1MuGMTExtendedCand,int> > gmtBrlRPCCands,gmtBrlDTCands,gmtFwdRPCCands,gmtFwdCSCCands;
+  vector<pair<L1MuGMTExtendedCand,pair<L1MuRegionalCand,L1MuRegionalCand> > > gmtBrlMatchCands,gmtFwdMatchCands;
+
+  //################################BX studies#################################
+  std::vector<L1MuGMTReadoutRecord> gmtRecords=(*muCollRefProd).getRecords();//one record for each non-empty BX    
+  int bx_inEvt(0);
+  for(unsigned int rr=0;rr<gmtRecords.size();rr++){
+    L1MuGMTReadoutRecord gmtRR=gmtRecords[rr];
+    vector<L1MuGMTExtendedCand> gmtCand=gmtRR.getGMTCands();
+    if(!gmtCand.empty()){
+      bx_inEvt++;
+      bx_GMT_RR->Fill(gmtRR.getBxInEvent());
+    }
+
+    //std::cout<<"Event "<<iEvent.id().event()<<" rr "<<rr<<" BCERR "<<gmtRR.getBCERR()<<" BxInEvent "<<gmtRR.getBxInEvent()<<" GMTCands size "<<gmtCand.size()<<" BxNr "<<gmtRR.getBxNr()<<" EvNr "<<gmtRR.getEvNr()<<std::endl;
+  }
+  nBX_perEvt->Fill(bx_inEvt);
+  
+  gmtCands=(*muCollRefProd).getRecord().getGMTCands();
+
+  bool filter(false);  
+  if(!gmtCands.empty()){
+    //#################################MuGMT candidates & Regional candidates quality matching#####################################
+    vector<L1MuRegionalCand> RPCBCands=(*muCollRefProd).getRecord().getBrlRPCCands();
+    vector<L1MuRegionalCand> RPCFCands=(*muCollRefProd).getRecord().getFwdRPCCands();
+    vector<L1MuRegionalCand> DTCands=(*muCollRefProd).getRecord().getDTBXCands();
+    vector<L1MuRegionalCand> CSCCands=(*muCollRefProd).getRecord().getCSCCands();
+    
+    //    std::cout<<"Run&Ev "<<iEvent.id().run()<<" "<<iEvent.id().event()<<" GMTCands Size:Barrel "<<muGMTBcands.size()<<" RPCB "<<RPCB_cands.size()<<" DTBX "<<DT_cands.size()<<" Forward "<<muGMTFcands.size()<<" RPCF "<<RPCF_cands.size()<<" CSC "<<CSC_cands.size()<<std::endl;      
+    //   if(RPCBCands.size()>0){for(vector<L1MuRegionalCand>::const_iterator rb=RPCBCands.begin();rb!=RPCBCands.end();rb++)std::cout<<"RPCB data word "<<rb->getDataWord()<<std::endl;}
+    //   if(RPCFCands.size()>0){for(vector<L1MuRegionalCand>::const_iterator rf=RPCFCands.begin();rf!=RPCFCands.end();rf++)std::cout<<"RPCF data word "<<rf->getDataWord()<<std::endl;}
+    //   if(CSCCands.size()>0){for(vector<L1MuRegionalCand>::const_iterator cs=CSCCands.begin();cs!=CSCCands.end();cs++)std::cout<<"CSC data word "<<cs->getDataWord()<<std::endl;}
+    //   if(DTCands.size()>0){for(vector<L1MuRegionalCand>::const_iterator dt=DTCands.begin();dt!=DTCands.end();dt++)std::cout<<"DTBX data word "<<dt->getDataWord()<<std::endl;}
+
+    vector<L1MuGMTExtendedCand> gmtBrlCands=(*muCollRefProd).getRecord().getGMTBrlCands();
+    vector<L1MuGMTExtendedCand> gmtFwdCands=(*muCollRefProd).getRecord().getGMTFwdCands();
+
+    bool brlMatch(false),fwdMatch(false);
+    for(vector<L1MuGMTExtendedCand>::const_iterator brlIt=gmtBrlCands.begin();brlIt!=gmtBrlCands.end();brlIt++){
+      if(brlIt->isMatchedCand())brlMatch=true;
+      if(brlMatch)break;
+    }
+    for(vector<L1MuGMTExtendedCand>::const_iterator fwdIt=gmtFwdCands.begin();fwdIt!=gmtFwdCands.end();fwdIt++){
+      if(fwdIt->isMatchedCand())fwdMatch=true;
+      if(fwdMatch)break;		  
+    }
+
+    if(!RPCBCands.empty()){
+      gmtBrlRPCCands=l1CandQMatcher(gmtBrlCands,RPCBCands);
+    }
+    if(!DTCands.empty()){
+      gmtBrlDTCands=l1CandQMatcher(gmtBrlCands,DTCands); 
+    }
+    if(!RPCFCands.empty()){
+      gmtFwdRPCCands=l1CandQMatcher(gmtFwdCands,RPCFCands);
+    }
+    if(!CSCCands.empty()){
+      gmtFwdCSCCands=l1CandQMatcher(gmtFwdCands,CSCCands);
+    }
+
+    if(brlMatch){
+      gmtBrlMatchCands=l1RegMatcher(gmtBrlCands,RPCBCands,DTCands);		  
+    }
+    if(fwdMatch){
+      gmtFwdMatchCands=l1RegMatcher(gmtFwdCands,RPCFCands,CSCCands);
+    }
+
+    vector<pair<L1MuGMTExtendedCand,pair<L1MuRegionalCand,L1MuRegionalCand> > >::const_iterator pltIt1,pltIt2;
+    for(pltIt1=gmtBrlMatchCands.begin();pltIt1!=gmtBrlMatchCands.end();++pltIt1){
+      L1MuGMTExtendedCand theGMT(pltIt1->first);
+      L1MuRegionalCand theDT((pltIt1->second).first),theRPC((pltIt1->second).second);
+      regMat_dPt->Fill(theDT.ptValue()-theRPC.ptValue());
+      regMat_dtPtrpcPt->Fill(theDT.ptValue(),theRPC.ptValue());
+      regMat_dEtadPhi->Fill(theDT.etaValue()-theRPC.etaValue(),theDT.phiValue()-theRPC.phiValue());
+      regMat_DRdPt->Fill(deltaR(theDT.etaValue(),theDT.phiValue(),theRPC.etaValue(),theRPC.phiValue()),theDT.ptValue()-theRPC.ptValue());
+      regMat_dPtgmtPt->Fill(theDT.ptValue()-theRPC.ptValue(),theGMT.ptValue());
+    }
+    for(pltIt2=gmtFwdMatchCands.begin();pltIt2!=gmtFwdMatchCands.end();++pltIt2){
+      L1MuGMTExtendedCand theGMT(pltIt2->first);
+      L1MuRegionalCand theCSC((pltIt2->second).first),theRPC((pltIt2->second).second);
+      regMat_dPt->Fill(theCSC.ptValue()-theRPC.ptValue());
+      regMat_cscPtrpcPt->Fill(theCSC.ptValue(),theRPC.ptValue());
+      regMat_dEtadPhi->Fill(theCSC.etaValue()-theRPC.etaValue(),theCSC.phiValue()-theRPC.phiValue());
+      regMat_DRdPt->Fill(deltaR(theCSC.etaValue(),theCSC.phiValue(),theRPC.etaValue(),theRPC.phiValue()),theCSC.ptValue()-theRPC.ptValue());
+      regMat_dPtgmtPt->Fill(theCSC.ptValue()-theRPC.ptValue(),theGMT.ptValue());
+    }
+
+    //###################################L1 efficiency analysis from data###################################
+    vector<L1MuGMTExtendedCand>::const_iterator gmtIt;
+    for(gmtIt=gmtCands.begin();gmtIt!=gmtCands.end();gmtIt++){
+      float pt=gmtIt->ptValue();
+      if(pt<ptCut || !(gmtIt->useInSingleMuonTrigger() && gmtIt->useInDiMuonTrigger()))continue;
+      float eta=gmtIt->etaValue();
+      float phi=(gmtIt->phiValue());      
+      if(phi<0.)phi+=2*pi;
+      phi*=radToDeg;
+      
+      if(gmtIt->isFwd()){
+	
+	if(gmtIt->isRPC()){//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@  RPC only
+	  if(pt>80.)filter=true;
+	  expCSC_eta->Fill(eta);expCSC_phi->Fill(phi);expCSC_pt->Fill(pt);
+	  expCSC_etaphi->Fill(eta,phi);
+	  
+	  //wheel-selected RPC histograms	  
+	  if(fabs(eta)>eta1 && fabs(eta)<eta2){
+	    exp_WF_CSC_eta->Fill(eta);exp_WF_CSC_phi->Fill(phi);exp_WF_CSC_pt->Fill(pt);
+	  }
+	  
+	  //station-selected RPC histograms
+	  if((phi>0. && phi<5.) || (phi>355. && phi<360.)){
+	    //	  if((phi>0. && phi<10.) || (phi>350. && phi<360.)){
+	    exp_SF_CSC_eta->Fill(eta);exp_SF_CSC_phi->Fill(phi);exp_SF_CSC_pt->Fill(pt);
+	    if(fabs(eta)>eta1 && fabs(eta)<eta2){
+	      exp_WSF_CSC_eta->Fill(eta);exp_WSF_CSC_phi->Fill(phi);exp_WSF_CSC_pt->Fill(pt);
+	    }
+	  }
+	  else {
+	    for(int k=0;k<11;k++){
+	      if(phi>(25.+((float)k*30.)) && phi<(35.+((float)k*30.))){
+		exp_SF_CSC_eta->Fill(eta);exp_SF_CSC_phi->Fill(phi);exp_SF_CSC_pt->Fill(pt);
+		if(fabs(eta)>eta1 && fabs(eta)<eta2){
+		  exp_WSF_CSC_eta->Fill(eta);exp_WSF_CSC_phi->Fill(phi);exp_WSF_CSC_pt->Fill(pt);
+		}
+	      }
+	    }
+	  }
+	  
+	  if(!gmtFwdRPCCands.empty()){
+	    int q;
+	    vector<pair<L1MuGMTExtendedCand,int> >::const_iterator pairIt;
+	    for(pairIt=gmtFwdRPCCands.begin();pairIt!=gmtFwdRPCCands.end();pairIt++){
+	      if(*gmtIt==pairIt->first)q=pairIt->second;
+	    }
+	    std::cout<<"q_fwd_rpc_only "<<q<<std::endl;
+	    qGMT_qFwdRPConly->Fill(gmtIt->quality(),q);
+	    if(q>rpcMaj){
+	      onlyRPC_QovM_etaphi->Fill(eta,phi);RPC_QovM_etaphi->Fill(eta,phi);
+	      onlyRPC_QovM_pt->Fill(pt);RPC_QovM_pt->Fill(pt);
+	    }
+	    else {
+	      onlyRPC_QunM_etaphi->Fill(eta,phi);RPC_QunM_etaphi->Fill(eta,phi);
+	      onlyRPC_QunM_pt->Fill(pt);RPC_QunM_pt->Fill(pt);		
+	    }
+	    switch(q){
+	    case 0:
+	      onlyRPC_Q0_etaphi->Fill(eta,phi);
+	      RPC_Q0_etaphi->Fill(eta,phi);
+	      onlyRPC_Q0_pt->Fill(pt);
+	      RPC_Q0_pt->Fill(pt);
+	      break;
+	    case 1:
+	      onlyRPC_Q1_etaphi->Fill(eta,phi);
+	      RPC_Q1_etaphi->Fill(eta,phi);
+	      onlyRPC_Q1_pt->Fill(pt);
+	      RPC_Q1_pt->Fill(pt);
+	      break;
+	    case 2:
+	      onlyRPC_Q2_etaphi->Fill(eta,phi);
+	      RPC_Q2_etaphi->Fill(eta,phi);
+	      onlyRPC_Q2_pt->Fill(pt);
+	      RPC_Q2_pt->Fill(pt);
+	      break;
+	    case 3:
+	      onlyRPC_Q3_etaphi->Fill(eta,phi);
+	      RPC_Q3_etaphi->Fill(eta,phi);
+	      onlyRPC_Q3_pt->Fill(pt);
+	      RPC_Q3_pt->Fill(pt);
+	      break;
+	    }	    
+	  }
+	}
+	  
+	else if(!gmtIt->isRPC() && gmtIt->isMatchedCand()){//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@  RPC+CSC
+	  if(pt>80.)filter=true;
+	  expCSC_eta->Fill(eta);expCSC_phi->Fill(phi);expCSC_pt->Fill(pt);
+	  effCSC_eta->Fill(eta);effCSC_phi->Fill(phi);effCSC_pt->Fill(pt);
+	  expRPC_eta->Fill(eta);expRPC_phi->Fill(phi);expRPC_pt->Fill(pt);
+	  effRPC_eta->Fill(eta);effRPC_phi->Fill(phi);effRPC_pt->Fill(pt);
+	  expCSC_etaphi->Fill(eta,phi);expRPC_etaphi->Fill(eta,phi);
+	  effCSC_etaphi->Fill(eta,phi);effRPC_etaphi->Fill(eta,phi);
+	    
+	  //wheel-selected RPC histograms	  
+	  if(fabs(eta)>eta1 && fabs(eta)<eta2){
+	    exp_WF_RPC_eta->Fill(eta);exp_WF_RPC_phi->Fill(phi);exp_WF_RPC_pt->Fill(pt);
+	    eff_WF_RPC_eta->Fill(eta);eff_WF_RPC_phi->Fill(phi);eff_WF_RPC_pt->Fill(pt);
+	    exp_WF_CSC_eta->Fill(eta);exp_WF_CSC_phi->Fill(phi);exp_WF_CSC_pt->Fill(pt);
+	    eff_WF_CSC_eta->Fill(eta);eff_WF_CSC_phi->Fill(phi);eff_WF_CSC_pt->Fill(pt);
+	  }
+	    
+	  //station-selected RPC histograms
+	  if((phi>0. && phi<5.) || (phi>355. && phi<360.)){
+	    //	  if((phi>0. && phi<10.) || (phi>350. && phi<360.)){
+	    exp_SF_RPC_eta->Fill(eta);exp_SF_RPC_phi->Fill(phi);exp_SF_RPC_pt->Fill(pt);
+	    eff_SF_RPC_eta->Fill(eta);eff_SF_RPC_phi->Fill(phi);eff_SF_RPC_pt->Fill(pt);
+	    exp_SF_CSC_eta->Fill(eta);exp_SF_CSC_phi->Fill(phi);exp_SF_CSC_pt->Fill(pt);
+	    eff_SF_CSC_eta->Fill(eta);eff_SF_CSC_phi->Fill(phi);eff_SF_CSC_pt->Fill(pt);
+	    if(fabs(eta)>eta1 && fabs(eta)<eta2){
+	      exp_WSF_RPC_eta->Fill(eta);exp_WSF_RPC_phi->Fill(phi);exp_WSF_RPC_pt->Fill(pt);
+	      eff_WSF_RPC_eta->Fill(eta);eff_WSF_RPC_phi->Fill(phi);eff_WSF_RPC_pt->Fill(pt);
+	      exp_WSF_CSC_eta->Fill(eta);exp_WSF_CSC_phi->Fill(phi);exp_WSF_CSC_pt->Fill(pt);
+	      eff_WSF_CSC_eta->Fill(eta);eff_WSF_CSC_phi->Fill(phi);eff_WSF_CSC_pt->Fill(pt);
+	    }
+	  }
+	  else {
+	    for(int k=0;k<11;k++){
+	      if(phi>(25.+((float)k*30.)) && phi<(35.+((float)k*30.))){
+		exp_SF_RPC_eta->Fill(eta);exp_SF_RPC_phi->Fill(phi);exp_SF_RPC_pt->Fill(pt);
+		eff_SF_RPC_eta->Fill(eta);eff_SF_RPC_phi->Fill(phi);eff_SF_RPC_pt->Fill(pt);
+		exp_SF_CSC_eta->Fill(eta);exp_SF_CSC_phi->Fill(phi);exp_SF_CSC_pt->Fill(pt);
+		eff_SF_CSC_eta->Fill(eta);eff_SF_CSC_phi->Fill(phi);eff_SF_CSC_pt->Fill(pt);
+		if(fabs(eta)>eta1 && fabs(eta)<eta2){
+		  exp_WSF_RPC_eta->Fill(eta);exp_WSF_RPC_phi->Fill(phi);exp_WSF_RPC_pt->Fill(pt);
+		  eff_WSF_RPC_eta->Fill(eta);eff_WSF_RPC_phi->Fill(phi);eff_WSF_RPC_pt->Fill(pt);
+		  exp_WSF_CSC_eta->Fill(eta);exp_WSF_CSC_phi->Fill(phi);exp_WSF_CSC_pt->Fill(pt);
+		  eff_WSF_CSC_eta->Fill(eta);eff_WSF_CSC_phi->Fill(phi);eff_WSF_CSC_pt->Fill(pt);
+		}
+	      }
+	    }
+	  }
+	    
+	  //Q-selected RPC histograms
+	  bool rpcOn=false;int rpcQ;
+	  expRPCQ_eta->Fill(eta);expRPCQ_phi->Fill(phi);expRPCQ_pt->Fill(pt);
+	  expRPCQ_etaphi->Fill(eta,phi);
+	  if(!gmtFwdRPCCands.empty()){
+	    rpcOn=true;
+	    int q;
+	    vector<pair<L1MuGMTExtendedCand,int> >::const_iterator pairIt;
+	    for(pairIt=gmtFwdRPCCands.begin();pairIt!=gmtFwdRPCCands.end();pairIt++){
+	      if(*gmtIt==pairIt->first)q=pairIt->second;
+	    }
+	    qGMT_qFwdRPCmatch->Fill(gmtIt->quality(),q);
+	    std::cout<<"q_fwd_rpc_match "<<q<<std::endl;
+	    //fill if q>1
+	    if(q>rpcMaj){
+	      effRPCQ_eta->Fill(eta);effRPCQ_phi->Fill(phi);effRPCQ_pt->Fill(pt);
+	      effRPCQ_etaphi->Fill(eta,phi);
+	      matchedRPC_QovM_etaphi->Fill(eta,phi);RPC_QovM_etaphi->Fill(eta,phi);
+	      matchedRPC_QovM_pt->Fill(pt);RPC_QovM_pt->Fill(pt);
+	    }
+	    else {
+	      matchedRPC_QunM_etaphi->Fill(eta,phi);RPC_QunM_etaphi->Fill(eta,phi);
+	      matchedRPC_QunM_pt->Fill(pt);RPC_QunM_pt->Fill(pt);
+	    }
+	    switch(q){
+	    case 0:
+	      matchedRPC_Q0_etaphi->Fill(eta,phi);
+	      RPC_Q0_etaphi->Fill(eta,phi);
+	      matchedRPC_Q0_pt->Fill(pt);
+	      RPC_Q0_pt->Fill(pt);
+	      break;
+	    case 1:
+	      matchedRPC_Q1_etaphi->Fill(eta,phi);
+	      RPC_Q1_etaphi->Fill(eta,phi);
+	      matchedRPC_Q1_pt->Fill(pt);
+	      RPC_Q1_pt->Fill(pt);
+	      break;
+	    case 2:
+	      matchedRPC_Q2_etaphi->Fill(eta,phi);
+	      RPC_Q2_etaphi->Fill(eta,phi);
+	      matchedRPC_Q2_pt->Fill(pt);
+	      RPC_Q2_pt->Fill(pt);
+	      break;
+	    case 3:
+	      matchedRPC_Q3_etaphi->Fill(eta,phi);
+	      RPC_Q3_etaphi->Fill(eta,phi);
+	      matchedRPC_Q3_pt->Fill(pt);
+	      RPC_Q3_pt->Fill(pt);
+	      break;
+	    }	    
+	    rpcQ=q;
+	  }
+
+	  if(!gmtFwdCSCCands.empty()){
+	    int q;
+	    vector<pair<L1MuGMTExtendedCand,int> >::const_iterator perIt;
+	    for(perIt=gmtFwdCSCCands.begin();perIt!=gmtFwdCSCCands.end();perIt++){
+	      if(*gmtIt==perIt->first)q=perIt->second;
+	    }
+	    qGMT_qCSCmatch->Fill(gmtIt->quality(),q);
+	    if(rpcOn)qRPC_qCSCmatch->Fill(rpcQ,q);
+	  }
+	}
+	  
+	else if(!gmtIt->isRPC() && !gmtIt->isMatchedCand() && fabs(eta)<1.7){//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@  CSC only
+	  expRPC_eta->Fill(eta);expRPC_phi->Fill(phi);expRPC_pt->Fill(pt);
+	  expRPCQ_eta->Fill(eta);expRPCQ_phi->Fill(phi);expRPCQ_pt->Fill(pt);
+	  expRPC_etaphi->Fill(eta,phi);expRPCQ_etaphi->Fill(eta,phi);
+	    
+	  //wheel-selected RPC histograms	  
+	  if(fabs(eta)>eta1 && fabs(eta)<eta2){
+	    exp_WF_RPC_eta->Fill(eta);exp_WF_RPC_pt->Fill(pt);exp_WF_RPC_phi->Fill(phi);
+	  }
+	    
+	  //station-selected RPC histograms
+	  if((phi>0. && phi<5.) || (phi>355. && phi<360.)){
+	    //	  if((phi>0. && phi<10.) || (phi>350. && phi<360.)){
+	    exp_SF_RPC_eta->Fill(eta);exp_SF_RPC_pt->Fill(pt);exp_SF_RPC_phi->Fill(phi);
+	    if(fabs(eta)>eta1 && fabs(eta)<eta2){
+	      exp_WSF_RPC_eta->Fill(eta);exp_WSF_RPC_phi->Fill(phi);exp_WSF_RPC_pt->Fill(pt);
+	    }
+	  }
+	  else {
+	    for(int k=0;k<11;k++){
+	      if(phi>(25.+((float)k*30.)) && phi<(35.+((float)k*30.))){
+		exp_SF_RPC_eta->Fill(eta);exp_SF_RPC_phi->Fill(phi);exp_SF_RPC_pt->Fill(pt);
+		if(fabs(eta)>eta1 && fabs(eta)<eta2){
+		  exp_WSF_RPC_eta->Fill(eta);exp_WSF_RPC_phi->Fill(phi);exp_WSF_RPC_pt->Fill(pt);
+		}
+	      }
+	    }
+	  }
+	    
+	  if(!gmtFwdCSCCands.empty()){
+	    int q;
+	    vector<pair<L1MuGMTExtendedCand,int> >::const_iterator perIt;
+	    for(perIt=gmtFwdCSCCands.begin();perIt!=gmtFwdCSCCands.end();perIt++){
+	      if(*gmtIt==perIt->first)q=perIt->second;
+	    }
+	    std::cout<<"q_csc_only "<<gmtIt->quality()<<" "<<q<<std::endl;
+	    qGMT_qCSConly->Fill(gmtIt->quality(),q);
+	  }
+	}
+      }
+
+      else {//else rispetto a gmtIt->isFwd()
+	if(gmtIt->isRPC()){//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@  RPC only
+	  expDT_eta->Fill(eta);expDT_phi->Fill(phi);expDT_pt->Fill(pt);
+	  expDT_etaphi->Fill(eta,phi);
+	  if(pt>80.){
+	    filter=true;
+	    expDThipt_eta->Fill(eta);expDThipt_phi->Fill(phi);
+	    cout<<"DTDEBUG<<<RPC Only: RUN"<<iEvent.id().run()<<" EVENT "<<iEvent.id().event()<<" pt "<<pt<<" eta "<<eta<<" phi "<<phi<<" gmtRPCBrlSize: "<<gmtBrlRPCCands.size()<<endl;
+	  }
+
+	  //wheel-selected RPC histograms	  
+	  if(fabs(eta)>eta1 && fabs(eta)<eta2){
+	    exp_WF_DT_eta->Fill(eta);exp_WF_DT_phi->Fill(phi);exp_WF_DT_pt->Fill(pt);
+	    if(pt>80.){
+	      exp_WF_DThipt_eta->Fill(eta);exp_WF_DThipt_phi->Fill(phi);
+	    }
+	  }
+	    
+	  //station-selected RPC histograms
+	  if((phi>0. && phi<5.) || (phi>355. && phi<360.)){
+	    //	  if((phi>0. && phi<10.) || (phi>350. && phi<360.)){
+	    exp_SF_DT_eta->Fill(eta);exp_SF_DT_phi->Fill(phi);exp_SF_DT_pt->Fill(pt);
+	    if(pt>80.){
+	      exp_SF_DThipt_eta->Fill(eta);exp_SF_DThipt_phi->Fill(phi);
+	    }
+	    if(fabs(eta)>eta1 && fabs(eta)<eta2){
+	      exp_WSF_DT_eta->Fill(eta);exp_WSF_DT_phi->Fill(phi);exp_WSF_DT_pt->Fill(pt);
+	      if(pt>80.){
+		exp_WSF_DThipt_eta->Fill(eta);exp_WSF_DThipt_phi->Fill(phi);
+	      }
+	    }
+	  }
+	  else {
+	    for(int k=0;k<11;k++){
+	      if(phi>(25.+((float)k*30.)) && phi<(35.+((float)k*30.))){
+		exp_SF_DT_eta->Fill(eta);exp_SF_DT_phi->Fill(phi);exp_SF_DT_pt->Fill(pt);
+		if(pt>80.){
+		  exp_SF_DThipt_eta->Fill(eta);exp_SF_DThipt_phi->Fill(phi);
+		}
+		if(fabs(eta)>eta1 && fabs(eta)<eta2){
+		  exp_WSF_DT_eta->Fill(eta);exp_WSF_DT_phi->Fill(phi);exp_WSF_DT_pt->Fill(pt);
+		  if(pt>80.){
+		    exp_WSF_DThipt_eta->Fill(eta);exp_WSF_DThipt_phi->Fill(phi);
+		  }
+		}
+	      }
+	    }
+	  }
+
+	  if(!gmtBrlRPCCands.empty()){	    
+	    int q;
+	    vector<pair<L1MuGMTExtendedCand,int> >::const_iterator pairIt;
+	    for(pairIt=gmtBrlRPCCands.begin();pairIt!=gmtBrlRPCCands.end();pairIt++){
+	      if(*gmtIt==pairIt->first)q=pairIt->second;
+	    }
+	    std::cout<<"q_brl_rpc_only "<<q<<std::endl;
+	    qGMT_qBrlRPConly->Fill(gmtIt->quality(),q);
+	    if(q>rpcMaj){
+	      onlyRPC_QovM_etaphi->Fill(eta,phi);RPC_QovM_etaphi->Fill(eta,phi);
+	      onlyRPC_QovM_pt->Fill(pt);RPC_QovM_pt->Fill(pt);
+	    }
+	    else {
+	      onlyRPC_QunM_etaphi->Fill(eta,phi);RPC_QunM_etaphi->Fill(eta,phi);
+	      onlyRPC_QunM_pt->Fill(pt);RPC_QunM_pt->Fill(pt);
+	    }
+	    switch(q){
+	    case 0:
+	      onlyRPC_Q0_etaphi->Fill(eta,phi);
+	      RPC_Q0_etaphi->Fill(eta,phi);
+	      onlyRPC_Q0_pt->Fill(pt);
+	      RPC_Q0_pt->Fill(pt);
+	      break;
+	    case 1:
+	      onlyRPC_Q1_etaphi->Fill(eta,phi);
+	      RPC_Q1_etaphi->Fill(eta,phi);
+	      onlyRPC_Q1_pt->Fill(pt);
+	      RPC_Q1_pt->Fill(pt);
+	      break;
+	    case 2:
+	      onlyRPC_Q2_etaphi->Fill(eta,phi);
+	      RPC_Q2_etaphi->Fill(eta,phi);
+	      onlyRPC_Q2_pt->Fill(pt);
+	      RPC_Q2_pt->Fill(pt);
+	      break;
+	    case 3:
+	      onlyRPC_Q3_etaphi->Fill(eta,phi);
+	      RPC_Q3_etaphi->Fill(eta,phi);
+	      onlyRPC_Q3_pt->Fill(pt);
+	      RPC_Q3_pt->Fill(pt);
+	      break;
+	    }	    
+	  }
+	}
+	else if(!gmtIt->isRPC() && gmtIt->isMatchedCand()){//@@@@@@@@@@@@@@@@@@@@@@@@@@@  RPC+DT
+	  expDT_eta->Fill(eta);expDT_phi->Fill(phi);expDT_pt->Fill(pt);
+	  effDT_eta->Fill(eta);effDT_phi->Fill(phi);effDT_pt->Fill(pt);
+	  expRPC_eta->Fill(eta);expRPC_phi->Fill(phi);expRPC_pt->Fill(pt);
+	  effRPC_eta->Fill(eta);effRPC_phi->Fill(phi);effRPC_pt->Fill(pt);
+	  expDT_etaphi->Fill(eta,phi);expRPC_etaphi->Fill(eta,phi);
+	  effDT_etaphi->Fill(eta,phi);effRPC_etaphi->Fill(eta,phi);
+	  if(pt>80.){
+	    filter=true;
+	    effDThipt_eta->Fill(eta);effDThipt_phi->Fill(phi);	    
+	    cout<<"DTDEBUG<<<RPC+DT: RUN"<<iEvent.id().run()<<" EVENT "<<iEvent.id().event()<<" pt "<<pt<<" eta "<<eta<<" phi "<<phi<<" gmtBrlRPCCandsSize: "<<gmtBrlRPCCands.size()<<" DTCandsSize: "<<gmtBrlDTCands.size()<<endl;
+	  }
+	  //wheel-selected RPC histograms	  
+	  if(fabs(eta)>eta1 && fabs(eta)<eta2){
+	    exp_WF_RPC_eta->Fill(eta);exp_WF_RPC_phi->Fill(phi);exp_WF_RPC_pt->Fill(pt);
+	    eff_WF_RPC_eta->Fill(eta);eff_WF_RPC_phi->Fill(phi);eff_WF_RPC_pt->Fill(pt);
+	    exp_WF_DT_eta->Fill(eta);exp_WF_DT_phi->Fill(phi);exp_WF_DT_pt->Fill(pt);
+	    eff_WF_DT_eta->Fill(eta);eff_WF_DT_phi->Fill(phi);eff_WF_DT_pt->Fill(pt);
+	    if(pt>80.){
+	      eff_WF_DThipt_eta->Fill(eta);eff_WF_DThipt_phi->Fill(phi);	    
+	    }
+	  }
+	    
+	  //station-selected RPC histograms
+	  if((phi>0. && phi<5.) || (phi>355. && phi<360.)){
+	    //	  if((phi>0. && phi<10.) || (phi>350. && phi<360.)){
+	    exp_SF_RPC_eta->Fill(eta);exp_SF_RPC_phi->Fill(phi);exp_SF_RPC_pt->Fill(pt);
+	    eff_SF_RPC_eta->Fill(eta);eff_SF_RPC_phi->Fill(phi);eff_SF_RPC_pt->Fill(pt);
+	    exp_SF_DT_eta->Fill(eta);exp_SF_DT_phi->Fill(phi);exp_SF_DT_pt->Fill(pt);
+	    eff_SF_DT_eta->Fill(eta);eff_SF_DT_phi->Fill(phi);eff_SF_DT_pt->Fill(pt);
+	    if(pt>80.){
+	      eff_SF_DThipt_eta->Fill(eta);eff_SF_DThipt_phi->Fill(phi);	    
+	    }
+	    if(fabs(eta)>eta1 && fabs(eta)<eta2){
+	      exp_WSF_RPC_eta->Fill(eta);exp_WSF_RPC_phi->Fill(phi);exp_WSF_RPC_pt->Fill(pt);
+	      eff_WSF_RPC_eta->Fill(eta);eff_WSF_RPC_phi->Fill(phi);eff_WSF_RPC_pt->Fill(pt);
+	      exp_WSF_DT_eta->Fill(eta);exp_WSF_DT_phi->Fill(phi);exp_WSF_DT_pt->Fill(pt);
+	      eff_WSF_DT_eta->Fill(eta);eff_WSF_DT_phi->Fill(phi);eff_WSF_DT_pt->Fill(pt);
+	      if(pt>80.){
+		eff_WSF_DThipt_eta->Fill(eta);eff_WSF_DThipt_phi->Fill(phi);	    
+	      }
+	    }
+	  }
+	  else {
+	    for(int k=0;k<11;k++){
+	      if(phi>(25.+((float)k*30.)) && phi<(35.+((float)k*30.))){
+		exp_SF_RPC_eta->Fill(eta);exp_SF_RPC_phi->Fill(phi);exp_SF_RPC_pt->Fill(pt);
+		eff_SF_RPC_eta->Fill(eta);eff_SF_RPC_phi->Fill(phi);eff_SF_RPC_pt->Fill(pt);
+		exp_SF_DT_eta->Fill(eta);exp_SF_DT_phi->Fill(phi);exp_SF_DT_pt->Fill(pt);
+		eff_SF_DT_eta->Fill(eta);eff_SF_DT_phi->Fill(phi);eff_SF_DT_pt->Fill(pt);
+		if(pt>80.){
+		  eff_SF_DThipt_eta->Fill(eta);eff_SF_DThipt_phi->Fill(phi);	    
+		}
+		if(fabs(eta)>eta1 && fabs(eta)<eta2){
+		  exp_WSF_RPC_eta->Fill(eta);exp_WSF_RPC_phi->Fill(phi);exp_WSF_RPC_pt->Fill(pt);
+		  eff_WSF_RPC_eta->Fill(eta);eff_WSF_RPC_phi->Fill(phi);eff_WSF_RPC_pt->Fill(pt);
+		  exp_WSF_DT_eta->Fill(eta);exp_WSF_DT_phi->Fill(phi);exp_WSF_DT_pt->Fill(pt);
+		  eff_WSF_DT_eta->Fill(eta);eff_WSF_DT_phi->Fill(phi);eff_WSF_DT_pt->Fill(pt);
+		  if(pt>80.){
+		    eff_WSF_DThipt_eta->Fill(eta);eff_WSF_DThipt_phi->Fill(phi);	    
+		  }
+		}
+	      }
+	    }
+	  }
+	    
+	  bool rpcOn=false;int rpcQ;
+	  if(!gmtBrlRPCCands.empty()){
+	    rpcOn=true;
+	    int q;
+	    vector<pair<L1MuGMTExtendedCand,int> >::const_iterator pairIt;
+	    for(pairIt=gmtBrlRPCCands.begin();pairIt!=gmtBrlRPCCands.end();pairIt++){
+	      if(*gmtIt==pairIt->first)q=pairIt->second;
+	    }
+	    expRPCQ_eta->Fill(eta);expRPCQ_phi->Fill(phi);expRPCQ_pt->Fill(pt);
+	    expRPCQ_etaphi->Fill(eta,phi);
+	    qGMT_qBrlRPCmatch->Fill(gmtIt->quality(),q);
+	    std::cout<<"q_brl_rpc_match "<<q<<std::endl;
+	    if(q>rpcMaj){
+	      effRPCQ_eta->Fill(eta);effRPCQ_phi->Fill(phi);effRPCQ_pt->Fill(pt);
+	      effRPCQ_etaphi->Fill(eta,phi);
+	      matchedRPC_QovM_etaphi->Fill(eta,phi);RPC_QovM_etaphi->Fill(eta,phi);
+	      matchedRPC_QovM_pt->Fill(pt);RPC_QovM_pt->Fill(pt);
+	    }
+	    else {
+	      matchedRPC_QunM_etaphi->Fill(eta,phi);RPC_QunM_etaphi->Fill(eta,phi);
+	      matchedRPC_QunM_pt->Fill(pt);RPC_QunM_pt->Fill(pt);
+	    }
+	    switch(q){
+	    case 0:
+	      matchedRPC_Q0_etaphi->Fill(eta,phi);
+	      RPC_Q0_etaphi->Fill(eta,phi);
+	      matchedRPC_Q0_pt->Fill(pt);
+	      RPC_Q0_pt->Fill(pt);
+	      break;
+	    case 1:
+	      matchedRPC_Q1_etaphi->Fill(eta,phi);
+	      RPC_Q1_etaphi->Fill(eta,phi);
+	      matchedRPC_Q1_pt->Fill(pt);
+	      RPC_Q1_pt->Fill(pt);
+	      break;
+	    case 2:
+	      matchedRPC_Q2_etaphi->Fill(eta,phi);
+	      RPC_Q2_etaphi->Fill(eta,phi);
+	      matchedRPC_Q2_pt->Fill(pt);
+	      RPC_Q2_pt->Fill(pt);
+	      break;
+	    case 3:
+	      matchedRPC_Q3_etaphi->Fill(eta,phi);
+	      RPC_Q3_etaphi->Fill(eta,phi);
+	      matchedRPC_Q3_pt->Fill(pt);
+	      RPC_Q3_pt->Fill(pt);
+	      break;
+	    }	   
+	    rpcQ=q;
+	  }
+	    
+	  if(!gmtBrlDTCands.empty()){
+	    int q;
+	    vector<pair<L1MuGMTExtendedCand,int> >::const_iterator pairIt;
+	    for(pairIt=gmtBrlDTCands.begin();pairIt!=gmtBrlDTCands.end();pairIt++){
+	      if(*gmtIt==pairIt->first)q=pairIt->second;
+	    }
+	    qGMT_qDTmatch->Fill(gmtIt->quality(),q);
+	    if(rpcOn)qRPC_qDTmatch->Fill(rpcQ,q);
+	    std::cout<<"DT_Q "<<q<<std::endl;
+	    switch(q){
+	    case 4:
+	      matchedDT_Q4_etaphi->Fill(eta,phi);
+	      matchedDT_Q4_pt->Fill(pt);
+	      DT_Q4_etaphi->Fill(eta,phi);
+	      DT_Q4_pt->Fill(pt);
+	      break;
+	    case 5:
+	      matchedDT_Q5_etaphi->Fill(eta,phi);
+	      matchedDT_Q5_pt->Fill(pt);
+	      DT_Q5_etaphi->Fill(eta,phi);
+	      DT_Q5_pt->Fill(pt);
+	      break;
+	    case 6:
+	      matchedDT_Q6_etaphi->Fill(eta,phi);
+	      matchedDT_Q6_pt->Fill(pt);
+	      DT_Q6_etaphi->Fill(eta,phi);
+	      DT_Q6_pt->Fill(pt);
+	      break;
+	    case 7:
+	      matchedDT_Q7_etaphi->Fill(eta,phi);
+	      matchedDT_Q7_pt->Fill(pt);
+	      DT_Q7_etaphi->Fill(eta,phi);
+	      DT_Q7_pt->Fill(pt);
+	      break;
+	    }
+	    if(q>dtMaj){
+	      expRPC_DTQ_eta->Fill(eta);expRPC_DTQ_phi->Fill(phi);expRPC_DTQ_pt->Fill(pt);
+	      expRPC_etaphi->Fill(eta,phi);
+	      if(rpcQ>rpcMaj){
+		effRPC_DTQ_eta->Fill(eta);effRPC_DTQ_phi->Fill(phi);effRPC_DTQ_pt->Fill(pt);
+		matcheDTQ_RPC_QovM_etaphi->Fill(eta,phi);matcheDTQ_RPC_QovM_pt->Fill(pt);
+	      }
+	      else {matcheDTQ_RPC_QunM_etaphi->Fill(eta,phi);matcheDTQ_RPC_QunM_pt->Fill(pt);}
+	    }
+	  }
+	}
+	else if(!gmtIt->isRPC() && !gmtIt->isMatchedCand()){//@@@@@@@@@@@@@@@@@@@@@@@@@@@  DT only
+	  expRPC_eta->Fill(eta);expRPC_phi->Fill(phi);expRPC_pt->Fill(pt);
+	  expRPCQ_eta->Fill(eta);expRPCQ_phi->Fill(phi);expRPCQ_pt->Fill(pt);
+	  expRPC_etaphi->Fill(eta,phi);expRPCQ_etaphi->Fill(eta,phi);
+	    
+	  //wheel-selected RPC histograms	  
+	  if(fabs(eta)>eta1 && fabs(eta)<eta2){
+	    exp_WF_RPC_eta->Fill(eta);exp_WF_RPC_phi->Fill(phi);exp_WF_RPC_pt->Fill(pt);
+	  }
+	    
+	  //station-selected RPC histograms
+	  if((phi>0. && phi<5.) || (phi>355. && phi<360.)){
+	    //	  if((phi>0. && phi<10.) || (phi>350. && phi<360.)){
+	    exp_SF_RPC_eta->Fill(eta);exp_SF_RPC_phi->Fill(phi);exp_SF_RPC_pt->Fill(pt);
+	    if(fabs(eta)>eta1 && fabs(eta)<eta2){
+	      exp_WSF_RPC_eta->Fill(eta);exp_WSF_RPC_phi->Fill(phi);exp_WSF_RPC_pt->Fill(pt);
+	    }
+	  }
+	  else {
+	    for(int k=0;k<11;k++){
+	      if(phi>(25.+((float)k*30.)) && phi<(35.+((float)k*30.))){
+		exp_SF_RPC_eta->Fill(eta);exp_SF_RPC_phi->Fill(phi);exp_SF_RPC_pt->Fill(pt);
+		if(fabs(eta)>eta1 && fabs(eta)<eta2){
+		  exp_WSF_RPC_eta->Fill(eta);exp_WSF_RPC_phi->Fill(phi);exp_WSF_RPC_pt->Fill(pt);
+		}
+	      }
+	    }
+	  }
+	    
+	  if(!gmtBrlDTCands.empty()){
+	    int q;
+	    vector<pair<L1MuGMTExtendedCand,int> >::const_iterator pairIt;
+	    for(pairIt=gmtBrlDTCands.begin();pairIt!=gmtBrlDTCands.end();pairIt++){
+	      if(*gmtIt==pairIt->first)q=pairIt->second;
+	    }
+	    qGMT_qDTonly->Fill(gmtIt->quality(),q);
+	    switch(q){
+	    case 4:
+	      onlyDT_Q4_etaphi->Fill(eta,phi);
+	      onlyDT_Q4_pt->Fill(pt);
+	      DT_Q4_etaphi->Fill(eta,phi);
+	      DT_Q4_pt->Fill(pt);
+	      break;
+	    case 5:
+	      onlyDT_Q5_etaphi->Fill(eta,phi);
+	      onlyDT_Q5_pt->Fill(pt);
+	      DT_Q5_etaphi->Fill(eta,phi);
+	      DT_Q5_pt->Fill(pt);
+	      break;
+	    case 6:
+	      onlyDT_Q6_etaphi->Fill(eta,phi);
+	      onlyDT_Q6_pt->Fill(pt);
+	      DT_Q6_etaphi->Fill(eta,phi);
+	      DT_Q6_pt->Fill(pt);
+	      break;
+	    case 7:
+	      onlyDT_Q7_etaphi->Fill(eta,phi);
+	      onlyDT_Q7_pt->Fill(pt);
+	      DT_Q7_etaphi->Fill(eta,phi);
+	      DT_Q7_pt->Fill(pt);
+	      break;
+	    }
+	    if(q>dtMaj)expRPC_DTQ_eta->Fill(eta);expRPC_DTQ_phi->Fill(phi);expRPC_DTQ_pt->Fill(pt);
+	  }
+	}      
+      }
+    }
+  }
+
+
+  //   edm::Handle<CandidateCollection> muCands;
+  //   if(reco)iEvent.getByLabel("muons",muCands);
+  //   else iEvent.getByLabel("genParticles",muCands);
+
+  //   const Candidate *goodMu;
+
+  edm::Handle<GenParticleCollection> genParticles;
+  edm::Handle<reco::MuonCollection> globalMuons;
+
+  iEvent.getByType(genParticles);
+  iEvent.getByType(globalMuons);
+
+  const Candidate *recoMu, *genMu, *goodMu;
+    
+  int gMuons(0),rMuons(0),nMuons(0);
+  for(unsigned int i=0;i<genParticles->size();i++){
+    const Candidate *genRef=&(genParticles->at(i));
+    //     CandidateRef genRef(muCands,i);
+    if(abs(genRef->pdgId())!=13 || (genRef->pt()<ptCut) || fabs(genRef->eta())>5.)continue;
+    
+    const Candidate* moth=genRef->mother();      
+    if(abs(moth->pdgId())!=13){
+      motherMuons->Fill(abs(moth->pdgId()));
+      if(abs(moth->pdgId())!=24)std::cout<<"nonW mother PDG ID "<<moth->pdgId()<<std::endl;
+      else {
+	int st=genRef->status();
+	switch (st){
+	case 1:
+	  genWMu1_pt->Fill(genRef->pt());
+	  break;
+	case 3:
+	  genWMu3_pt->Fill(genRef->pt());
+	  break;
+	}
+      }
+    }
+    
+    if(genRef->status()==3){
+      std::cout<<"MuSt_3 mother "<<moth->pdgId()<<std::endl;//nMuGen_st3++;
+      genMu3_pt->Fill(genRef->pt());
+    }
+
+    if(genRef->status()!=1)continue;
+    genMu1_pt->Fill(genRef->pt());
+    const Candidate* grMoth=moth->mother();
+    std::cout<<"MuSt_1 mother "<<moth->pdgId()<<" MuSt_1 grandMother "<<grMoth->pdgId()<<std::endl;
+    gMuons++;
+    genMu=genRef;
+  }
+
+  for(unsigned int j=0;j<globalMuons->size();j++){
+    const Candidate *recoRef=&(globalMuons->at(j));
+    if(!recoRef->isGlobalMuon() || recoRef->pt()<ptCut || fabs(recoRef->eta())>5.)continue;
+    recoMu_pt->Fill(recoRef->pt());
+    rMuons++;
+    recoMu=recoRef;
+  }
+  std::cout<<"gMuons "<<gMuons<<" rMuons "<<rMuons<<std::endl;
+
+  if(reco){
+    goodMu=recoMu;
+    nMuons=rMuons;
+  }
+  else {
+    goodMu=genMu;
+    nMuons=gMuons;
+  }
+  
+  if(nMuons==1){
+    float ptGen=goodMu->pt();
+    float etaGen=goodMu->eta();
+    float phiGen=goodMu->phi();
+    if(phiGen<0.)phiGen+=(2*M_PI);
+    float phiGenHisto=phiGen*radToDeg;      
+    cout<<"DTDEBUG<<<RECO:"<<reco<<"  RUN"<<iEvent.id().run()<<" EVENT "<<iEvent.id().event()<<" pt "<<ptGen<<" eta "<<etaGen<<" phi "<<phiGenHisto<<endl;
+
+    totalGen_etaphi->Fill(etaGen,phiGenHisto);
+
+    vector<pair<L1MuGMTExtendedCand,int> > gmtRPC,gmtDTCSC;
+    
+    matchExpL1Eta->Fill(etaGen);
+    matchExpL1Phi->Fill(phiGenHisto);
+    matchExpL1Pt->Fill(ptGen);
+    matchExpL1EtaPhi->Fill(etaGen,phiGenHisto);
+
+    //fill gmtRPC vector independently from DT/CSC overlap region cuts
+    if(fabs(etaGen)<=1.)gmtRPC=gmtBrlRPCCands;
+    else if(fabs(etaGen)<=1.7)gmtRPC=gmtFwdRPCCands;
+
+    //DT/CSC
+    if(fabs(etaGen)<=0.8){
+      matchExpDTEta->Fill(etaGen);
+      matchExpDTPhi->Fill(phiGenHisto);
+      matchExpDTPt->Fill(ptGen);
+      matchExpDTEtaPhi->Fill(etaGen,phiGenHisto);
+      if(ptGen>80.){
+	matchExpDThiptEta->Fill(etaGen);
+	matchExpDThiptPhi->Fill(phiGenHisto);
+      }
+      gmtDTCSC=gmtBrlDTCands;
+      if(fabs(etaGen)>eta1 && fabs(etaGen)<eta2){
+	matchExp_WF_DTEta->Fill(etaGen);matchExp_WF_DTPhi->Fill(phiGenHisto);matchExp_WF_DTPt->Fill(ptGen);
+	if(ptGen>80.){
+	  matchExp_WF_DThiptEta->Fill(etaGen);
+	  matchExp_WF_DThiptPhi->Fill(phiGenHisto);
+	}
+      }
+      
+      //station-selected RPC histograms
+      if((phiGenHisto>0. && phiGenHisto<5.) || (phiGenHisto>355. && phiGenHisto<360.)){
+	//	  if((phiGenHisto>0. && phiGenHisto<10.) || (phiGenHisto>350. && phiGenHisto<360.)){
+	matchExp_SF_DTEta->Fill(etaGen);matchExp_SF_DTPhi->Fill(phiGenHisto);matchExp_SF_DTPt->Fill(ptGen);
+	if(ptGen>80.){
+	  matchExp_SF_DThiptEta->Fill(etaGen);
+	  matchExp_SF_DThiptPhi->Fill(phiGenHisto);
+	}
+	if(fabs(etaGen)>eta1 && fabs(etaGen)<eta2){
+	  matchExp_WSF_DTEta->Fill(etaGen);matchExp_WSF_DTPhi->Fill(phiGenHisto);matchExp_WSF_DTPt->Fill(ptGen);
+	  if(ptGen>80.){
+	    matchExp_WSF_DThiptEta->Fill(etaGen);
+	    matchExp_WSF_DThiptPhi->Fill(phiGenHisto);
+	  }
+	}
+      }
+      else {
+	for(int k=0;k<11;k++){
+	  if(phiGenHisto>(25.+((float)k*30.)) && phiGenHisto<(35.+((float)k*30.))){
+	    matchExp_SF_DTEta->Fill(etaGen);matchExp_SF_DTPhi->Fill(phiGenHisto);matchExp_SF_DTPt->Fill(ptGen);  
+	    if(ptGen>80.){
+	      matchExp_SF_DThiptEta->Fill(etaGen);
+	      matchExp_SF_DThiptPhi->Fill(phiGenHisto);
+	    }
+	    if(fabs(etaGen)>eta1 && fabs(etaGen)<eta2){
+	      matchExp_WSF_DTEta->Fill(etaGen);matchExp_WSF_DTPhi->Fill(phiGenHisto);matchExp_WSF_DTPt->Fill(ptGen);
+	      if(ptGen>80.){
+		matchExp_WSF_DThiptEta->Fill(etaGen);
+		matchExp_WSF_DThiptPhi->Fill(phiGenHisto);
+	      }
+	    }
+	  }
+	}
+      }
+    }
+    else if(fabs(etaGen)>1.2 && fabs(etaGen)<1.7){
+      matchExpCSCEta->Fill(etaGen);
+      matchExpCSCPhi->Fill(phiGenHisto);
+      matchExpCSCPt->Fill(ptGen);
+      matchExpCSCEtaPhi->Fill(etaGen,phiGenHisto);
+      gmtDTCSC=gmtFwdCSCCands;
+      if(fabs(etaGen)>eta1 && fabs(etaGen)<eta2){
+	matchExp_WF_CSCEta->Fill(etaGen);matchExp_WF_CSCPhi->Fill(phiGenHisto);matchExp_WF_CSCPt->Fill(ptGen);
+      }
+      
+      //station-selected RPC histograms
+      if((phiGenHisto>0. && phiGenHisto<5.) || (phiGenHisto>355. && phiGenHisto<360.)){
+	//	  if((phiGenHisto>0. && phiGenHisto<10.) || (phiGenHisto>350. && phiGenHisto<360.)){
+	matchExp_SF_CSCEta->Fill(etaGen);matchExp_SF_CSCPhi->Fill(phiGenHisto);matchExp_SF_CSCPt->Fill(ptGen);
+	if(fabs(etaGen)>eta1 && fabs(etaGen)<eta2){
+	  matchExp_WSF_CSCEta->Fill(etaGen);matchExp_WSF_CSCPhi->Fill(phiGenHisto);matchExp_WSF_CSCPt->Fill(ptGen);
+	}
+      }
+      else {
+	for(int k=0;k<11;k++){
+	  if(phiGenHisto>(25.+((float)k*30.)) && phiGenHisto<(35.+((float)k*30.))){
+	    matchExp_SF_CSCEta->Fill(etaGen);matchExp_SF_CSCPhi->Fill(phiGenHisto);matchExp_SF_CSCPt->Fill(ptGen);  
+	    if(fabs(etaGen)>eta1 && fabs(etaGen)<eta2){
+	      matchExp_WSF_CSCEta->Fill(etaGen);matchExp_WSF_CSCPhi->Fill(phiGenHisto);matchExp_WSF_CSCPt->Fill(ptGen);
+	    }
+	  }
+	}
+      }
+    }
+
+    //RPC
+    if(fabs(etaGen)<1.7){
+      matchExpRPCEta->Fill(etaGen);
+      matchExpRPCPhi->Fill(phiGenHisto);
+      matchExpRPCPt->Fill(ptGen);	
+      matchExpRPCEtaPhi->Fill(etaGen,phiGenHisto);
+
+      //Q-selected and dTQ-selected RPC histograms
+      matchExpRPCQEta->Fill(etaGen);matchExpRPCQPhi->Fill(phiGenHisto);matchExpRPCQPt->Fill(ptGen);
+      matchExpRPCQEtaPhi->Fill(etaGen,phiGenHisto);
+
+      //wheel-selected RPC histograms	  
+      if(fabs(etaGen)>eta1 && fabs(etaGen)<eta2){
+	matchExp_WF_RPCEta->Fill(etaGen);matchExp_WF_RPCPhi->Fill(phiGenHisto);matchExp_WF_RPCPt->Fill(ptGen);
+      }
+
+      //station-selected RPC histograms
+      if((phiGenHisto>0. && phiGenHisto<5.) || (phiGenHisto>355. && phiGenHisto<360.)){
+	//	  if((phiGenHisto>0. && phiGenHisto<10.) || (phiGenHisto>350. && phiGenHisto<360.)){
+	matchExp_SF_RPCEta->Fill(etaGen);matchExp_SF_RPCPhi->Fill(phiGenHisto);matchExp_SF_RPCPt->Fill(ptGen);
+	if(fabs(etaGen)>eta1 && fabs(etaGen)<eta2){
+	  matchExp_WSF_RPCEta->Fill(etaGen);matchExp_WSF_RPCPhi->Fill(phiGenHisto);matchExp_WSF_RPCPt->Fill(ptGen);
+	}
+      }
+      else {
+	for(int k=0;k<11;k++){
+	  if(phiGenHisto>(25.+((float)k*30.)) && phiGenHisto<(35.+((float)k*30.))){
+	    matchExp_SF_RPCEta->Fill(etaGen);matchExp_SF_RPCPhi->Fill(phiGenHisto);matchExp_SF_RPCPt->Fill(ptGen);  
+	    if(fabs(etaGen)>eta1 && fabs(etaGen)<eta2){
+	      matchExp_WSF_RPCEta->Fill(etaGen);matchExp_WSF_RPCPhi->Fill(phiGenHisto);matchExp_WSF_RPCPt->Fill(ptGen);
+	    }
+	  }
+	}
+      }
+    }
+
+    if(!gmtCands.empty()){
+      if(gmtCands.size()==1){
+	matchedGen_etaphi->Fill(etaGen,phiGenHisto);matchedGen_pt->Fill(ptGen);
+
+	vector<L1MuGMTExtendedCand>::const_iterator l1It=gmtCands.begin();
+	float l1Eta=l1It->etaValue(),l1Phi=l1It->phiValue(),l1Pt=l1It->ptValue();
+	float dPhi=deltaPhi(l1Phi,phiGen),delR=deltaR(l1Eta,l1Phi,etaGen,phiGen);
+
+	if(l1It->isRPC()/* || l1It->isMatchedCand()*/){
+	  genMat_dPt->Fill(ptGen-l1Pt);
+	  genMat_genPtrpcPt->Fill(ptGen,l1Pt);
+	  genMat_DRdPt->Fill(delR,ptGen-l1Pt);
+	  if(ptGen>80.){
+	    genMat_dPhi->Fill(phiGen-l1Phi);
+	    genMat_dEta->Fill(etaGen-l1Eta);
+	  }
+	}
+
+	cout<<"DPHI_ISSUE:l1Phi "<<l1Phi<<" genPhi "<<phiGen<<" origGenPhi "<<goodMu->phi()<<" dPhi "<<dPhi<<" origdPhi "<<deltaPhi(l1Phi,phiGen)<<" Profile: "<<phiGenHisto<<" "<<dPhi*radToDeg<<endl;
+
+	etaResol->Fill(l1Eta-etaGen);phiResol->Fill(dPhi);ptResol->Fill(l1Pt-ptGen);
+	l1PtDist->Fill(l1Pt);deltaR_L1->Fill(delR);
+	etaResDeltaR->Fill(l1Eta-etaGen,delR);phiResDeltaR->Fill(dPhi,delR);
+	deltaEtaDeltaPhi->Fill(l1Eta-etaGen,dPhi);deltaEtaSQdeltaPhiSQ->Fill(pow(l1Eta-etaGen,2),pow(dPhi,2));
+	l1GenEtaRes->Fill(etaGen,l1Eta-etaGen);l1GenPhiRes->Fill(phiGenHisto,dPhi*radToDeg);l1GenPhiResRad->Fill(phiGen,dPhi);l1GenPtRes->Fill(ptGen,l1Pt-ptGen);
+	if(gmtRPC.size()==1){
+	  rpcGenEtaRes->Fill(etaGen,l1Eta-etaGen);rpcGenPhiRes->Fill(phiGenHisto,dPhi*radToDeg);rpcGenPtRes->Fill(ptGen,l1Pt-ptGen);
+	}
+	if(gmtDTCSC.size()==1 && fabs(etaGen)<=0.8){
+	  dtGenEtaRes->Fill(etaGen,l1Eta-etaGen);dtGenPhiRes->Fill(phiGenHisto,dPhi*radToDeg);dtGenPtRes->Fill(ptGen,l1Pt-ptGen);
+	}
+	if(gmtDTCSC.size()==1 && fabs(etaGen)>=1.2 && fabs(etaGen)<=1.7){
+	  cscGenEtaRes->Fill(etaGen,l1Eta-etaGen);cscGenPhiRes->Fill(phiGenHisto,dPhi*radToDeg);cscGenPtRes->Fill(ptGen,l1Pt-ptGen);
+	}
+      }
+      matchEffL1Eta->Fill(etaGen);matchEffL1Phi->Fill(phiGenHisto);matchEffL1Pt->Fill(ptGen);
+      matchEffL1EtaPhi->Fill(etaGen,phiGenHisto);
+      
+      int rQ=0,dcQ=0;pair<L1MuGMTExtendedCand,int> rpcCan,dtcscCan;
+      if(!gmtRPC.empty()){
+	matchedRPCGen_etaphi->Fill(etaGen,phiGenHisto);
+	matchedRPCGen_pt->Fill(ptGen);
+	vector<pair<L1MuGMTExtendedCand,int> >::const_iterator rIt;
+	for(rIt=gmtRPC.begin();rIt!=gmtRPC.end();rIt++){
+	  if(rIt->second>rQ){
+	    rQ=rIt->second;
+	    rpcCan=*rIt;
+	  }
+	}
+	
+	matchEffRPCEta->Fill(etaGen);
+	matchEffRPCPhi->Fill(phiGenHisto);
+	matchEffRPCPt->Fill(ptGen);	
+	matchEffRPCEtaPhi->Fill(etaGen,phiGenHisto);
+	
+	//Q-selected RPC histograms
+	if(rQ>rpcMaj){matchEffRPCQEta->Fill(etaGen);matchEffRPCQPhi->Fill(phiGenHisto);matchEffRPCQPt->Fill(ptGen);matchEffRPCQEtaPhi->Fill(etaGen,phiGenHisto);}
+	
+	//wheel-selected RPC histograms
+	if(fabs(etaGen)>eta1 && fabs(etaGen)<eta2){
+	  matchEff_WF_RPCEta->Fill(etaGen);matchEff_WF_RPCPhi->Fill(phiGenHisto);matchEff_WF_RPCPt->Fill(ptGen);
+	}
+	
+	//station-selected RPC histograms
+	if((phiGenHisto>0. && phiGenHisto<5.) || (phiGenHisto>355. && phiGenHisto<360.)){
+	  //	  if((phiGenHisto>0. && phiGenHisto<10.) || (phiGenHisto>350. && phiGenHisto<360.)){
+	  matchEff_SF_RPCEta->Fill(etaGen);matchEff_SF_RPCPhi->Fill(phiGenHisto);matchEff_SF_RPCPt->Fill(ptGen);
+	  if(fabs(etaGen)>eta1 && fabs(etaGen)<eta2){
+	    matchEff_WSF_RPCEta->Fill(etaGen);matchEff_WSF_RPCPhi->Fill(phiGenHisto);matchEff_WSF_RPCPt->Fill(ptGen);
+	  }
+	}
+	else {
+	  for(int k=0;k<11;k++){
+	    if(phiGenHisto>(25.+((float)k*30.)) && phiGenHisto<(35.+((float)k*30.))){
+	      matchEff_SF_RPCEta->Fill(etaGen);matchEff_SF_RPCPhi->Fill(phiGenHisto);matchEff_SF_RPCPt->Fill(ptGen);
+	      if(fabs(etaGen)>eta1 && fabs(etaGen)<eta2){
+		matchEff_WSF_RPCEta->Fill(etaGen);matchEff_WSF_RPCPhi->Fill(phiGenHisto);matchEff_WSF_RPCPt->Fill(ptGen);
+	      }
+	    }
+	  }
+	}
+      }
+
+      if(!gmtDTCSC.empty()){
+	vector<pair<L1MuGMTExtendedCand,int> >::const_iterator dcIt;
+	for(dcIt=gmtDTCSC.begin();dcIt!=gmtDTCSC.end();dcIt++){
+	  if(dcIt->second>dcQ){
+	    dcQ=dcIt->second;	
+	    dtcscCan=*dcIt;
+	  }
+	}
+	
+	if(fabs(etaGen)<=0.8){
+	  matchedDTGen_etaphi->Fill(etaGen,phiGenHisto);
+	  matchedDTGen_pt->Fill(ptGen);
+	  matchEffDTEta->Fill(etaGen);
+	  matchEffDTPt->Fill(ptGen);
+	  matchEffDTPhi->Fill(phiGenHisto);
+	  matchEffDTEtaPhi->Fill(etaGen,phiGenHisto);
+	  if(ptGen>80.){
+	    matchEffDThiptEta->Fill(etaGen);
+	    matchEffDThiptPhi->Fill(phiGenHisto);
+	  }
+	  std::cout<<"rQ "<<rQ<<" dcQ "<<dcQ<<std::endl;
+
+	  // 	  if(dcQ>dtMaj){
+	  // 	    matchExpRPC_DTQEta->Fill(etaGen);matchExpRPC_DTQPhi->Fill(phiGenHisto);matchExpRPC_DTQPt->Fill(ptGen);
+	  // 	    if(!gmtRPC.empty()){
+	  // 	      matchEffRPC_DTQEta->Fill(etaGen);matchEffRPC_DTQPhi->Fill(phiGenHisto);matchEffRPC_DTQPt->Fill(ptGen);
+	  // 	    }
+	  // 	  }
+	  
+	  if(fabs(etaGen)>eta1 && fabs(etaGen)<eta2){
+	    matchEff_WF_DTEta->Fill(etaGen);matchEff_WF_DTPhi->Fill(phiGenHisto);matchEff_WF_DTPt->Fill(ptGen);
+	    if(ptGen>80.){
+	      matchEff_WF_DThiptEta->Fill(etaGen);
+	      matchEff_WF_DThiptPhi->Fill(phiGenHisto);
+	    }
+	  }
+	  
+	  //station-selected RPC histograms
+	  if((phiGenHisto>0. && phiGenHisto<5.) || (phiGenHisto>355. && phiGenHisto<360.)){
+	    //	  if((phiGenHisto>0. && phiGenHisto<10.) || (phiGenHisto>350. && phiGenHisto<360.)){
+	    matchEff_SF_DTEta->Fill(etaGen);matchEff_SF_DTPhi->Fill(phiGenHisto);matchEff_SF_DTPt->Fill(ptGen);
+	    if(ptGen>80.){
+	      matchEff_SF_DThiptEta->Fill(etaGen);
+	      matchEff_SF_DThiptPhi->Fill(phiGenHisto);
+	    }
+	    if(fabs(etaGen)>eta1 && fabs(etaGen)<eta2){
+	      matchEff_WSF_DTEta->Fill(etaGen);matchEff_WSF_DTPhi->Fill(phiGenHisto);matchEff_WSF_DTPt->Fill(ptGen);
+	      if(ptGen>80.){
+		matchEff_WSF_DThiptEta->Fill(etaGen);
+		matchEff_WSF_DThiptPhi->Fill(phiGenHisto);
+	      }
+	    }
+	  }
+	  else {
+	    for(int k=0;k<11;k++){
+	      if(phiGenHisto>(25.+((float)k*30.)) && phiGenHisto<(35.+((float)k*30.))){
+		matchEff_SF_DTEta->Fill(etaGen);matchEff_SF_DTPhi->Fill(phiGenHisto);matchEff_SF_DTPt->Fill(ptGen);
+		if(ptGen>80.){
+		  matchEff_SF_DThiptEta->Fill(etaGen);
+		  matchEff_SF_DThiptPhi->Fill(phiGenHisto);
+		}
+		if(fabs(etaGen)>eta1 && fabs(etaGen)<eta2){
+		  matchEff_WSF_DTEta->Fill(etaGen);matchEff_WSF_DTPhi->Fill(phiGenHisto);matchEff_WSF_DTPt->Fill(ptGen);
+		  if(ptGen>80.){
+		    matchEff_WSF_DThiptEta->Fill(etaGen);
+		    matchEff_WSF_DThiptPhi->Fill(phiGenHisto);
+		  }
+		}
+	      }
+	    }
+	  }
+	}
+	else if(fabs(etaGen)>1.2 && fabs(etaGen)<1.7){
+	  matchedCSCGen_etaphi->Fill(etaGen,phiGenHisto);
+	  matchedCSCGen_pt->Fill(ptGen);
+	  matchEffCSCEta->Fill(etaGen);
+	  matchEffCSCPt->Fill(ptGen);
+	  matchEffCSCPhi->Fill(phiGenHisto);
+	  matchEffCSCEtaPhi->Fill(etaGen,phiGenHisto);
+	  if(fabs(etaGen)>eta1 && fabs(etaGen)<eta2){
+	    matchEff_WF_CSCEta->Fill(etaGen);matchEff_WF_CSCPhi->Fill(phiGenHisto);matchEff_WF_CSCPt->Fill(ptGen);
+	  }
+	  
+	  //station-selected RPC histograms
+	  if((phiGenHisto>0. && phiGenHisto<5.) || (phiGenHisto>355. && phiGenHisto<360.)){
+	    //	  if((phiGenHisto>0. && phiGenHisto<10.) || (phiGenHisto>350. && phiGenHisto<360.)){
+	    matchEff_SF_CSCEta->Fill(etaGen);matchEff_SF_CSCPhi->Fill(phiGenHisto);matchEff_SF_CSCPt->Fill(ptGen);
+	    if(fabs(etaGen)>eta1 && fabs(etaGen)<eta2){
+	      matchEff_WSF_CSCEta->Fill(etaGen);matchEff_WSF_CSCPhi->Fill(phiGenHisto);matchEff_WSF_CSCPt->Fill(ptGen);
+	    }
+	  }
+	  else {
+	    for(int k=0;k<11;k++){
+	      if(phiGenHisto>(25.+((float)k*30.)) && phiGenHisto<(35.+((float)k*30.))){
+		matchEff_SF_CSCEta->Fill(etaGen);matchEff_SF_CSCPhi->Fill(phiGenHisto);matchEff_SF_CSCPt->Fill(ptGen);
+		if(fabs(etaGen)>eta1 && fabs(etaGen)<eta2){
+		  matchEff_WSF_CSCEta->Fill(etaGen);matchEff_WSF_CSCPhi->Fill(phiGenHisto);matchEff_WSF_CSCPt->Fill(ptGen);
+		}
+	      }
+	    }
+	  }
+	}	
+      }
+    }
+    else {
+      onlyGen_etaphi->Fill(etaGen,phiGenHisto);onlyGen_pt->Fill(ptGen);
+      if(fabs(etaGen)<1.7){
+	onlyRPCGen_etaphi->Fill(etaGen,phiGenHisto);
+	onlyRPCGen_pt->Fill(ptGen);
+      }
+      if(fabs(etaGen)<1.){
+	onlyDTGen_etaphi->Fill(etaGen,phiGenHisto);
+	onlyDTGen_pt->Fill(ptGen);
+      }
+      else {
+	onlyCSCGen_etaphi->Fill(etaGen,phiGenHisto);
+	onlyCSCGen_pt->Fill(ptGen);
+      }
+    }
+    
+  }//end nMuons==1
+
+  cout<<"filter value "<<filter<<endl;
+   return filter;
+}
+
+void 
+L1DataDrivenMC::endJob() {
+
+  histoFile->WriteTObject(regMat_dPt);
+  histoFile->WriteTObject(genMat_dPt);
+  histoFile->WriteTObject(genMat_dPhi);
+  histoFile->WriteTObject(genMat_dEta);
+  histoFile->WriteTObject(regMat_dtPtrpcPt);
+  histoFile->WriteTObject(genMat_genPtrpcPt);
+  histoFile->WriteTObject(regMat_cscPtrpcPt);
+  histoFile->WriteTObject(regMat_dEtadPhi);
+  histoFile->WriteTObject(regMat_DRdPt);
+  histoFile->WriteTObject(genMat_DRdPt);
+  histoFile->WriteTObject(regMat_dPtgmtPt);
+
+  histoFile->WriteTObject(expCSC_eta);
+  histoFile->WriteTObject(expCSC_phi);
+  histoFile->WriteTObject(expCSC_pt);
+  histoFile->WriteTObject(expDT_eta);
+  histoFile->WriteTObject(expDT_phi);
+  histoFile->WriteTObject(expDT_pt);
+  histoFile->WriteTObject(expRPC_eta); 
+  histoFile->WriteTObject(expRPC_phi);
+  histoFile->WriteTObject(expRPC_pt);
+
+  histoFile->WriteTObject(effCSC_eta);
+  histoFile->WriteTObject(effCSC_phi);
+  histoFile->WriteTObject(effCSC_pt);
+  histoFile->WriteTObject(effDT_eta);
+  histoFile->WriteTObject(effDT_phi); 
+  histoFile->WriteTObject(effDT_pt);
+  histoFile->WriteTObject(effRPC_eta); 
+  histoFile->WriteTObject(effRPC_phi);
+  histoFile->WriteTObject(effRPC_pt);
+
+  histoFile->WriteTObject(exp_WF_CSC_eta);
+  histoFile->WriteTObject(exp_WF_CSC_phi);
+  histoFile->WriteTObject(exp_WF_CSC_pt);
+  histoFile->WriteTObject(exp_SF_CSC_eta); 
+  histoFile->WriteTObject(exp_SF_CSC_phi);
+  histoFile->WriteTObject(exp_SF_CSC_pt); 
+  histoFile->WriteTObject(exp_WSF_CSC_eta);
+  histoFile->WriteTObject(exp_WSF_CSC_phi);
+  histoFile->WriteTObject(exp_WSF_CSC_pt);
+
+  histoFile->WriteTObject(eff_WF_CSC_eta); 
+  histoFile->WriteTObject(eff_WF_CSC_phi);
+  histoFile->WriteTObject(eff_WF_CSC_pt);
+  histoFile->WriteTObject(eff_SF_CSC_eta); 
+  histoFile->WriteTObject(eff_SF_CSC_phi); 
+  histoFile->WriteTObject(eff_SF_CSC_pt);
+  histoFile->WriteTObject(eff_WSF_CSC_eta); 
+  histoFile->WriteTObject(eff_WSF_CSC_phi);
+  histoFile->WriteTObject(eff_WSF_CSC_pt);
+
+  histoFile->WriteTObject(expDThipt_eta);
+  histoFile->WriteTObject(expDThipt_phi);
+  histoFile->WriteTObject(effDThipt_eta);
+  histoFile->WriteTObject(effDThipt_phi);
+  histoFile->WriteTObject(exp_WF_DThipt_eta);
+  histoFile->WriteTObject(exp_WF_DThipt_phi);
+  histoFile->WriteTObject(exp_SF_DThipt_eta);
+  histoFile->WriteTObject(exp_SF_DThipt_phi);
+  histoFile->WriteTObject(exp_WSF_DThipt_eta);
+  histoFile->WriteTObject(exp_WSF_DThipt_phi);
+  histoFile->WriteTObject(eff_WF_DThipt_eta);
+  histoFile->WriteTObject(eff_WF_DThipt_phi);
+  histoFile->WriteTObject(eff_SF_DThipt_eta);
+  histoFile->WriteTObject(eff_SF_DThipt_phi);
+  histoFile->WriteTObject(eff_WSF_DThipt_eta);
+  histoFile->WriteTObject(eff_WSF_DThipt_phi);
+
+  histoFile->WriteTObject(exp_WF_DT_eta);
+  histoFile->WriteTObject(exp_WF_DT_phi);
+  histoFile->WriteTObject(exp_WF_DT_pt);
+  histoFile->WriteTObject(exp_SF_DT_eta);
+  histoFile->WriteTObject(exp_SF_DT_phi);
+  histoFile->WriteTObject(exp_SF_DT_pt);
+  histoFile->WriteTObject(exp_WSF_DT_eta); 
+  histoFile->WriteTObject(exp_WSF_DT_phi);
+  histoFile->WriteTObject(exp_WSF_DT_pt);
+  histoFile->WriteTObject(eff_WF_DT_eta);
+  histoFile->WriteTObject(eff_WF_DT_phi); 
+  histoFile->WriteTObject(eff_WF_DT_pt);
+  histoFile->WriteTObject(eff_SF_DT_eta); 
+  histoFile->WriteTObject(eff_SF_DT_phi); 
+  histoFile->WriteTObject(eff_SF_DT_pt); 
+  histoFile->WriteTObject(eff_WSF_DT_eta); 
+  histoFile->WriteTObject(eff_WSF_DT_phi);
+  histoFile->WriteTObject(eff_WSF_DT_pt);
+
+  histoFile->WriteTObject(exp_WF_RPC_eta);
+  histoFile->WriteTObject(exp_WF_RPC_phi);
+  histoFile->WriteTObject(exp_WF_RPC_pt);
+  histoFile->WriteTObject(exp_SF_RPC_eta);
+  histoFile->WriteTObject(exp_SF_RPC_phi);
+  histoFile->WriteTObject(exp_SF_RPC_pt); 
+  histoFile->WriteTObject(exp_WSF_RPC_eta); 
+  histoFile->WriteTObject(exp_WSF_RPC_phi);
+  histoFile->WriteTObject(exp_WSF_RPC_pt);
+  histoFile->WriteTObject(eff_WF_RPC_eta);
+  histoFile->WriteTObject(eff_WF_RPC_phi); 
+  histoFile->WriteTObject(eff_WF_RPC_pt); 
+  histoFile->WriteTObject(eff_SF_RPC_eta); 
+  histoFile->WriteTObject(eff_SF_RPC_phi); 
+  histoFile->WriteTObject(eff_SF_RPC_pt); 
+  histoFile->WriteTObject(eff_WSF_RPC_eta); 
+  histoFile->WriteTObject(eff_WSF_RPC_phi);
+  histoFile->WriteTObject(eff_WSF_RPC_pt);
+  histoFile->WriteTObject(expRPCQ_eta); 
+  histoFile->WriteTObject(expRPCQ_phi); 
+  histoFile->WriteTObject(expRPCQ_pt); 
+  histoFile->WriteTObject(effRPCQ_eta); 
+  histoFile->WriteTObject(effRPCQ_phi); 
+  histoFile->WriteTObject(effRPCQ_pt);
+  histoFile->WriteTObject(expRPC_DTQ_eta); 
+  histoFile->WriteTObject(expRPC_DTQ_phi); 
+  histoFile->WriteTObject(expRPC_DTQ_pt); 
+  histoFile->WriteTObject(effRPC_DTQ_eta); 
+  histoFile->WriteTObject(effRPC_DTQ_phi); 
+  histoFile->WriteTObject(effRPC_DTQ_pt);
+
+  histoFile->WriteTObject(expCSC_etaphi);
+  histoFile->WriteTObject(expDT_etaphi); 
+  histoFile->WriteTObject(expRPC_etaphi); 
+  histoFile->WriteTObject(expRPCQ_etaphi);
+  histoFile->WriteTObject(expRPC_DTQ_etaphi);
+  histoFile->WriteTObject(effCSC_etaphi); 
+  histoFile->WriteTObject(effDT_etaphi); 
+  histoFile->WriteTObject(effRPC_etaphi); 
+  histoFile->WriteTObject(effRPCQ_etaphi); 
+  histoFile->WriteTObject(effRPC_DTQ_etaphi);
+
+  histoFile->WriteTObject(simExpEta); 
+  histoFile->WriteTObject(simExpPhi); 
+  histoFile->WriteTObject(simExpPt);
+  histoFile->WriteTObject(simEffEta); 
+  histoFile->WriteTObject(simEffPhi); 
+  histoFile->WriteTObject(simEffPt);
+  histoFile->WriteTObject(matchExpL1Eta); 
+  histoFile->WriteTObject(matchExpCSCEta); 
+  histoFile->WriteTObject(matchExpDTEta); 
+  histoFile->WriteTObject(matchExpRPCEta);
+  histoFile->WriteTObject(matchExpL1Pt); 
+  histoFile->WriteTObject(matchExpCSCPt); 
+  histoFile->WriteTObject(matchExpDTPt); 
+  histoFile->WriteTObject(matchExpRPCPt);
+  histoFile->WriteTObject(matchExpL1Phi); 
+  histoFile->WriteTObject(matchExpCSCPhi); 
+  histoFile->WriteTObject(matchExpDTPhi); 
+  histoFile->WriteTObject(matchExpRPCPhi);
+  histoFile->WriteTObject(matchEffL1Eta); 
+  histoFile->WriteTObject(matchEffCSCEta); 
+  histoFile->WriteTObject(matchEffDTEta); 
+  histoFile->WriteTObject(matchEffRPCEta);
+  histoFile->WriteTObject(matchEffL1Pt); 
+  histoFile->WriteTObject(matchEffCSCPt); 
+  histoFile->WriteTObject(matchEffDTPt); 
+  histoFile->WriteTObject(matchEffRPCPt);
+  histoFile->WriteTObject(matchEffL1Phi); 
+  histoFile->WriteTObject(matchEffCSCPhi); 
+  histoFile->WriteTObject(matchEffDTPhi); 
+  histoFile->WriteTObject(matchEffRPCPhi);
+
+  histoFile->WriteTObject(matchExpDThiptEta);
+  histoFile->WriteTObject(matchExpDThiptPhi);
+  histoFile->WriteTObject(matchEffDThiptEta);
+  histoFile->WriteTObject(matchEffDThiptPhi);
+  histoFile->WriteTObject(matchExp_WF_DThiptEta);
+  histoFile->WriteTObject(matchExp_WF_DThiptPhi);
+  histoFile->WriteTObject(matchExp_SF_DThiptEta);
+  histoFile->WriteTObject(matchExp_SF_DThiptPhi);
+  histoFile->WriteTObject(matchExp_WSF_DThiptEta);
+  histoFile->WriteTObject(matchExp_WSF_DThiptPhi);
+  histoFile->WriteTObject(matchEff_WF_DThiptEta);
+  histoFile->WriteTObject(matchEff_WF_DThiptPhi);
+  histoFile->WriteTObject(matchEff_SF_DThiptEta);
+  histoFile->WriteTObject(matchEff_SF_DThiptPhi);
+  histoFile->WriteTObject(matchEff_WSF_DThiptEta);
+  histoFile->WriteTObject(matchEff_WSF_DThiptPhi);
+  
+  histoFile->WriteTObject(matchExp_WF_CSCEta); 
+  histoFile->WriteTObject(matchExp_WF_CSCPhi); 
+  histoFile->WriteTObject(matchExp_WF_CSCPt);
+  histoFile->WriteTObject(matchExp_SF_CSCEta); 
+  histoFile->WriteTObject(matchExp_SF_CSCPhi); 
+  histoFile->WriteTObject(matchExp_SF_CSCPt);
+  histoFile->WriteTObject(matchExp_WSF_CSCEta); 
+  histoFile->WriteTObject(matchExp_WSF_CSCPhi); 
+  histoFile->WriteTObject(matchExp_WSF_CSCPt);
+  histoFile->WriteTObject(matchEff_WF_CSCEta); 
+  histoFile->WriteTObject(matchEff_WF_CSCPhi); 
+  histoFile->WriteTObject(matchEff_WF_CSCPt);
+  histoFile->WriteTObject(matchEff_SF_CSCEta); 
+  histoFile->WriteTObject(matchEff_SF_CSCPhi); 
+  histoFile->WriteTObject(matchEff_SF_CSCPt);
+  histoFile->WriteTObject(matchEff_WSF_CSCEta); 
+  histoFile->WriteTObject(matchEff_WSF_CSCPhi); 
+  histoFile->WriteTObject(matchEff_WSF_CSCPt);
+
+  histoFile->WriteTObject(matchExp_WF_DTEta); 
+  histoFile->WriteTObject(matchExp_WF_DTPhi); 
+  histoFile->WriteTObject(matchExp_WF_DTPt);
+  histoFile->WriteTObject(matchExp_SF_DTEta); 
+  histoFile->WriteTObject(matchExp_SF_DTPhi); 
+  histoFile->WriteTObject(matchExp_SF_DTPt);
+  histoFile->WriteTObject(matchExp_WSF_DTEta); 
+  histoFile->WriteTObject(matchExp_WSF_DTPhi); 
+  histoFile->WriteTObject(matchExp_WSF_DTPt);
+  histoFile->WriteTObject(matchEff_WF_DTEta); 
+  histoFile->WriteTObject(matchEff_WF_DTPhi); 
+  histoFile->WriteTObject(matchEff_WF_DTPt);
+  histoFile->WriteTObject(matchEff_SF_DTEta); 
+  histoFile->WriteTObject(matchEff_SF_DTPhi); 
+  histoFile->WriteTObject(matchEff_SF_DTPt);
+  histoFile->WriteTObject(matchEff_WSF_DTEta); 
+  histoFile->WriteTObject(matchEff_WSF_DTPhi); 
+  histoFile->WriteTObject(matchEff_WSF_DTPt);
+
+  histoFile->WriteTObject(matchExp_WF_RPCEta); 
+  histoFile->WriteTObject(matchExp_WF_RPCPhi); 
+  histoFile->WriteTObject(matchExp_WF_RPCPt);
+  histoFile->WriteTObject(matchExp_SF_RPCEta); 
+  histoFile->WriteTObject(matchExp_SF_RPCPhi);
+  histoFile->WriteTObject(matchExp_SF_RPCPt);
+  histoFile->WriteTObject(matchExp_WSF_RPCEta); 
+  histoFile->WriteTObject(matchExp_WSF_RPCPhi); 
+  histoFile->WriteTObject(matchExp_WSF_RPCPt);
+  histoFile->WriteTObject(matchEff_WF_RPCEta); 
+  histoFile->WriteTObject(matchEff_WF_RPCPhi); 
+  histoFile->WriteTObject(matchEff_WF_RPCPt);
+  histoFile->WriteTObject(matchEff_SF_RPCEta); 
+  histoFile->WriteTObject(matchEff_SF_RPCPhi); 
+  histoFile->WriteTObject(matchEff_SF_RPCPt);
+  histoFile->WriteTObject(matchEff_WSF_RPCEta); 
+  histoFile->WriteTObject(matchEff_WSF_RPCPhi); 
+  histoFile->WriteTObject(matchEff_WSF_RPCPt);
+
+  histoFile->WriteTObject(matchExpRPCQEta); 
+  histoFile->WriteTObject(matchExpRPCQPhi); 
+  histoFile->WriteTObject(matchExpRPCQPt); 
+  histoFile->WriteTObject(matchEffRPCQEta);
+  histoFile->WriteTObject(matchEffRPCQPhi);
+  histoFile->WriteTObject(matchEffRPCQPt);
+  histoFile->WriteTObject(matchExpRPC_DTQEta);
+  histoFile->WriteTObject(matchExpRPC_DTQPhi);
+  histoFile->WriteTObject(matchExpRPC_DTQPt); 
+  histoFile->WriteTObject(matchEffRPC_DTQEta);
+  histoFile->WriteTObject(matchEffRPC_DTQPhi);
+  histoFile->WriteTObject(matchEffRPC_DTQPt);
+
+  histoFile->WriteTObject(matchExpL1EtaPhi);
+  histoFile->WriteTObject(matchExpCSCEtaPhi);
+  histoFile->WriteTObject(matchExpDTEtaPhi);
+  histoFile->WriteTObject(matchExpRPCEtaPhi); 
+  histoFile->WriteTObject(matchExpRPCQEtaPhi);
+  histoFile->WriteTObject(matchEffL1EtaPhi); 
+  histoFile->WriteTObject(matchEffCSCEtaPhi); 
+  histoFile->WriteTObject(matchEffDTEtaPhi);
+  histoFile->WriteTObject(matchEffRPCEtaPhi);
+  histoFile->WriteTObject(matchEffRPCQEtaPhi);
+
+  histoFile->WriteTObject(motherMuons);
+  histoFile->WriteTObject(genMu1_pt);
+  histoFile->WriteTObject(genMu3_pt);
+  histoFile->WriteTObject(genWMu1_pt);
+  histoFile->WriteTObject(genWMu3_pt);
+  histoFile->WriteTObject(recoMu_pt);
+  histoFile->WriteTObject(bx_GMT_RR);
+  histoFile->WriteTObject(nBX_perEvt);
+  histoFile->WriteTObject(etaResol);
+  histoFile->WriteTObject(phiResol); 
+  histoFile->WriteTObject(ptResol); 
+  histoFile->WriteTObject(l1PtDist);
+  histoFile->WriteTObject(deltaR_L1); 
+  histoFile->WriteTObject(deltaR_CSC);
+  histoFile->WriteTObject(deltaR_DT); 
+  histoFile->WriteTObject(deltaR_RPC); 
+  histoFile->WriteTObject(selDeltaR_L1);
+  histoFile->WriteTObject(selDeltaR_CSC);
+  histoFile->WriteTObject(selDeltaR_DT);
+  histoFile->WriteTObject(selDeltaR_RPC);
+  histoFile->WriteTObject(selChi2_ST);
+  histoFile->WriteTObject(etaResDeltaR);
+  histoFile->WriteTObject(phiResDeltaR);
+  histoFile->WriteTObject(deltaEtaDeltaPhi);
+  histoFile->WriteTObject(deltaEtaSQdeltaPhiSQ);
+
+  histoFile->WriteTObject(l1GenEtaRes);
+  histoFile->WriteTObject(l1GenPhiRes);
+  histoFile->WriteTObject(l1GenPhiResRad);
+  histoFile->WriteTObject(l1GenPtRes);
+  histoFile->WriteTObject(cscGenEtaRes);
+  histoFile->WriteTObject(cscGenPhiRes);
+  histoFile->WriteTObject(cscGenPtRes);
+  histoFile->WriteTObject(dtGenEtaRes);
+  histoFile->WriteTObject(dtGenPhiRes);
+  histoFile->WriteTObject(dtGenPtRes);
+  histoFile->WriteTObject(rpcGenEtaRes);
+  histoFile->WriteTObject(rpcGenPhiRes);
+  histoFile->WriteTObject(rpcGenPtRes);
+
+  histoFile->WriteTObject(qGMT_qBrlRPConly); 
+  histoFile->WriteTObject(qGMT_qFwdRPConly); 
+  histoFile->WriteTObject(qGMT_qDTonly); 
+  histoFile->WriteTObject(qGMT_qCSConly); 
+  histoFile->WriteTObject(qGMT_qBrlRPCmatch);
+  histoFile->WriteTObject(qGMT_qFwdRPCmatch);
+  histoFile->WriteTObject(qGMT_qDTmatch);
+  histoFile->WriteTObject(qGMT_qCSCmatch);
+  histoFile->WriteTObject(qRPC_qDTmatch);
+  histoFile->WriteTObject(qRPC_qCSCmatch);
+
+  histoFile->WriteTObject(totalGen_etaphi); 
+  histoFile->WriteTObject(matchedGen_etaphi); 
+  histoFile->WriteTObject(onlyGen_etaphi);
+  histoFile->WriteTObject(matchedDTGen_etaphi); 
+  histoFile->WriteTObject(matchedRPCGen_etaphi);
+  histoFile->WriteTObject(matchedCSCGen_etaphi);
+  histoFile->WriteTObject(onlyDTGen_etaphi);
+  histoFile->WriteTObject(onlyRPCGen_etaphi);
+  histoFile->WriteTObject(onlyCSCGen_etaphi);
+
+  histoFile->WriteTObject(matchedGen_pt);
+  histoFile->WriteTObject(onlyGen_pt);
+  histoFile->WriteTObject(matchedDTGen_pt);
+  histoFile->WriteTObject(matchedRPCGen_pt); 
+  histoFile->WriteTObject(matchedCSCGen_pt);
+  histoFile->WriteTObject(onlyDTGen_pt);
+  histoFile->WriteTObject(onlyRPCGen_pt);
+  histoFile->WriteTObject(onlyCSCGen_pt);
+
+  histoFile->WriteTObject(onlyRPC_QunM_etaphi);
+  histoFile->WriteTObject(onlyRPC_QovM_etaphi);
+  histoFile->WriteTObject(RPC_QunM_etaphi); 
+  histoFile->WriteTObject(RPC_QovM_etaphi);
+  histoFile->WriteTObject(matcheDTQ_RPC_QunM_etaphi); 
+  histoFile->WriteTObject(matcheDTQ_RPC_QovM_etaphi);
+  histoFile->WriteTObject(matchedRPC_QunM_etaphi);
+  histoFile->WriteTObject(matchedRPC_QovM_etaphi);
+
+  histoFile->WriteTObject(onlyRPC_QunM_pt); 
+  histoFile->WriteTObject(onlyRPC_QovM_pt);
+  histoFile->WriteTObject(RPC_QunM_pt);
+  histoFile->WriteTObject(RPC_QovM_pt);
+  histoFile->WriteTObject(matcheDTQ_RPC_QunM_pt);
+  histoFile->WriteTObject(matcheDTQ_RPC_QovM_pt);
+  histoFile->WriteTObject(matchedRPC_QunM_pt);
+  histoFile->WriteTObject(matchedRPC_QovM_pt);
+
+  histoFile->WriteTObject(onlyRPC_Q3_etaphi);
+  histoFile->WriteTObject(onlyRPC_Q2_etaphi);
+  histoFile->WriteTObject(onlyRPC_Q1_etaphi);
+  histoFile->WriteTObject(onlyRPC_Q0_etaphi);
+  histoFile->WriteTObject(matchedRPC_Q3_etaphi);
+  histoFile->WriteTObject(matchedRPC_Q2_etaphi);
+  histoFile->WriteTObject(matchedRPC_Q1_etaphi);
+  histoFile->WriteTObject(matchedRPC_Q0_etaphi);
+  histoFile->WriteTObject(RPC_Q3_etaphi);
+  histoFile->WriteTObject(RPC_Q2_etaphi);
+  histoFile->WriteTObject(RPC_Q1_etaphi);
+  histoFile->WriteTObject(RPC_Q0_etaphi);
+  histoFile->WriteTObject(onlyDT_Q7_etaphi); 
+  histoFile->WriteTObject(onlyDT_Q6_etaphi);
+  histoFile->WriteTObject(onlyDT_Q5_etaphi);
+  histoFile->WriteTObject(onlyDT_Q4_etaphi);
+  histoFile->WriteTObject(matchedDT_Q7_etaphi);
+  histoFile->WriteTObject(matchedDT_Q6_etaphi);
+  histoFile->WriteTObject(matchedDT_Q5_etaphi);
+  histoFile->WriteTObject(matchedDT_Q4_etaphi);
+  histoFile->WriteTObject(DT_Q7_etaphi);
+  histoFile->WriteTObject(DT_Q6_etaphi);
+  histoFile->WriteTObject(DT_Q5_etaphi);
+  histoFile->WriteTObject(DT_Q4_etaphi);
+
+  histoFile->WriteTObject(onlyRPC_Q3_pt);
+  histoFile->WriteTObject(onlyRPC_Q2_pt); 
+  histoFile->WriteTObject(onlyRPC_Q1_pt); 
+  histoFile->WriteTObject(onlyRPC_Q0_pt);
+  histoFile->WriteTObject(matchedRPC_Q3_pt); 
+  histoFile->WriteTObject(matchedRPC_Q2_pt); 
+  histoFile->WriteTObject(matchedRPC_Q1_pt);
+  histoFile->WriteTObject(matchedRPC_Q0_pt);
+  histoFile->WriteTObject(RPC_Q3_pt);
+  histoFile->WriteTObject(RPC_Q2_pt); 
+  histoFile->WriteTObject(RPC_Q1_pt); 
+  histoFile->WriteTObject(RPC_Q0_pt);
+  histoFile->WriteTObject(onlyDT_Q7_pt); 
+  histoFile->WriteTObject(onlyDT_Q6_pt); 
+  histoFile->WriteTObject(onlyDT_Q5_pt);
+  histoFile->WriteTObject(onlyDT_Q4_pt);
+  histoFile->WriteTObject(matchedDT_Q7_pt); 
+  histoFile->WriteTObject(matchedDT_Q6_pt); 
+  histoFile->WriteTObject(matchedDT_Q5_pt);
+  histoFile->WriteTObject(matchedDT_Q4_pt);
+  histoFile->WriteTObject(DT_Q7_pt);
+  histoFile->WriteTObject(DT_Q6_pt);
+  histoFile->WriteTObject(DT_Q5_pt);
+  histoFile->WriteTObject(DT_Q4_pt);
+
+  histoFile->Close();
+
+}
+
+vector<pair<L1MuGMTExtendedCand,int> > L1DataDrivenMC::l1CandQMatcher(const vector<L1MuGMTExtendedCand>& cands, const vector<L1MuRegionalCand>& regionals){
+  
+  vector<pair<L1MuGMTExtendedCand,int> > outVector;
+  map<int,pair<L1MuGMTExtendedCand,pair<float,int> > > bufMap;
+  
+  vector<L1MuGMTExtendedCand>::const_iterator cIt;
+  for(cIt=cands.begin();cIt!=cands.end();cIt++){
+    float cEta=cIt->etaValue(),cPhi=cIt->phiValue();
+    float delta(100.);unsigned int q,w;
+    vector<L1MuRegionalCand>::const_iterator rIt;
+    for(rIt=regionals.begin();rIt!=regionals.end();rIt++){
+      float rEta=rIt->etaValue(),rPhi=rIt->phiValue();
+      float dR=deltaR(cEta,cPhi,rEta,rPhi);
+      if(dR<delta){
+	delta=dR;
+	q=(int)rIt->quality();
+	w=(int)rIt->getDataWord();
+      }
+    }
+    if(bufMap.size()==0)bufMap[w]=make_pair(*cIt,make_pair(delta,q));
+    else {
+      map<int,pair<L1MuGMTExtendedCand,pair<float,int> > >::const_iterator it=bufMap.find(w);
+      if(it==bufMap.end())bufMap[w]=make_pair(*cIt,make_pair(delta,q));
+      else {
+	if(delta<((it->second).second).first){
+	  bufMap.erase(it->first);
+	  bufMap[w]=make_pair(*cIt,make_pair(delta,q));
+	}
+      }
+    }
+  }
+
+  map<int,pair<L1MuGMTExtendedCand,pair<float,int> > >::const_iterator itr=bufMap.begin();
+  for(;itr!=bufMap.end();itr++){
+    outVector.push_back(make_pair((itr->second).first,((itr->second).second).second));
+  }
+
+  return outVector;
+}
+
+vector<pair<L1MuGMTExtendedCand,pair<L1MuRegionalCand,L1MuRegionalCand> > > L1DataDrivenMC::l1RegMatcher(const vector<L1MuGMTExtendedCand>& gmtCands, const vector<L1MuRegionalCand>& rpcCands, const vector<L1MuRegionalCand>& cscdtCands){
+
+  //  cout<<"rpcSize "<<rpcCands.size()<<" dtcscSize "<<cscdtCands.size()<<" gmtSize "<<gmtCands.size()<<endl;
+  map<int,vector<pair<L1MuRegionalCand,float> > > matchMap;
+  map<int,L1MuGMTExtendedCand> gmtMatCand;
+
+  int counter(0);
+  vector<L1MuGMTExtendedCand>::const_iterator gmtIt;
+  for(gmtIt=gmtCands.begin();gmtIt!=gmtCands.end();++gmtIt){
+    if(!gmtIt->isMatchedCand())continue;
+    L1MuGMTExtendedCand gmtCand(*gmtIt);
+    counter++;
+    gmtMatCand[counter]=gmtCand;
+    float gmtEta(gmtIt->etaValue()),gmtPhi(gmtIt->phiValue());
+    vector<pair<L1MuRegionalCand,float> > cones;
+    vector<L1MuRegionalCand>::const_iterator dcIt;
+    for(dcIt=cscdtCands.begin();dcIt!=cscdtCands.end();++dcIt){
+      float dcEta(dcIt->etaValue()),dcPhi(dcIt->phiValue());
+      float dR=deltaR(gmtEta,gmtPhi,dcEta,dcPhi);
+      L1MuRegionalCand dcCand(*dcIt);
+      cones.push_back(make_pair(dcCand,dR));
+    }
+    matchMap[counter]=cones;
+  }
+
+  map<int,L1MuRegionalCand> bestMatchers;
+  for(unsigned int r=0;r<cscdtCands.size();++r){
+    int key;float matVal(100.);
+    L1MuRegionalCand theOne;
+    if(matchMap.size()>0){
+      map<int,vector<pair<L1MuRegionalCand,float> > >::const_iterator matIt,theIt;
+      for(matIt=matchMap.begin();matIt!=matchMap.end();matIt++){
+	vector<pair<L1MuRegionalCand,float> > mapVal=matIt->second;
+	if(mapVal[r].second<matVal){
+	  matVal=mapVal[r].second;
+	  L1MuRegionalCand buf(mapVal[r].first);
+	  theOne=buf;
+	  key=matIt->first;
+	}
+      }
+      bestMatchers[key]=theOne;
+      matchMap.erase(matchMap.find(key));
+    }
+  }
+  
+  map<int,vector<pair<L1MuRegionalCand,float> > > regMap;
+  vector<L1MuRegionalCand> dcMatCand;
+  map<int,L1MuRegionalCand>::const_iterator bmIt;
+  for(bmIt=bestMatchers.begin();bmIt!=bestMatchers.end();++bmIt){
+    float dcEta((bmIt->second).etaValue()),dcPhi((bmIt->second).phiValue());//,dcPt((bmIt->second).ptValue());
+    vector<pair<L1MuRegionalCand,float> > coni;
+    vector<L1MuRegionalCand>::const_iterator rpcIt;
+    for(rpcIt=rpcCands.begin();rpcIt!=rpcCands.end();++rpcIt){
+      float rpcEta(rpcIt->etaValue()),rpcPhi(rpcIt->phiValue());
+      float dR=deltaR(dcEta,dcPhi,rpcEta,rpcPhi);
+      L1MuRegionalCand rpcCand(*rpcIt);
+      coni.push_back(make_pair(rpcCand,dR));
+    }
+    regMap[bmIt->first]=coni;
+  }
+
+  map<int,L1MuRegionalCand> regMatchers;
+  for(unsigned int rp=0;rp<rpcCands.size();++rp){
+    int key;float matVal(100.);
+    L1MuRegionalCand theOne;
+    if(regMap.size()>0){
+      map<int,vector<pair<L1MuRegionalCand,float> > >::const_iterator regIt,theIt;
+      for(regIt=regMap.begin();regIt!=regMap.end();regIt++){
+	vector<pair<L1MuRegionalCand,float> > mapVal=regIt->second;
+	if(mapVal[rp].second<matVal){
+	  matVal=mapVal[rp].second;
+	  L1MuRegionalCand buf(mapVal[rp].first);
+	  theOne=buf;
+	  key=regIt->first;
+	}
+      }
+      regMatchers[key]=theOne;
+      regMap.erase(regMap.find(key));
+    }
+  }
+
+  vector<pair<L1MuGMTExtendedCand,pair<L1MuRegionalCand,L1MuRegionalCand> > > outVector;
+
+  //  cout<<"regMatSize "<<regMatchers.size()<<" bestMatSize "<<bestMatchers.size()<<endl;
+  for(map<int,L1MuRegionalCand>::const_iterator endIt=regMatchers.begin();endIt!=regMatchers.end();++endIt){
+    map<int,L1MuRegionalCand>::const_iterator bestIt(bestMatchers.find(endIt->first));
+    L1MuRegionalCand triCand(endIt->second),traCand(bestIt->second);
+    pair<L1MuRegionalCand,L1MuRegionalCand> firstPair(make_pair(traCand,triCand));
+    map<int,L1MuGMTExtendedCand>::const_iterator gmtIt(gmtMatCand.find(bestIt->first));
+    outVector.push_back(make_pair(gmtIt->second,firstPair));
+  }
+
+  return outVector;
+}
+
+DEFINE_FWK_MODULE(L1DataDrivenMC);
