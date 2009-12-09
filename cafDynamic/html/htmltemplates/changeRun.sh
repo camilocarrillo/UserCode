@@ -10,5 +10,6 @@ sed "s|-RUN-|$1 $2|g" htmltemplates/azimutal.html > azimutal.html
 sed "s|-RUN-|$1 $2|g" htmltemplates/azimutalbarrel.html > azimutalbarrel.html
 sed "s|-RUN-|$1 $2|g" htmltemplates/cls.html > cls.html
 sed "s|-RUN-|$1 $2|g" htmltemplates/ang.html > ang.html
+sed "s|-RUN-|$1 $2|g" htmltemplates/indexcutendcap.html > indexcutendcap.html
 showtags > info.txt
 echo $LOCALRT >> info.txt

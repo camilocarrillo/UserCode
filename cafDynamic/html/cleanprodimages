@@ -20,3 +20,5 @@ rm Alignment.dat
 rm Greg/ -rf
 rm Pino* 
 rm CLS -rf
+rm rollZeroEff.txt
+rm rollZeroPrediction.txt

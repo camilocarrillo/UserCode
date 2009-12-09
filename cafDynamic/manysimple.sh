@@ -11,9 +11,9 @@ while [[ $i -le $NumberOfRuns ]]
 do
 	export run=`awk 'NR=='$i' {print $1}' $1`
 	export run=`echo $run`
-	echo "Number of runs to analyze $run"
+	echo "run to analyze $run"
 	sed -e "s|-run-|$run|g" $2 > eff$run.txt
-	echo "Calling Simple"
+	echo "Calling Simple for run $run (see /tmp/carrillo/eff$run.txt)"
 	/afs/cern.ch/user/c/carrillo/public/for_All/cafDynamic/simple.sh eff$run.txt 1> /tmp/carrillo/eff$run.txt
 	echo "Calling PrepRunAndSet.sh"
 	echo "run = $run - dataset=$dataset - project = $project"
@@ -34,9 +34,9 @@ do
 	   cat /tmp/carrillo/text.txt
 	   mail -s "run $run" carrillo < /tmp/carrillo/text.txt
 	   #mail -s "run $run" rpc-commissioning < /tmp/carrillo/text.txt
-	   mail -s "plots for run $run" cmsrpc-caf < /tmp/carrillo/text.txt
+	   #mail -s "plots for run $run" cmsrpc-caf < /tmp/carrillo/text.txt
         else
- 	   echo "!!!!!!!!!!!!!!!!!!!!! Problem with Main Index, or cmsrpc402b20 turned off or kerberos token expired, plase try "
+ 	   echo "!!!!!!!!!!!!!!!!!!!!! Problem with Main Index, or cmsrpc402b20 turned off or kerberos token expired, plase try again"
 	fi
 	let "i=$i+1"
 done

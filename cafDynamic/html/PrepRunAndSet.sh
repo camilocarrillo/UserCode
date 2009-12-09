@@ -11,7 +11,7 @@ then
    exit 0
 fi
 cmsRun seg2D2.py
-htmltemplates/changeRun.sh $1
+htmltemplates/changeRun.sh $1 $2
 cd Sides
 /tmp/carrillo/prodimages/$1/htmltemplates/rot.sh
 cd /tmp/carrillo/

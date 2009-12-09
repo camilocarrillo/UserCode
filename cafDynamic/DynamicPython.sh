@@ -254,11 +254,13 @@ echo Submiting Last Merging for $key for $filesInCastorLocal files
 sleep 10
 export numrun=`bjobs | grep RUN | grep $queue | wc -l`
 export numpend=`bjobs | grep PEND | grep $queue | wc -l`
+export filesInCastorLocalfinal=`nsls $castorpad | grep Local.root | wc -l`     
 
-until [[ $numrun -eq 0 && $numpend -eq 0 || -f Local.root ]]
+until [[ $numrun -eq 0 && $numpend -eq 0 || $filesInCastorLocalfinal -eq 1 ]]
         do  
         export numrun=`bjobs | grep RUN | grep $queue | wc -l`
         export numpend=`bjobs | grep PEND | grep $queue | wc -l`
+	export filesInCastorLocalfinal=`nsls $castorpad | grep Local.root | wc -l`     
         let "i=$i+1"
         let "t=i*10"
 	echo t=$t s jobs: \| $key \| run=$numrun \| pend=$numpend \| merging $filesInCastor \|
