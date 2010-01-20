@@ -115,11 +115,22 @@ HEPMCPRODUCTSANALYZER::analyze(const edm::Event& iEvent, const edm::EventSetup& 
        HepMC::GenParticle* theParticle=*iter;
        double pt=pow(pow(theParticle->momentum().px(),2)+pow(theParticle->momentum().py(),2), 0.5);
        double charge=pdt->particle(theParticle->pdg_id())->charge();
+       double mass=pdt->particle(theParticle->pdg_id())->mass();
        if(abs(theParticle->pdg_id())==11 
 	  || abs(theParticle->pdg_id())==13
 	  || abs(theParticle->pdg_id())==15
 	  ) continue;
-       std::cout<<"pdgId="<<theParticle->pdg_id()<<" charge"<<charge<<" pt="<<pt<<" status="<<theParticle->status()<<std::endl;
+       
+       if(abs(theParticle->pdg_id())==2000015){
+	 std::cout<<" eta "<<theParticle->momentum().eta()<<" "<<iEvent.id().run()<<" "<<iEvent.id().event()<<std::endl;
+	 if(fabs(theParticle->momentum().eta())<=2.4) std::cout<<"select "<<iEvent.id().run()<<" "<<iEvent.id().event()<<std::endl;
+       }
+       
+       double ratio = mass/theParticle->momentum().mag();
+
+       double beta = 1/sqrt(1+ratio*ratio);
+       
+       std::cout<<"pdgId="<<theParticle->pdg_id()<<" charge"<<charge<<" pt="<<pt<<" status="<<theParticle->status()<<" beta="<<beta<<" mass="<<mass<<" p="<<theParticle->momentum().mag()<<std::endl;
        std::cout<<"Is the end_vertexValid and has daughters particles?"<<std::endl;
        if ( /*theParticle->status() == 2 &&*/ theParticle->end_vertex() &&  theParticle->end_vertex()->particles_out_size() ){
 	 std::cout<<"Yes "<<std::endl;
@@ -131,7 +142,7 @@ HEPMCPRODUCTSANALYZER::analyze(const edm::Event& iEvent, const edm::EventSetup& 
 	   double ptd=pow(pow(daugh->momentum().px(),2)+pow(daugh->momentum().py(),2), 0.5);
 	   std::cout<<"\t Daughter pdgId="<<daugh->pdg_id()<<" status="<<daugh->status()<<" pt="<<ptd<<std::endl;
 	 }
-	 std::cout<<" endVertex.position.mag()="<<theParticle->end_vertex()->position().mag()<<" Number of Daughters = "<<counter<<std::endl;
+	 std::cout<<theParticle->pdg_id()<<" endVertex.position.x"<<theParticle->end_vertex()->position().x()<<" Number of Daughters = "<<counter<<std::endl;
        }else{
 	 std::cout<<"No "<<std::endl;
        }
