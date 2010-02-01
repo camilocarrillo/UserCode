@@ -28,7 +28,7 @@ process.rpcPointProducer = cms.EDProducer('RPCPointProducer',
   incldt = cms.untracked.bool(True),
   inclcsc = cms.untracked.bool(True),
 
-  debug = cms.untracked.bool(False),
+  debug = cms.untracked.bool(True),
 
   rangestrips = cms.untracked.double(4.),
   rangestripsRB4 = cms.untracked.double(4.),
