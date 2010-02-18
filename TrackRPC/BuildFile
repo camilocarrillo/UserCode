@@ -36,6 +36,7 @@
 <use name=rootrflx>
 <use name=root>
 
+<use name=hepmc>  
 
 <flags EDM_PLUGIN=1>
 <export>

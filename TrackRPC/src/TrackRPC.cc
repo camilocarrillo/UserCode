@@ -13,7 +13,7 @@
 //
 // Original Author:  Camilo Andres Carrillo Montoya
 //         Created:  Mon May 18 16:59:36 CEST 2009
-// $Id$
+// $Id: TrackRPC.cc,v 1.5 2009/08/24 13:07:24 carrillo Exp $
 //
 //
 
@@ -49,6 +49,7 @@
 #include "DataFormats/DetId/interface/DetId.h"
 #include "DataFormats/MuonDetId/interface/MuonSubdetId.h"
 
+#include "SimDataFormats/GeneratorProducts/interface/HepMCProduct.h"
 
 #include "RecoMuon/TrackingTools/interface/MuonServiceProxy.h"
 #include "RecoMuon/MeasurementDet/interface/MuonDetLayerMeasurements.h"
@@ -123,7 +124,7 @@ class TrackRPC : public edm::EDAnalyzer {
       std::string thePropagatorName;
       float minTkP, minDtP, maxTkBeta, minDR, maxInvPtDiff, maxChi2;
 
-      std::string partLabel;
+      edm::InputTag partLabel;
 
       std::string rootFileName;
 
@@ -175,7 +176,7 @@ class TrackRPC : public edm::EDAnalyzer {
 TrackRPC::TrackRPC(const edm::ParameterSet& iConfig)
 {
   m_trackTag = iConfig.getUntrackedParameter<std::string>("tracks");
-  partLabel = iConfig.getUntrackedParameter<std::string>("partLabel");
+  partLabel = iConfig.getParameter<edm::InputTag>("partLabel");
   rootFileName = iConfig.getUntrackedParameter<std::string>("rootFileName");
   partid = iConfig.getUntrackedParameter<int>("partid"); 
 
@@ -218,41 +219,41 @@ TrackRPC::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   
   std::cout<<"Reading the particles container"<<std::endl;
 
-  edm::Handle<reco::GenParticleCollection> genParticles;
-  iEvent.getByLabel(partLabel,genParticles );
-  
-  std::cout<<"Number of Particles in this event: " << genParticles->size() << std::endl;
+  edm::Handle<edm::HepMCProduct> genParticles;
+  iEvent.getByLabel(partLabel, genParticles);
 
+  HepMC::GenEvent * myGenEvent = new  HepMC::GenEvent(*(genParticles->GetEvent()));
   
-  // information from the muon system: TOF
-  // information from the tracker: dE/dx
+  //  std::cout<<"Number of Particles in this event: " << genParticles->size() << std::endl;
+
   edm::Handle<reco::TrackCollection> trackCollectionHandle;
   iEvent.getByLabel(m_trackTag,trackCollectionHandle);
   std::vector<susybsm::RPCHit4D> HSCPRPCRecHits;
   
-  reco::GenParticleCollection::const_iterator partIt;
-  for(partIt=genParticles->begin();partIt!=genParticles->end();++partIt) {
-    //std::cout<<"Particle Id="<<partIt->pdgId()<<std::endl;
+  for(HepMC::GenEvent::particle_iterator partIt = myGenEvent->particles_begin();
+      partIt != myGenEvent->particles_end(); ++partIt ){
+
+    //std::cout<<"Particle Id="<<(*partIt)->pdg_id()<<std::endl;
     float etamc=0;
     float phimc=0;
     float betamc=0;
     float pmc=0;
     float mmc=0;
     
-    if(partIt->pdgId()==partid){
+    if((*partIt)->pdg_id()==partid){
       std::cout<<"This event contains one HSCP"<<std::endl;
       statistics->Fill(2);
 
-      float e=partIt->energy();
-      float pt = partIt->pt();
+      float e=sqrt ( (*partIt)->momentum().mag()*(*partIt)->momentum().mag() + (*partIt)->generated_mass()* (*partIt)->generated_mass() );
+      float pt = (*partIt)->momentum().perp();
       //float betaT=pt/e;
-      pmc=partIt->p();
+      pmc=(*partIt)->momentum().mag();
 
       betamc=pmc/e;
 
       int event = iEvent.id().event();
-      etamc = partIt->eta();
-      phimc = partIt->phi();
+      etamc = (*partIt)->momentum().eta();
+      phimc = (*partIt)->momentum().phi();
 
       mmc=sqrt(e*e-pmc*pmc);
 
@@ -269,7 +270,7 @@ TrackRPC::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       expectedbeta->Fill(betamc);
       expectedp->Fill(pmc);
       
-      std::cout<<"ev="<<event<<" phimc="<<partIt->phi()<<" etamc="<<etamc<<" betamc="<<betamc<<" pmc="<<pmc<<"GeV pt="<<pt<<"GeV mmc="<<mmc<<"GeV"<<std::endl;
+      std::cout<<"ev="<<event<<" phimc="<<(*partIt)->momentum().phi()<<" etamc="<<etamc<<" betamc="<<betamc<<" pmc="<<pmc<<"GeV pt="<<pt<<"GeV mmc="<<mmc<<"GeV"<<std::endl;
       
     }else{
       continue;
