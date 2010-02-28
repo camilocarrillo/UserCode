@@ -13,7 +13,7 @@
 //
 // Original Author:  Camilo Andres Carrillo Montoya
 //         Created:  Mon Mar 16 23:08:11 CET 2009
-// $Id$
+// $Id: DIGIANALIZER.cc,v 1.1 2009/03/22 21:29:54 carrillo Exp $
 //
 //
 
@@ -94,20 +94,26 @@ DIGIANALIZER::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    //iEvent.getByType(rpcDigis);
    
    RPCDigiCollection::DigiRangeIterator rpcDigiCI;
+
+   int digisBarrel=0;
+   int digisForward=0;
+   int digisBackward=0;
+   
    for(rpcDigiCI = rpcDigis->begin();rpcDigiCI!=rpcDigis->end();rpcDigiCI++){
      //std::cout<<(*rpcDigiCI).first<<endl;;
-     const RPCDigiCollection::Range& range = (*rpcDigiCI).second;    
-     
-     
+     const RPCDigiCollection::Range& range = (*rpcDigiCI).second;
+     int region = (*rpcDigiCI).first.region();
      for (RPCDigiCollection::const_iterator digiIt = range.first;digiIt!=range.second;++digiIt){
        
        std::cout<<*digiIt<<std::endl;
        std::cout<<"Strip number: "<<digiIt->strip()<<std::endl;
+       if(region==0) digisBarrel++;
+       else if(region==1) digisForward++;
+       else if(region==-1) digisBackward++;
      }
    }
    
-
-
+   std::cout<<digisBarrel<<" "<<digisForward<<" "<<digisBackward<<std::endl;
 }
 
 
