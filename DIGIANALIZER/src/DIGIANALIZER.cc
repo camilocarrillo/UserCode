@@ -13,7 +13,7 @@
 //
 // Original Author:  Camilo Andres Carrillo Montoya
 //         Created:  Mon Mar 16 23:08:11 CET 2009
-// $Id: DIGIANALIZER.cc,v 1.1 2009/03/22 21:29:54 carrillo Exp $
+// $Id: DIGIANALIZER.cc,v 1.2 2010/02/28 21:20:31 carrillo Exp $
 //
 //
 
@@ -33,6 +33,10 @@
 #include "DataFormats/MuonDetId/interface/RPCDetId.h"
 #include "DataFormats/RPCDigi/interface/RPCDigiCollection.h"
 
+#include "DataFormats/Provenance/interface/Timestamp.h"
+#include <sys/time.h>
+
+
 //
 // class decleration
 //
@@ -44,10 +48,11 @@ class DIGIANALIZER : public edm::EDAnalyzer {
 
 
    private:
-      virtual void beginJob(const edm::EventSetup&) ;
+      virtual void beginRun(const edm::EventSetup&) ;
       virtual void analyze(const edm::Event&, const edm::EventSetup&);
-      virtual void endJob() ;
-
+      virtual void endRun() ;
+      float Tmax;
+      float Tmin;
       // ----------member data ---------------------------
 };
 
@@ -90,7 +95,7 @@ DIGIANALIZER::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    using namespace edm;
 
    edm::Handle<RPCDigiCollection> rpcDigis;
-   iEvent.getByLabel("simMuonRPCDigis", rpcDigis);
+   iEvent.getByLabel("muonRPCDigis", rpcDigis);
    //iEvent.getByType(rpcDigis);
    
    RPCDigiCollection::DigiRangeIterator rpcDigiCI;
@@ -104,28 +109,40 @@ DIGIANALIZER::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
      const RPCDigiCollection::Range& range = (*rpcDigiCI).second;
      int region = (*rpcDigiCI).first.region();
      for (RPCDigiCollection::const_iterator digiIt = range.first;digiIt!=range.second;++digiIt){
-       
-       std::cout<<*digiIt<<std::endl;
-       std::cout<<"Strip number: "<<digiIt->strip()<<std::endl;
+       //std::cout<<*digiIt<<std::endl;
+       //std::cout<<"Strip number: "<<digiIt->strip()<<std::endl;
        if(region==0) digisBarrel++;
        else if(region==1) digisForward++;
        else if(region==-1) digisBackward++;
      }
    }
    
-   std::cout<<digisBarrel<<" "<<digisForward<<" "<<digisBackward<<std::endl;
+   //   std::cout<<iEvent.id().event()<<" "<<digisBarrel<<" "<<digisForward<<" "<<digisBackward<<std::endl;
+
+
+   TimeValue_t time=iEvent.time().value();
+   timeval *tmval=(timeval*)&time;
+
+   if(tmval->tv_usec > Tmax) Tmax = tmval->tv_usec;
+   if(tmval->tv_usec < Tmin) Tmin = tmval->tv_usec;
+   
+   std::cout<<tmval->tv_usec<<" "<<digisBarrel<<" "<<digisForward<<" "<<digisBackward<<std::endl;
 }
+
 
 
 // ------------ method called once each job just before starting event loop  ------------
 void 
-DIGIANALIZER::beginJob(const edm::EventSetup&)
+DIGIANALIZER::beginRun(const edm::EventSetup&)
 {
+      Tmax = -1;
+      Tmin = 1e10;
 }
 
 // ------------ method called once each job just after ending the event loop  ------------
 void 
-DIGIANALIZER::endJob() {
+DIGIANALIZER::endRun() {
+  std::cout<<"timeinfo"<<Tmin<<" "<<Tmax<<std::endl;
 }
 
 //define this as a plug-in
