@@ -117,7 +117,7 @@ DIGIANALIZER::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
      }
    }
    
-   //   std::cout<<iEvent.id().event()<<" "<<digisBarrel<<" "<<digisForward<<" "<<digisBackward<<std::endl;
+   std::cout<<"To Understand "<<iEvent.id().event()<<" "<<digisBarrel<<" "<<digisForward<<" "<<digisBackward<<std::endl;
 
 
    TimeValue_t time=iEvent.time().value();
