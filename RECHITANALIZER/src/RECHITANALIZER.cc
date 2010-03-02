@@ -13,7 +13,7 @@
 //
 // Original Author:  Camilo Andres Carrillo Montoya
 //         Created:  Mon Mar 16 22:50:16 CET 2009
-// $Id$
+// $Id: RECHITANALIZER.cc,v 1.1 2009/03/22 21:31:29 carrillo Exp $
 //
 //
 
@@ -45,6 +45,39 @@
 #include <Geometry/Records/interface/MuonGeometryRecord.h>
 #include <Geometry/RPCGeometry/interface/RPCGeomServ.h>
 #include <Geometry/CommonDetUnit/interface/GeomDet.h>
+#include "DataFormats/Provenance/interface/Timestamp.h"
+#include <sys/time.h>
+
+//bnrute attack includes
+
+#include <FWCore/Framework/interface/Frameworkfwd.h>
+#include <FWCore/Framework/interface/EDAnalyzer.h>
+#include <FWCore/Framework/interface/Event.h>
+#include "FWCore/ParameterSet/interface/ParameterSet.h"
+#include "FWCore/ServiceRegistry/interface/Service.h"
+
+#include "DQMServices/Core/interface/DQMStore.h"
+#include "DQMServices/Core/interface/MonitorElement.h"
+
+#include <DataFormats/MuonDetId/interface/RPCDetId.h>
+#include "FWCore/Framework/interface/ESHandle.h"
+#include <Geometry/RPCGeometry/interface/RPCGeometry.h>
+#include <Geometry/DTGeometry/interface/DTGeometry.h>
+#include <Geometry/CSCGeometry/interface/CSCGeometry.h>
+
+#include <memory>
+#include "FWCore/Framework/interface/MakerMacros.h"
+#include <DataFormats/RPCDigi/interface/RPCDigiCollection.h>
+#include "DataFormats/RPCRecHit/interface/RPCRecHitCollection.h"
+#include <DataFormats/MuonDetId/interface/RPCDetId.h>
+#include <DataFormats/DTRecHit/interface/DTRecSegment4DCollection.h>
+#include <DataFormats/CSCRecHit/interface/CSCSegmentCollection.h>
+#include <Geometry/RPCGeometry/interface/RPCGeomServ.h>
+#include <Geometry/CommonDetUnit/interface/GeomDet.h>
+#include <Geometry/Records/interface/MuonGeometryRecord.h>
+#include <Geometry/CommonTopologies/interface/RectangularStripTopology.h>
+#include <Geometry/CommonTopologies/interface/TrapezoidalStripTopology.h>
+
 
 
 //
@@ -120,7 +153,10 @@ RECHITANALIZER::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
      nRPC++;
    }
    
-
+   int digisBarrel=0;
+   int digisForward=0;
+   int digisBackward=0;
+   
    std::cout<<"The Number of Rec Hits is "<<nRPC<<std::endl;
 
    for (recHit = rpcRecHits->begin(); recHit != rpcRecHits->end(); recHit++) {
@@ -134,9 +170,18 @@ RECHITANALIZER::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
      GlobalPoint RecHitInGlobal = RPCSurface.toGlobal(recHitPos);
      
-     std::cout<<"\t \t We have an RPC Rec Hit! bx="<<recHit->BunchX()<<" Roll="<<rpcsrv.name()<<" Global Position="<<RecHitInGlobal<<std::endl;
-
+     //std::cout<<"\t \t We have an RPC Rec Hit! bx="<<recHit->BunchX()<<" Roll="<<rpcsrv.name()<<" Global Position="<<RecHitInGlobal<<std::endl;
+     int region = rollId.region();
+     if(region==0) digisBarrel=digisBarrel+recHit->clusterSize();
+     else if(region==1) digisForward=digisForward+recHit->clusterSize();
+     else if(region==-1) digisBackward=digisBackward+recHit->clusterSize();   
    }
+
+   TimeValue_t time=iEvent.time().value();
+   timeval *tmval=(timeval*)&time;
+   
+   std::cout<<"flagevent "<<iEvent.id().event()<<" "<<digisBarrel<<" "<<digisForward<<" "<<digisBackward<<std::endl;
+   std::cout<<"flogtime "<<tmval->tv_usec<<" "<<digisBarrel<<" "<<digisForward<<" "<<digisBackward<<std::endl;
 }
 
 
@@ -144,7 +189,7 @@ RECHITANALIZER::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 void RECHITANALIZER::beginRun(const edm::Run& run, const edm::EventSetup& iSetup){
   iSetup.get<MuonGeometryRecord>().get(rpcGeo);
-
+  
 }
 
 // ------------ method called once each job just after ending the event loop  ------------
