@@ -13,7 +13,7 @@
 //
 // Original Author:  Marcello Maggi
 //         Created:  Mon Nov 17 14:01:33 CET 2008
-// $Id$
+// $Id: SelRPCEvents.cc,v 1.2 2009/05/18 10:12:49 carrillo Exp $
 //
 //
 
@@ -58,8 +58,8 @@ private:
 
 SelRPCEvents::SelRPCEvents(const edm::ParameterSet& iConfig)
 {
-
-  std::string fname("/afs/cern.ch/user/c/carrillo/scratch0/CSCFilter/70195/merged.txt");
+ 
+ std::string fname("selection.txt");
   std::ifstream ifin(fname.c_str());
   int run;
   int eve;
@@ -73,6 +73,7 @@ SelRPCEvents::SelRPCEvents(const edm::ParameterSet& iConfig)
       }
       elis.insert(eve);
       evts[run]=elis;
+      std::cout<<"loading map run="<<run<<" event="<<event<<std::endl;
     }
   }
 }
@@ -101,30 +102,19 @@ bool SelRPCEvents::filter(edm::Event& iEvent, const edm::EventSetup& iSetup){
     std::set<int> elis=evts[run];
     if (elis.find(evt)!=elis.end()){
       std::cout <<" ==> Bad Event: RUN="<<run<<" EVT="<<evt<<std::endl;
-      std::cout <<"Skiped... "<<run<<"   "<<evt<<std::endl;
-      return false;
+      std::cout <<"Passed "<<run<<"   "<<evt<<std::endl;
+      return true;
     }
   }
-  std::cout <<"Event passed to MuonSegEff"<<run<<"   "<<evt<<std::endl;
-  return true;
+  std::cout <<"Event skipped "<<run<<"   "<<evt<<std::endl;
+  return false;
 }
 
 // ------------ method called once each job just before starting event loop  ------------
 void 
 SelRPCEvents::beginJob(const edm::EventSetup&)
 {
-  /*
-  std::cout <<"Starting The Events Selection"<<std::endl;
-  for (std::map<int, std::set<int> >::iterator iev=evts.begin(); 
-       iev!=evts.end(); iev++){
-    std::cout <<" RUN Number = "<<iev->first<<std::endl;
-    std::set<int> ilis=iev->second;
-    for (std::set<int>::iterator ii=ilis.begin();
-	 ii!=ilis.end();ii++){
-      std::cout <<"     EVENT = "<<*ii<<std::endl;
-    }
-  }
-  */
+
 }
 
 // ------------ method called once each job just after ending the event loop  ------------
