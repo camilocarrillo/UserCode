@@ -13,7 +13,7 @@
 //
 // Original Author:  Marcello Maggi
 //         Created:  Mon Nov 17 14:01:33 CET 2008
-// $Id: SelRPCEvents.cc,v 1.2 2009/05/18 10:12:49 carrillo Exp $
+// $Id: SelRPCEvents.cc,v 1.3 2010/03/19 14:19:59 carrillo Exp $
 //
 //
 
@@ -73,7 +73,7 @@ SelRPCEvents::SelRPCEvents(const edm::ParameterSet& iConfig)
       }
       elis.insert(eve);
       evts[run]=elis;
-      std::cout<<"loading map run="<<run<<" event="<<event<<std::endl;
+      std::cout<<"loading map run="<<run<<" event="<<eve<<std::endl;
     }
   }
 }
