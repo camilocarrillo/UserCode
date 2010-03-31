@@ -15,13 +15,13 @@ process.load("Geometry.MuonNumbering.muonNumberingInitialization_cfi")
 
 process.source = cms.Source("PoolSource",
     # replace 'myfile.root' with the source file you want to use
-    fileNames = cms.untracked.vstring(
-       'file:/tmp/carrillo/rechit300GeV.root'
-#       'file:/tmp/carrillo/testsingle10Rec300GeV.root'
+    fileNames = cms.untracked.vstring("file:/tmp/carrillo/mergedcastor.root"
     )
 )
 
-process.demo = cms.EDAnalyzer('RECHITANALIZER'
+process.demo = cms.EDAnalyzer('RECHITANALIZER',
+  eventfilename = cms.untracked.string('EVENTO.txt'),
+  timefilename = cms.untracked.string('TIEMPO.txt')
 )
 
 

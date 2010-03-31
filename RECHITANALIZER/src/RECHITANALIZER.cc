@@ -13,7 +13,7 @@
 //
 // Original Author:  Camilo Andres Carrillo Montoya
 //         Created:  Mon Mar 16 22:50:16 CET 2009
-// $Id: RECHITANALIZER.cc,v 1.1 2009/03/22 21:31:29 carrillo Exp $
+// $Id: RECHITANALIZER.cc,v 1.2 2010/03/02 11:24:29 carrillo Exp $
 //
 //
 
@@ -79,6 +79,7 @@
 #include <Geometry/CommonTopologies/interface/TrapezoidalStripTopology.h>
 
 
+#include <fstream>
 
 //
 // class decleration
@@ -92,8 +93,12 @@ class RECHITANALIZER : public edm::EDAnalyzer {
       virtual void beginRun(const edm::Run&, const edm::EventSetup&);
       
    private:
-      virtual void analyze(const edm::Event&, const edm::EventSetup&);
-      virtual void endJob() ;
+  std::string eventfilename;
+  std::string timefilename;
+  ofstream eventfile;
+  ofstream timefile;
+  virtual void analyze(const edm::Event&, const edm::EventSetup&);
+  virtual void endJob() ;
 
 
       // ----------member data ---------------------------
@@ -113,17 +118,18 @@ class RECHITANALIZER : public edm::EDAnalyzer {
 RECHITANALIZER::RECHITANALIZER(const edm::ParameterSet& iConfig)
 
 {
-  //now do what ever initialization is needed
-
+  eventfilename = iConfig.getUntrackedParameter<std::string>("eventfilename", "event.txt");
+  timefilename = iConfig.getUntrackedParameter<std::string>("timefilename", "time.txt");
+  
+  eventfile.open(eventfilename.c_str());
+  timefile.open(timefilename.c_str());
 }
 
 
 RECHITANALIZER::~RECHITANALIZER()
 {
- 
-   // do anything here that needs to be done at desctruction time
-   // (e.g. close files, deallocate resources etc.)
-
+  eventfile.close();
+  timefile.close();
 }
 
 
@@ -156,32 +162,37 @@ RECHITANALIZER::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    int digisBarrel=0;
    int digisForward=0;
    int digisBackward=0;
-   
-   std::cout<<"The Number of Rec Hits is "<<nRPC<<std::endl;
 
-   for (recHit = rpcRecHits->begin(); recHit != rpcRecHits->end(); recHit++) {
-     RPCDetId rollId = (RPCDetId)(*recHit).rpcId();
-     RPCGeomServ rpcsrv(rollId);
-     LocalPoint recHitPos=recHit->localPosition();
-
-     const RPCRoll* rollasociated = rpcGeo->roll(rollId);
-
-     const BoundPlane & RPCSurface = rollasociated->surface(); 
-
-     GlobalPoint RecHitInGlobal = RPCSurface.toGlobal(recHitPos);
-     
-     //std::cout<<"\t \t We have an RPC Rec Hit! bx="<<recHit->BunchX()<<" Roll="<<rpcsrv.name()<<" Global Position="<<RecHitInGlobal<<std::endl;
-     int region = rollId.region();
-     if(region==0) digisBarrel=digisBarrel+recHit->clusterSize();
-     else if(region==1) digisForward=digisForward+recHit->clusterSize();
-     else if(region==-1) digisBackward=digisBackward+recHit->clusterSize();   
-   }
-
-   TimeValue_t time=iEvent.time().value();
-   timeval *tmval=(timeval*)&time;
-   
-   std::cout<<"flagevent "<<iEvent.id().event()<<" "<<digisBarrel<<" "<<digisForward<<" "<<digisBackward<<std::endl;
-   std::cout<<"flogtime "<<tmval->tv_usec<<" "<<digisBarrel<<" "<<digisForward<<" "<<digisBackward<<std::endl;
+   //if(nRPC>0)
+     {
+ 
+       //std::cout<<"The Number of Rec Hits is "<<nRPC<<std::endl;
+       
+       for (recHit = rpcRecHits->begin(); recHit != rpcRecHits->end(); recHit++) {
+	 RPCDetId rollId = (RPCDetId)(*recHit).rpcId();
+	 RPCGeomServ rpcsrv(rollId);
+	 LocalPoint recHitPos=recHit->localPosition();
+	 
+	 const RPCRoll* rollasociated = rpcGeo->roll(rollId);
+	 
+	 const BoundPlane & RPCSurface = rollasociated->surface(); 
+	 
+	 GlobalPoint RecHitInGlobal = RPCSurface.toGlobal(recHitPos);
+	 
+	 //std::cout<<"\t \t We have an RPC Rec Hit! bx="<<recHit->BunchX()<<" Roll="<<rpcsrv.name()<<" Global Position="<<RecHitInGlobal<<std::endl;
+	 int region = rollId.region();
+	 if(region==0) digisBarrel=digisBarrel+recHit->clusterSize();
+	 else if(region==1) digisForward=digisForward+recHit->clusterSize();
+	 else if(region==-1) digisBackward=digisBackward+recHit->clusterSize();   
+       }
+       
+       TimeValue_t time=iEvent.time().value();
+       timeval *tmval=(timeval*)&time;
+       
+       eventfile<<"event "<<iEvent.id().event()<<" "<<digisBarrel<<" "<<digisForward<<" "<<digisBackward<<std::endl;
+       eventfile<<"time "<<tmval->tv_usec<<" "<<digisBarrel<<" "<<digisForward<<" "<<digisBackward<<std::endl;
+       timefile<<tmval->tv_usec<<" "<<digisBarrel<<" "<<digisForward<<" "<<digisBackward<<std::endl;
+     }
 }
 
 
