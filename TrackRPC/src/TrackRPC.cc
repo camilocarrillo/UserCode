@@ -13,7 +13,7 @@
 //
 // Original Author:  Camilo Andres Carrillo Montoya
 //         Created:  Mon May 18 16:59:36 CEST 2009
-// $Id: TrackRPC.cc,v 1.5 2009/08/24 13:07:24 carrillo Exp $
+// $Id$
 //
 //
 
@@ -90,6 +90,8 @@
 #include "DataFormats/TrackCandidate/interface/TrackCandidate.h" 
 #include "SimDataFormats/TrackingHit/interface/PSimHitContainer.h"
 
+#include "SUSYBSMAnalysis/HSCP/src/BetaFromRPC.cc"
+
 //Root
 
 #include "TFile.h"
@@ -100,6 +102,7 @@
 #include "TMath.h"
 #include "TCanvas.h"
 #include <fstream>
+#include "TGraphErrors.h"
 
 //
 // class decleration
@@ -109,7 +112,7 @@ class TrackRPC : public edm::EDAnalyzer {
    public:
       explicit TrackRPC(const edm::ParameterSet&);
       ~TrackRPC();
-
+  
       edm::ESHandle<RPCGeometry> rpcGeo;
 
    private:
@@ -158,7 +161,11 @@ class TrackRPC : public edm::EDAnalyzer {
       TH1F * residualbeta;
       TH1F * residualp;
 
-       
+      TH2F * residualbetaVsEta;
+      TH2F * residualbetaVsKnees;
+      TH2F * residualbetaVsbeta;
+  
+              
       // ----------member data ---------------------------
 };
 
@@ -223,8 +230,9 @@ TrackRPC::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   iEvent.getByLabel(partLabel, genParticles);
 
   HepMC::GenEvent * myGenEvent = new  HepMC::GenEvent(*(genParticles->GetEvent()));
+
   
-  //  std::cout<<"Number of Particles in this event: " << genParticles->size() << std::endl;
+  // std::cout<<"Number of Particles in this event: " << genParticles->size() << std::endl;
 
   edm::Handle<reco::TrackCollection> trackCollectionHandle;
   iEvent.getByLabel(m_trackTag,trackCollectionHandle);
@@ -232,8 +240,7 @@ TrackRPC::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   
   for(HepMC::GenEvent::particle_iterator partIt = myGenEvent->particles_begin();
       partIt != myGenEvent->particles_end(); ++partIt ){
-
-    //std::cout<<"Particle Id="<<(*partIt)->pdg_id()<<std::endl;
+    //std::cout<<"Particle Id="<<partIt->pdgId()<<std::endl;
     float etamc=0;
     float phimc=0;
     float betamc=0;
@@ -245,6 +252,7 @@ TrackRPC::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       statistics->Fill(2);
 
       float e=sqrt ( (*partIt)->momentum().mag()*(*partIt)->momentum().mag() + (*partIt)->generated_mass()* (*partIt)->generated_mass() );
+
       float pt = (*partIt)->momentum().perp();
       //float betaT=pt/e;
       pmc=(*partIt)->momentum().mag();
@@ -280,6 +288,7 @@ TrackRPC::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     float phi=0;
     float p=0;
     float beta = 1;
+    float knees = 1;
     
     std::cout<<"\t Loop on all the reconstructed muons"<<std::endl;
     std::cout<<"\t We found "<<trackCollectionHandle->size()<<" muon tracks in this event"<<std::endl;
@@ -336,10 +345,8 @@ TrackRPC::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       if(HSCPRPCRecHits.size()==0){
 	continue;
 	std::cout<<"\t NO RPC RecHits in this muon!!!"<<std::endl;
-      }
-      
-
-      
+      }      
+     
       std::cout<<"\t \t loop on the RPCHit4D!!!"<<std::endl;
       for(std::vector<susybsm::RPCHit4D>::iterator point = HSCPRPCRecHits.begin(); point < HSCPRPCRecHits.end(); ++point) {
 	float r=point->gp.mag();
@@ -370,71 +377,14 @@ TrackRPC::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
       if(Candidate){
 	statistics->Fill(3);
-	std::cout<<"\t \t \t yes! We found an HSCPs let's try to stimate beta"<<std::endl;
+	std::cout<<"\t \t \t yes! We found an HSCPs let's try to estimate beta"<<std::endl;
 	// here we should get some pattern-based estimate
 
-	//Counting knees
-	int lastbx=-7;
-	int knees=0;
-	float maginknee = 0;
-	float maginfirstknee = 0;
-	for(std::vector<susybsm::RPCHit4D>::iterator point = HSCPRPCRecHits.begin(); point < HSCPRPCRecHits.end(); ++point) {
-	  if(lastbx==-7){
-	    maginfirstknee = point->gp.mag();
-	  }else if((lastbx!=point->bx)){
-	    std::cout<<"\t \t \t one knee between"<<lastbx<<point->bx<<std::endl;
-	    maginknee=point->gp.mag();
-	    knees++;
-	  }
-	  lastbx=point->bx;
-	}
-      
-	if(knees==0){
-	  std::cout<<"\t \t \t \t knees="<<knees<<std::endl;
-	  beta=maginfirstknee/(25-delay+maginfirstknee/30.)/30.;
-	}else if(knees==1){
-	  float beta1=0;
-	  float beta2=0;
-	  std::cout<<"\t \t \t \t knees="<<knees<<std::endl;
-	  std::cout<<"\t \t \t \t anydifferentzero="<<anydifferentzero<<" anydifferentone="<<anydifferentone<<std::endl;
-	  if(!anydifferentzero){
-	    beta=maginknee/(25-delay+maginknee/30.)/30.;
-	  }else if(!anydifferentone){//i.e non zeros and no ones
-	    beta=maginknee/(50-delay+maginknee/30.)/30.;
-	  }else{
-	    beta1=maginknee/(25-delay+maginknee/30.)/30.;
-	    float dr =(maginknee-maginfirstknee);
-	    beta2 = dr/(25.-delay+dr/30.);
-	    std::cout<<"\t \t \t \t \t not zero neither ones beta1="<<beta1<<" beta2="<<beta2<<std::endl;
-	    beta = (beta1 + beta2)*0.5;
-	  }
-	}else if(knees==2){
-	  std::cout<<"\t \t \t \t knees="<<knees<<std::endl;
-	  knees=0;
-	  float beta1=0;
-	  float beta2=0;
-	  lastbx=-7;
-	  std::cout<<"\t \t \t \t looping again on the RPCRecHits4D="<<knees<<std::endl;
-	  for(std::vector<susybsm::RPCHit4D>::iterator point = HSCPRPCRecHits.begin(); point < HSCPRPCRecHits.end(); ++point) {
-	    if(lastbx==-7){
-	      maginfirstknee = point->gp.mag();
-	    }else if((lastbx!=point->bx)){
-	      std::cout<<"\t \t \t \t \t one knee between"<<lastbx<<point->bx<<std::endl;
-	      knees++;
-	      if(knees==2){
-		float maginsecondknee=point->gp.mag();
-		beta1=maginknee/(25-delay+maginknee/30.)/30.;
-		float dr =(maginknee-maginsecondknee);
-		beta2 = dr/(25.+dr/30.);
-		std::cout<<"\t \t \t \t \t beta1="<<beta1<<" beta2="<<beta2<<std::endl;
-	      }
-	    }
-	    lastbx=point->bx;
-	  }
-	  beta = (beta1 + beta2)*0.5;
-	}
-      
-	std::cout<<"\t \t \t beta="<<beta<<std::endl;
+	BetaFromRPC BetaClass(HSCPRPCRecHits);
+	beta = BetaClass.beta();
+	knees = BetaClass.knees();
+
+	std::cout<<"\t \t \t beta = "<<beta<<" "<<"knees = "<<knees<<std::endl;
       }else{
 	std::cout<<"\t \t \t No we didn't find an HSCPs"<<std::endl;
       }
@@ -460,6 +410,10 @@ TrackRPC::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	  residualeta->Fill(diffeta);
 	  residualbeta->Fill(diffbeta);
 	  residualp->Fill(diffp);
+	  residualbetaVsEta->Fill(etamc,diffbeta);
+	  residualbetaVsKnees->Fill(knees,diffbeta);
+	  residualbetaVsbeta->Fill(betamc,diffbeta);
+	  
 	  //Estimation of the mass
 	  std::cout<<"\t \t \t Estimating the mass"<<std::endl;
 	  float m=p/(gamma(beta)*beta);
@@ -470,7 +424,7 @@ TrackRPC::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	  std::cout<<"\t \t \t Identified but in different direction this is noise!"<<std::endl;
 	}
       }else{
-	std::cout<<"\t \t \t Muon Not mateched with an HSCP in MC"<<std::endl;
+	std::cout<<"\t \t \t Muon Not matched with an HSCP in MC"<<std::endl;
       }
     }
   }
@@ -505,12 +459,18 @@ TrackRPC::beginJob(const edm::EventSetup& iSetup)
     residualphi = new TH1F("ResidualPhi","Phi Residuals",100,-0.05,0.05);
     residualbeta = new TH1F("ResidualBeta","Beta Residuals",25,-0.5,0.5);
     residualp = new TH1F("ResidualP","P Residuals",100,-750,750);
+    
+    residualbetaVsEta = new TH2F ("ResidualBetaVsEta","ResidualBetaVsEta",50,-2.5,2.5,25,-0.5,0.5);
+    residualbetaVsKnees = new TH2F ("residualbetaVsKnees","residualbetaVsKnees",3,-0.5,3.5,25,-0.5,0.5);
+    residualbetaVsbeta = new TH2F ("residualbetaVsbeta","residualbetaVsbeta",10,0.,1.,25,-0.5,0.5);
   }
 
 // ------------ method called once each job just after ending the event loop  ------------
 void 
 TrackRPC::endJob() {
+  std::cout<<"Starging the endjob"<<std::endl;
 
+  /* 
   statistics->GetXaxis()->SetBinLabel(1,"Events");
   statistics->GetXaxis()->SetBinLabel(2,"Events with HSCP in MC");
   statistics->GetXaxis()->SetBinLabel(3,"Events with HSCP in Mu/RPC");
@@ -552,8 +512,47 @@ TrackRPC::endJob() {
     efficiencyp->SetBinContent(k,effp);
     efficiencyp->SetBinError(k,errp);
     
-
+    
   }
+
+  const int n = 50;
+  
+  float x[n];
+  float y[n];
+  float ex[n];
+  float ey[n];
+  
+  float step = 5./float(n);
+
+  for(int i=0;i<50;i++){
+    float mean = residualbetaVsEta->ProjectionY("_py",i,i+1)->GetMean();
+    float error  = residualbetaVsEta->ProjectionY("_py",i,i+1)->GetRMS();
+    std::cout<<"mean="<<mean<<" rms="<<error<<std::endl;
+    
+    x[i]=(i+1)*step;
+    ex[i]=step*0.5;
+    y[i]=mean;
+    ey[i]=error;
+  }
+  
+
+  TCanvas * Ca5;
+
+  Ca5 = new TCanvas("Ca5","etaVsresolution",800,600);
+
+  TGraphErrors * plot1 = new TGraphErrors(n,x,y,ex,ey);
+
+  plot1->SetMarkerColor(1);
+  plot1->SetMarkerStyle(20);
+  plot1->SetMarkerSize(0.5);
+  plot1->GetXaxis()->SetTitle("Eta");
+  plot1->GetYaxis()->SetTitle("Mean Beta Distribution (Error Bars RMS)");
+  plot1->Draw("AP");
+  std::string labeltoSave = "etaVsresolution.png";
+  Ca5->SaveAs(labeltoSave.c_str());
+  Ca5->Clear();
+
+  */
   
   theFile->cd();
 
@@ -580,8 +579,11 @@ TrackRPC::endJob() {
   residualbeta->Write();
   residualp->Write();
 
+  residualbetaVsEta->Write();
+  residualbetaVsKnees->Write();
+  residualbetaVsbeta->Write();
+  
   theFile->Close();
-
 
 }
 
