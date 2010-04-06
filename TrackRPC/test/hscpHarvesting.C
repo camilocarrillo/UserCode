@@ -7,11 +7,11 @@
 void hscpHarvesting(){
   gStyle->SetOptStat(0);
   
-  TFile * theFile1 = new TFile("totalmerge.root");
-//  TFile * theFile1 = new TFile("/tmp/carrillo/hscpkktau300.root");
-//  TFile * theFile1 = new TFile("/tmp/carrillo/hscpstaus247.root");
+  TFile * theFile1 = new TFile("/tmp/carrillo/PlotsStau247.root");
+  TFile * theFileOut = new TFile("hscpStau247harvesting.root","RECREATE");
 
-  TFile * theFileOut = new TFile("hscpkktau300Harvesting.root","RECREATE");
+//  TFile * theFile1 = new TFile("/tmp/carrillo/PlotsStau156.root");
+//  TFile * theFileOut = new TFile("hscpStau156harvesting.root","RECREATE");
 
   TH1F * statistics = (TH1F*) (theFile1->Get("statistics"));
 
