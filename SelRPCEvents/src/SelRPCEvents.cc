@@ -10,14 +10,7 @@
  Implementation:
      <Notes on implementation>
 */
-//
-// Original Author:  Marcello Maggi
-//         Created:  Mon Nov 17 14:01:33 CET 2008
-// $Id: SelRPCEvents.cc,v 1.3 2010/03/19 14:19:59 carrillo Exp $
-//
-//
 
-// system include files
 #include <memory>
 #include <fstream>
 #include <sstream>
@@ -25,8 +18,6 @@
 #include <iostream>
 #include <map>
 #include <set>
-
-// user include files
 #include "FWCore/Framework/interface/Frameworkfwd.h"
 #include "FWCore/Framework/interface/EDFilter.h"
 
@@ -35,22 +26,16 @@
 
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 
-//
-// class declaration
-//
-
 class SelRPCEvents : public edm::EDFilter {
 public:
   explicit SelRPCEvents(const edm::ParameterSet&);
   ~SelRPCEvents();
   
 private:
-  virtual void beginJob(const edm::EventSetup&) ;
+  virtual void beginRun(const edm::Run&,const edm::EventSetup&) ;
   virtual bool filter(edm::Event&, const edm::EventSetup&);
-  virtual void endJob() ;
-  
-      // ----------member data ---------------------------
-private:
+  virtual void endRun() ;
+  std::string eventsfile;  
   std::map<int, std::set<int> > evts;
 
       
@@ -58,9 +43,11 @@ private:
 
 SelRPCEvents::SelRPCEvents(const edm::ParameterSet& iConfig)
 {
- 
- std::string fname("selection.txt");
+  eventsfile = iConfig.getUntrackedParameter<std::string>("eventsfile","selection.txt");
+  std::cout<<"eventsfile "<<eventsfile<<std::endl;
+  std::string fname(eventsfile.c_str());
   std::ifstream ifin(fname.c_str());
+  std::cout<<"file name "<<fname.c_str()<<std::endl;
   int run;
   int eve;
   while (ifin.good()){
@@ -94,7 +81,6 @@ SelRPCEvents::~SelRPCEvents()
 
 // ------------ method called on each new Event  ------------
 bool SelRPCEvents::filter(edm::Event& iEvent, const edm::EventSetup& iSetup){
-  bool selected=false;
   int evt = iEvent.id().event();
   int run = iEvent.id().run();
   std::cout <<"Filtering .... Event "<<run<<"   "<<evt<<std::endl;
@@ -112,14 +98,14 @@ bool SelRPCEvents::filter(edm::Event& iEvent, const edm::EventSetup& iSetup){
 
 // ------------ method called once each job just before starting event loop  ------------
 void 
-SelRPCEvents::beginJob(const edm::EventSetup&)
+SelRPCEvents::beginRun(const edm::Run&,const edm::EventSetup&)
 {
 
 }
 
 // ------------ method called once each job just after ending the event loop  ------------
 void 
-SelRPCEvents::endJob() {
+SelRPCEvents::endRun() {
 }
 
 //define this as a plug-in

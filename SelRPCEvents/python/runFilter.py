@@ -4,17 +4,18 @@ process = cms.Process("SelRPCEvemts")
 
 
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(-1)
+    input = cms.untracked.int32(10)
 )
 
-process.selRPC = cms.EDFilter("SelRPCEvents")
+process.selRPC = cms.EDFilter("SelRPCEvents",
+    eventsfile = cms.untracked.string('/afs/cern.ch/user/c/carrillo/scratch0/7TeVRaw/132440/runEventMonster.txt')
+)
 
 #process.source = cms.Source("EmptySource")
 
 
 process.source = cms.Source("PoolSource",
-   fileNames = 
-cms.untracked.vstring('/store/data/BeamCommissioning08/BeamHalo/RECO/v1/000/063/440/0058A079-D786-DD11-99CE-000423D952C0.root')
+   fileNames = cms.untracked.vstring('//store/data/Commissioning10/ZeroBias/RAW/v4/000/132/440/C0A5D466-EC3B-DF11-BDF4-000423D9A2AE.root')
 )
 
 process.FEVT = cms.OutputModule("PoolOutputModule",
@@ -22,7 +23,7 @@ process.FEVT = cms.OutputModule("PoolOutputModule",
     SelectEvents = cms.untracked.PSet(
       SelectEvents = cms.vstring("selrpc")
     ),
-    fileName = cms.untracked.string('/tmp/carrillo/RPCEvents.root')
+    fileName = cms.untracked.string('filter132440.C0A5D466-EC3B-DF11-BDF4-000423D9A2AE.root')
 )
 
 process.selrpc = cms.Path(process.selRPC)
