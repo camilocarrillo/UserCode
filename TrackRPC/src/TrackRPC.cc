@@ -13,7 +13,7 @@
 //
 // Original Author:  Camilo Andres Carrillo Montoya
 //         Created:  Mon May 18 16:59:36 CEST 2009
-// $Id$
+// $Id: TrackRPC.cc,v 1.7 2010/04/06 15:51:03 carrillo Exp $
 //
 //
 
@@ -36,6 +36,10 @@
 #include "DQMServices/Core/interface/MonitorElement.h"
 #include <DataFormats/MuonDetId/interface/RPCDetId.h>
 #include "FWCore/ParameterSet/interface/InputTag.h"
+
+#include <Geometry/CommonDetUnit/interface/GeomDet.h>
+#include <Geometry/Records/interface/MuonGeometryRecord.h>
+
 
 #include "MagneticField/Engine/interface/MagneticField.h"
 #include "MagneticField/Records/interface/IdealMagneticFieldRecord.h"
@@ -116,7 +120,7 @@ class TrackRPC : public edm::EDAnalyzer {
       edm::ESHandle<RPCGeometry> rpcGeo;
 
    private:
-      virtual void beginJob(const edm::EventSetup&) ;
+  virtual void beginRun(const edm::Run&,const edm::EventSetup&) ;
       virtual void analyze(const edm::Event&, const edm::EventSetup&);
       virtual void endJob() ;
 
@@ -431,7 +435,7 @@ TrackRPC::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 }
 // ------------ method called once each job just before starting event loop  ------------
 void 
-TrackRPC::beginJob(const edm::EventSetup& iSetup)
+TrackRPC::beginRun(const edm::Run&,const edm::EventSetup& iSetup)
   {
     iSetup.get<MuonGeometryRecord>().get(rpcGeo);
     
@@ -465,7 +469,6 @@ TrackRPC::beginJob(const edm::EventSetup& iSetup)
     residualbetaVsbeta = new TH2F ("residualbetaVsbeta","residualbetaVsbeta",10,0.,1.,25,-0.5,0.5);
   }
 
-// ------------ method called once each job just after ending the event loop  ------------
 void 
 TrackRPC::endJob() {
   std::cout<<"Starging the endjob"<<std::endl;
@@ -556,6 +559,8 @@ TrackRPC::endJob() {
   
   theFile->cd();
 
+  std::cout<<"saving root files"<<std::endl;
+  
   statistics->Write();
   mass->Write();
   
