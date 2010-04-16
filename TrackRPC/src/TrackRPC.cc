@@ -13,7 +13,7 @@
 //
 // Original Author:  Camilo Andres Carrillo Montoya
 //         Created:  Mon May 18 16:59:36 CEST 2009
-// $Id: TrackRPC.cc,v 1.7 2010/04/06 15:51:03 carrillo Exp $
+// $Id: TrackRPC.cc,v 1.8 2010/04/15 14:35:09 carrillo Exp $
 //
 //
 
@@ -145,11 +145,6 @@ class TrackRPC : public edm::EDAnalyzer {
 
       TH1F * mass;
   
-      TH1F * efficiencyeta;
-      TH1F * efficiencyphi;
-      TH1F * efficiencybeta;
-      TH1F * efficiencyp;
-
       TH1F * expectedeta;
       TH1F * expectedphi;
       TH1F * expectedbeta;
@@ -160,11 +155,20 @@ class TrackRPC : public edm::EDAnalyzer {
       TH1F * observedbeta;
       TH1F * observedp;
 
+      TH1F * trackobservedeta;
+      TH1F * trackobservedphi;
+      TH1F * trackobservedbeta;
+      TH1F * trackobservedp;
+
       TH1F * residualeta;
       TH1F * residualphi;
       TH1F * residualbeta;
       TH1F * residualp;
 
+      TH1F * trackresidualeta;
+      TH1F * trackresidualphi;
+      TH1F * trackresidualp;
+  
       TH2F * residualbetaVsEta;
       TH2F * residualbetaVsKnees;
       TH2F * residualbetaVsbeta;
@@ -288,15 +292,60 @@ TrackRPC::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       continue;
     }
     
+    float tracketa=0;
+    float trackphi=0;
+    float trackp=0;
+    float mindR=999999;
+    float mindiffeta=9999999;
+    float mindiffphi=9999999;
+    float mindiffp=9999999;
+    
+    std::cout<<"\t Loop on all the reconstructed muons"<<std::endl;
+    std::cout<<"\t We found "<<trackCollectionHandle->size()<<" muon tracks in this event"<<std::endl;
+
+    //loop just to check the reconstructed track
+    
+    reco::TrackCollection::const_iterator matchedTrack;
+
+    for (reco::TrackCollection::const_iterator muon = trackCollectionHandle->begin(); muon!=trackCollectionHandle->end(); muon++) {
+      tracketa=muon->eta();
+      trackphi=muon->phi();
+      trackp=muon->p();
+
+      float diffeta = etamc - tracketa;
+      float diffphi = phimc - trackphi;
+      float diffp = pmc - trackp;
+      
+      float dR = sqrt(diffeta*diffeta+diffphi*diffphi);
+
+      if(dR<mindR){
+	mindR = dR;
+	mindiffphi = diffphi;
+	mindiffeta = diffeta;
+	mindiffp = diffp;
+	matchedTrack = muon;
+      }
+    }
+    
+    if(fabs(mindiffeta)<=0.3 && fabs(mindiffphi)<=0.03){ //assertion in the same cone?
+      std::cout<<"\t \t \t Coincidence TRACK WITH MC candidate"<<std::endl;
+      trackobservedeta->Fill(etamc);
+      trackobservedphi->Fill(phimc);
+      trackobservedbeta->Fill(betamc);
+      trackobservedp->Fill(pmc);
+      trackresidualphi->Fill(mindiffphi);
+      trackresidualeta->Fill(mindiffeta);
+      trackresidualp->Fill(mindiffp);
+    }
+    
     float eta=0;
     float phi=0;
     float p=0;
     float beta = 1;
     float knees = 1;
     
-    std::cout<<"\t Loop on all the reconstructed muons"<<std::endl;
-    std::cout<<"\t We found "<<trackCollectionHandle->size()<<" muon tracks in this event"<<std::endl;
-
+    //loop just to check the RPC Candidate
+  
     for (reco::TrackCollection::const_iterator muon = trackCollectionHandle->begin(); muon!=trackCollectionHandle->end(); muon++) {
       eta=muon->eta();
       phi=muon->phi();
@@ -315,8 +364,6 @@ TrackRPC::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
       std::cout<<"\t \t phimc="<<phimc<<" etamc="<<etamc<<std::endl;
       std::cout<<"\t \t phi  ="<<phi<<" eta  ="<<eta<<std::endl;
-
-
       std::cout<<"\t \t Loop on the rechits"<<std::endl;
       HSCPRPCRecHits.clear();
       for(trackingRecHit_iterator recHit = muon->recHitsBegin(); recHit != muon->recHitsEnd(); ++recHit){
@@ -395,7 +442,7 @@ TrackRPC::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     
       if(Candidate){
 	std::cout<<"\t \t \t Now filling residuals and efficiency histograms if muon matches with an HSCP"<<std::endl;
-
+	
 	std::cout<<"\t \t \t etamc="<<etamc<<" phimc="<<phimc<<" betamc="<<betamc<<" pmc="<<pmc<<std::endl;
 	std::cout<<"\t \t \t eta  ="<<eta<<" phi  ="<<phi<<" beta  ="<<beta<<" p  ="<<p<<std::endl;
 	
@@ -403,7 +450,7 @@ TrackRPC::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	float diffphi = phimc - phi;
 	float diffbeta = betamc - beta;
 	float diffp = pmc - p;
-
+	
 	if(fabs(diffeta)<=0.3 && fabs(diffphi)<=0.03){ //assertion in the same cone?
 	  std::cout<<"\t \t \t Coincidence candidate with MC"<<std::endl;
 	  observedeta->Fill(etamc);
@@ -444,11 +491,6 @@ TrackRPC::beginRun(const edm::Run&,const edm::EventSetup& iSetup)
     statistics = new TH1F("statistics","Some Information",10,0.5,10.5);		 
     mass = new TH1F("mass","Mass estimation",75,0,1500);		 
     
-    efficiencyeta = new TH1F("EtaEff","Eta Efficiency",100,-2.5,2.5);		 
-    efficiencyphi = new TH1F("PhiEff","Phi Efficiency",100,-3.1415926,3.1415926); 
-    efficiencybeta = new TH1F("BetaEff","Beta Efficiency",100,0,1);                
-    efficiencyp = new TH1F("PEfficiency","P Efficiency",100,0,1500);
-  
     expectedeta = new TH1F("EtaExpected","Eta Expected",100,-2.5,2.5);		 
     expectedphi = new TH1F("PhiExpected","Phi Expected",100,-3.1415926,3.1415926); 
     expectedbeta = new TH1F("BetaExpected","Beta Expected",100,0,1);                
@@ -463,6 +505,15 @@ TrackRPC::beginRun(const edm::Run&,const edm::EventSetup& iSetup)
     residualphi = new TH1F("ResidualPhi","Phi Residuals",100,-0.05,0.05);
     residualbeta = new TH1F("ResidualBeta","Beta Residuals",25,-0.5,0.5);
     residualp = new TH1F("ResidualP","P Residuals",100,-750,750);
+
+    trackobservedeta = new TH1F("trackEtaObserved","Eta Observed",100,-2.5,2.5);		 
+    trackobservedphi = new TH1F("trackPhiObserved","Phi Observed",100,-3.1415926,3.1415926); 
+    trackobservedbeta = new TH1F("trackBetaObserved","Beta Observed",100,0,1);                
+    trackobservedp = new TH1F("trackPObserved","P Observed",100,0,1500);    
+
+    trackresidualeta = new TH1F("trackResidualEta","Eta Residuals",25,-0.2,0.2);
+    trackresidualphi = new TH1F("trackResidualPhi","Phi Residuals",100,-0.05,0.05);
+    trackresidualp = new TH1F("trackResidualP","P Residuals",100,-750,750);
     
     residualbetaVsEta = new TH2F ("ResidualBetaVsEta","ResidualBetaVsEta",50,-2.5,2.5,25,-0.5,0.5);
     residualbetaVsKnees = new TH2F ("residualbetaVsKnees","residualbetaVsKnees",3,-0.5,3.5,25,-0.5,0.5);
@@ -473,90 +524,6 @@ void
 TrackRPC::endJob() {
   std::cout<<"Starging the endjob"<<std::endl;
 
-  /* 
-  statistics->GetXaxis()->SetBinLabel(1,"Events");
-  statistics->GetXaxis()->SetBinLabel(2,"Events with HSCP in MC");
-  statistics->GetXaxis()->SetBinLabel(3,"Events with HSCP in Mu/RPC");
-    
-  for(int k=1;k<=100;k++){
-    float effeta = 0;
-    float erreta = 0;
-    if(expectedeta->GetBinContent(k)!=0){
-      effeta = observedeta->GetBinContent(k)/expectedeta->GetBinContent(k);
-      erreta = sqrt(effeta*(1-effeta)/expectedeta->GetBinContent(k));
-    }
-    efficiencyeta->SetBinContent(k,effeta);
-    efficiencyeta->SetBinError(k,erreta);
-    
-    float effphi = 0;
-    float errphi = 0;
-    if(expectedphi->GetBinContent(k)!=0){
-      effphi = observedphi->GetBinContent(k)/expectedphi->GetBinContent(k);
-      errphi = sqrt(effphi*(1-effphi)/expectedphi->GetBinContent(k));
-    }
-    efficiencyphi->SetBinContent(k,effphi);
-    efficiencyphi->SetBinError(k,errphi);
-
-    float effbeta = 0;
-    float errbeta = 0;
-    if(expectedbeta->GetBinContent(k)!=0){
-      effbeta = observedbeta->GetBinContent(k)/expectedbeta->GetBinContent(k);
-      errbeta = sqrt(effbeta*(1-effbeta)/expectedbeta->GetBinContent(k));
-    }
-    efficiencybeta->SetBinContent(k,effbeta);
-    efficiencybeta->SetBinError(k,errbeta);
-
-    float effp = 0;
-    float errp = 0;
-    if(expectedp->GetBinContent(k)!=0){
-      effp = observedp->GetBinContent(k)/expectedp->GetBinContent(k);
-      errp = sqrt(effp*(1-effp)/expectedp->GetBinContent(k));
-    }
-    efficiencyp->SetBinContent(k,effp);
-    efficiencyp->SetBinError(k,errp);
-    
-    
-  }
-
-  const int n = 50;
-  
-  float x[n];
-  float y[n];
-  float ex[n];
-  float ey[n];
-  
-  float step = 5./float(n);
-
-  for(int i=0;i<50;i++){
-    float mean = residualbetaVsEta->ProjectionY("_py",i,i+1)->GetMean();
-    float error  = residualbetaVsEta->ProjectionY("_py",i,i+1)->GetRMS();
-    std::cout<<"mean="<<mean<<" rms="<<error<<std::endl;
-    
-    x[i]=(i+1)*step;
-    ex[i]=step*0.5;
-    y[i]=mean;
-    ey[i]=error;
-  }
-  
-
-  TCanvas * Ca5;
-
-  Ca5 = new TCanvas("Ca5","etaVsresolution",800,600);
-
-  TGraphErrors * plot1 = new TGraphErrors(n,x,y,ex,ey);
-
-  plot1->SetMarkerColor(1);
-  plot1->SetMarkerStyle(20);
-  plot1->SetMarkerSize(0.5);
-  plot1->GetXaxis()->SetTitle("Eta");
-  plot1->GetYaxis()->SetTitle("Mean Beta Distribution (Error Bars RMS)");
-  plot1->Draw("AP");
-  std::string labeltoSave = "etaVsresolution.png";
-  Ca5->SaveAs(labeltoSave.c_str());
-  Ca5->Clear();
-
-  */
-  
   theFile->cd();
 
   std::cout<<"saving root files"<<std::endl;
@@ -564,11 +531,6 @@ TrackRPC::endJob() {
   statistics->Write();
   mass->Write();
   
-  efficiencyeta->Write();
-  efficiencyphi->Write();
-  efficiencybeta->Write();
-  efficiencyp->Write();
-
   expectedeta->Write();
   expectedphi->Write();
   expectedbeta->Write();  
@@ -583,6 +545,15 @@ TrackRPC::endJob() {
   residualphi->Write();
   residualbeta->Write();
   residualp->Write();
+
+  trackobservedeta->Write();
+  trackobservedphi->Write();
+  trackobservedbeta->Write();
+  trackobservedp->Write();
+
+  trackresidualeta->Write();
+  trackresidualphi->Write();
+  trackresidualp->Write();
 
   residualbetaVsEta->Write();
   residualbetaVsKnees->Write();
