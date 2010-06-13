@@ -13,7 +13,7 @@
 //
 // Original Author:  Camilo Andres Carrillo Montoya,40 2-B15,+41227671625,
 //         Created:  Thu Jun 10 11:34:48 CEST 2010
-// $Id$
+// $Id: RPChscpFilter.cc,v 1.1 2010/06/11 09:02:18 carrillo Exp $
 //
 //
 
@@ -32,7 +32,6 @@
 
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 
-#include "TrackingTools/PatternTools/interface/Trajectory.h"
 #include "DQMServices/Core/interface/DQMStore.h"
 #include "DQMServices/Core/interface/MonitorElement.h"
 #include <DataFormats/MuonDetId/interface/RPCDetId.h>
@@ -56,16 +55,11 @@
 
 #include "RecoMuon/TrackingTools/interface/MuonServiceProxy.h"
 #include "RecoMuon/MeasurementDet/interface/MuonDetLayerMeasurements.h"
-#include "TrackingTools/KalmanUpdators/interface/Chi2MeasurementEstimator.h"
 #include "TrackingTools/PatternTools/interface/TrajMeasLessEstim.h"
 #include "TrackingTools/GeomPropagators/interface/Propagator.h"
 #include "TrackingTools/PatternTools/interface/MeasurementEstimator.h"
-#include "RecoMuon/TransientTrackingRecHit/interface/MuonTransientTrackingRecHit.h"
-#include "TrackingTools/MeasurementDet/interface/TrajectoryMeasurementGroup.h"
 
 #include "RecoMuon/Navigation/interface/DirectMuonNavigation.h"
-#include "TrackingTools/GeomPropagators/interface/Propagator.h" 
-#include "TrackingTools/KalmanUpdators/interface/Chi2MeasurementEstimator.h" 
 #include "TrackingTools/TrajectoryState/interface/FreeTrajectoryState.h"
 #include "TrackingTools/PatternTools/interface/TrajectoryMeasurement.h"
 #include "TrackingTools/DetLayers/interface/DetLayer.h"
@@ -101,9 +95,9 @@ class RPChscpFilter : public edm::EDFilter {
   explicit RPChscpFilter(const edm::ParameterSet& );
       ~RPChscpFilter();
       edm::ESHandle<RPCGeometry> rpcGeo;
-
-
-   private:
+      int MinRPCRecHits;
+  
+  private:
       virtual void beginJob();
       virtual bool filter(edm::Event&, const edm::EventSetup&);
       virtual void endJob() ;
@@ -132,6 +126,7 @@ RPChscpFilter::RPChscpFilter(const edm::ParameterSet& iConfig)
   //now do what ever initialization is needed
   m_trackTag = iConfig.getUntrackedParameter<std::string>("tracks");
   rootFileName = iConfig.getUntrackedParameter<std::string>("rootFileName");
+  MinRPCRecHits = iConfig.getUntrackedParameter<int>("MinRPCRecHits");
 }
 
 
@@ -156,9 +151,8 @@ RPChscpFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
   iEvent.getByLabel(m_trackTag,trackCollectionHandle);
   std::vector<susybsm::RPCHit4D> HSCPRPCRecHits;
 
-  std::cout<<"Getting the RPC Geometry"<<std::endl;
   iSetup.get<MuonGeometryRecord>().get(rpcGeo);
-  
+	
   int counter = 0;
   float eta=0;
   float phi=0;
@@ -193,26 +187,17 @@ RPChscpFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
     
     HSCPRPCRecHits.clear();
     for(trackingRecHit_iterator recHit = muon->recHitsBegin(); recHit != muon->recHitsEnd(); ++recHit){
-      std::cout<<"\t \t Is an RPCRecHit?"<<(*recHit)->geographicalId().subdetId()<<std::endl;
       if ( (*recHit)->geographicalId().det() != DetId::Muon  ) continue;
       if ( (*recHit)->geographicalId().subdetId() != MuonSubdetId::RPC ) continue;
       if (!(*recHit)->isValid()) continue;
-      std::cout<<"\t \t Yes Getting Geographical Id"<<std::endl;                                                                                                             
       RPCDetId rollId = (RPCDetId)(*recHit)->geographicalId();
       LocalPoint recHitPos=(*recHit)->localPosition();
-      std::cout<<"\t \t finding roll asociated"<<rollId<<std::endl;
-     
-
       const RPCRoll* rollasociated = rpcGeo->roll(rollId); 
-      std::cout<<"\t \t Found in this roll"<<rollId<<std::endl;
       const BoundPlane & RPCSurface = rollasociated->surface();
-      std::cout<<"\t \t Got the surface"<<rollId<<std::endl;      
-      
       susybsm::RPCHit4D ThisHit;
       ThisHit.bx = ((RPCRecHit*)(&(**recHit)))->BunchX();
       ThisHit.gp = RPCSurface.toGlobal(recHitPos);
       ThisHit.id = (RPCDetId)(*recHit)->geographicalId().rawId();
-      std::cout<<"\t \t Pushing back ThisHit"<<std::endl;
       HSCPRPCRecHits.push_back(ThisHit);
     }
     
@@ -223,12 +208,14 @@ RPChscpFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
     bool increasing = true;
     bool anydifferentzero = true;
     bool anydifferentone = true;
-
-    if(HSCPRPCRecHits.size()==0){
+    
+    if(HSCPRPCRecHits.size()<MinRPCRecHits){
+      std::cout<<"\t Less than"<<MinRPCRecHits<<"RecHits in this muon!!! = "<<HSCPRPCRecHits.size()<<std::endl;
       continue;
-      std::cout<<"\t NO RPC RecHits in this muon!!!"<<std::endl;
     }
 
+    std::cout<<"Number of RPC Hits for this Muon Track"<<HSCPRPCRecHits.size()<<std::endl;
+    
     std::cout<<"\t \t loop on the RPCHit4D!!!"<<std::endl;
     for(std::vector<susybsm::RPCHit4D>::iterator point = HSCPRPCRecHits.begin(); point < HSCPRPCRecHits.end(); ++point) {
       float r=point->gp.mag();
@@ -238,7 +225,7 @@ RPChscpFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
       anydifferentone &= (!point->bx==1); //to check one knee withoutones                                                                                            
       lastbx = point->bx;
       std::cout<<"\t \t  r="<<r<<" phi="<<point->gp.phi()<<" eta="<<point->gp.eta()<<" bx="<<point->bx<<" outOfTime"<<outOfTime<<" increasing"<<increasing<<" anydif\
-ferentzero"<<anydifferentzero<<std::endl;
+ferentzero"<<anydifferentzero<<point->id<<std::endl;
     }
     std::cout<<"\t \t";
 

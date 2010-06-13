@@ -7,7 +7,7 @@ process.load("Geometry.RPCGeometry.rpcGeometry_cfi")
 process.load("Geometry.MuonNumbering.muonNumberingInitialization_cfi")
 
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(10)
+    input = cms.untracked.int32(-1)
 )
 
 
@@ -17,6 +17,7 @@ process.selRPC = cms.EDFilter("RPChscpFilter",
 #  tracks = cms.untracked.string('standAloneSETMuons'), doesn't work
    tracks = cms.untracked.string('globalMuons'),
    rootFileName = cms.untracked.string('/tmp/carrillo/hscp.root'),
+   MinRPCRecHits = cms.untracked.int32(2)
 )
 
 process.source = cms.Source("PoolSource",
