@@ -13,7 +13,7 @@
 //
 // Original Author:  Camilo Andres Carrillo Montoya,40 2-B15,+41227671625,
 //         Created:  Thu Jun 10 11:34:48 CEST 2010
-// $Id: RPChscpFilter.cc,v 1.2 2010/06/13 12:35:01 carrillo Exp $
+// $Id: RPChscpFilter.cc,v 1.3 2010/06/14 16:28:46 carrillo Exp $
 //
 //
 
@@ -61,6 +61,7 @@
 #include <Geometry/Records/interface/MuonGeometryRecord.h>
 #include <Geometry/RPCGeometry/interface/RPCGeometry.h>
 #include <Geometry/RPCGeometry/interface/RPCRoll.h> 
+#include <Geometry/RPCGeometry/interface/RPCGeomServ.h>
 #include "AnalysisDataFormats/SUSYBSMObjects/interface/HSCParticle.h"
 #include <DataFormats/RPCRecHit/interface/RPCRecHit.h>
 #include "DataFormats/TrajectorySeed/interface/TrajectorySeedCollection.h"
@@ -69,6 +70,8 @@
 #include "DataFormats/TrackCandidate/interface/TrackCandidate.h" 
 #include "SimDataFormats/TrackingHit/interface/PSimHitContainer.h"
 
+#include "TFile.h"
+#include "TH1F.h"
 //
 // class declaration
 //
@@ -78,18 +81,24 @@ class RPChscpFilter : public edm::EDFilter {
   explicit RPChscpFilter(const edm::ParameterSet& );
       ~RPChscpFilter();
       edm::ESHandle<RPCGeometry> rpcGeo;
+      std::vector<unsigned int> blacklist;
+      bool firstbook;
+      TFile * theFileCal;
+      TH1F * theHisto;
+      std::string  m_trackTag;
+      std::string rootFileNameCal;
       int MinRPCRecHits;
-  
+      double synchth;
+      double minIntegral;
+      double minMean;
   private:
       virtual void beginJob();
+      virtual void beginRun(const edm::Run&, const edm::EventSetup&);
       virtual bool filter(edm::Event&, const edm::EventSetup&);
+      virtual void endRun() ;
       virtual void endJob() ;
 
-      std::string  m_trackTag;
-      std::string rootFileName;
-
-
-      
+            
       // ----------member data ---------------------------
 };
 
@@ -108,8 +117,12 @@ RPChscpFilter::RPChscpFilter(const edm::ParameterSet& iConfig)
 {
   //now do what ever initialization is needed
   m_trackTag = iConfig.getUntrackedParameter<std::string>("tracks");
-  rootFileName = iConfig.getUntrackedParameter<std::string>("rootFileName");
   MinRPCRecHits = iConfig.getUntrackedParameter<int>("MinRPCRecHits");
+  rootFileNameCal =iConfig.getUntrackedParameter<std::string>("rootFileNameCal");
+  synchth = iConfig.getUntrackedParameter<double>("synchth");
+  minIntegral = iConfig.getUntrackedParameter<double>("minIntegral");
+  minMean = iConfig.getUntrackedParameter<double>("minMean");
+
 }
 
 
@@ -127,9 +140,56 @@ RPChscpFilter::~RPChscpFilter()
 //
 
 // ------------ method called on each new Event  ------------
+
+bool IsBadRoll(uint32_t rawId,std::vector<uint32_t> thelist){
+  bool isBadRoll = false;
+  if(!(find(thelist.begin(),thelist.end(),rawId)==thelist.end())){
+    isBadRoll=true;
+  }
+  return isBadRoll;
+}
+
 bool
 RPChscpFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
+ 
+  if(firstbook){
+  firstbook = false;
+
+  iSetup.get<MuonGeometryRecord>().get(rpcGeo);
+  theFileCal = new TFile(rootFileNameCal.c_str());
+  
+  if(!theFileCal) std::cout<<"The File Doesn't exist"<<std::endl;
+
+  blacklist.clear();
+  for (TrackingGeometry::DetContainer::const_iterator it=rpcGeo->dets().begin();it<rpcGeo->dets().end();it++){
+    if(dynamic_cast< RPCChamber* >( *it ) != 0 ){
+      RPCChamber* ch = dynamic_cast< RPCChamber* >( *it );
+      std::vector< const RPCRoll*> roles = (ch->rolls());
+      for(std::vector<const RPCRoll*>::const_iterator r = roles.begin();r != roles.end(); ++r){
+        RPCDetId rpcId = (*r)->id();
+        RPCGeomServ rpcsrv(rpcId);
+	std::string nameRoll = rpcsrv.name();
+	std::string meIdRES,folder;
+        folder = "DQMData/BXMuon_";
+        meIdRES = folder + nameRoll;
+        theHisto = (TH1F*)theFileCal->Get(meIdRES.c_str());
+	float ratio = 0;
+	int noGoodHits = theHisto->Integral()-theHisto->GetBinContent(6);
+	if(theHisto->GetBinContent(6)!=0) ratio = float(noGoodHits)/float(theHisto->GetBinContent(6));
+        if(theHisto->Integral()<minIntegral) std::cout<<"NotEnoughMuonHits_for "<<nameRoll<<std::endl;
+        if(ratio>synchth) std::cout<<"S "<<nameRoll<<" ratio="<<ratio<<std::endl;
+        if(ratio>synchth  && theHisto->Integral() >= minIntegral) std::cout<<"SI "<<nameRoll<<" ratio"<<ratio<<" integral="<<theHisto->Integral()<<std::endl;
+        if(ratio>synchth  && theHisto->Integral() >= minIntegral && fabs(theHisto->GetMean()) >= minMean){
+	  std::cout<<"SIM "<<nameRoll<<" ratio="<<ratio<<" integral="<<theHisto->Integral()<<" mean="<<theHisto->GetMean()<<std::endl;
+	  blacklist.push_back(rpcId.rawId());
+	}
+      }
+    }
+  }
+  std::cout<<"Number of rolls in black list = "<<blacklist.size()<<std::endl;
+  }
+
   edm::Handle<reco::TrackCollection> trackCollectionHandle;
   iEvent.getByLabel(m_trackTag,trackCollectionHandle);
   std::vector<susybsm::RPCHit4D> HSCPRPCRecHits;
@@ -162,9 +222,7 @@ RPChscpFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
     if(rechitcounter==0){
       std::cout<<"!!!!!!!!!!!!No recHits in this track"<<std::endl;
     }
-
     std::cout<<"\t \t Rechitcounter in this muon = "<<rechitcounter<<std::endl;
-
     std::cout<<"\t \t phi  ="<<phi<<" eta  ="<<eta<<std::endl;
     std::cout<<"\t \t Loop on the rechits"<<std::endl;
     
@@ -173,6 +231,7 @@ RPChscpFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
       if ( (*recHit)->geographicalId().det() != DetId::Muon  ) continue;
       if ( (*recHit)->geographicalId().subdetId() != MuonSubdetId::RPC ) continue;
       if (!(*recHit)->isValid()) continue;
+      if(IsBadRoll((RPCDetId)(*recHit)->geographicalId().rawId(),blacklist)) continue;
       RPCDetId rollId = (RPCDetId)(*recHit)->geographicalId();
       LocalPoint recHitPos=(*recHit)->localPosition();
       const RPCRoll* rollasociated = rpcGeo->roll(rollId); 
@@ -207,8 +266,7 @@ RPChscpFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
       anydifferentzero &= (!point->bx==0); //to check one knee withoutzeros                                                                                          
       anydifferentone &= (!point->bx==1); //to check one knee withoutones                                                                                            
       lastbx = point->bx;
-      std::cout<<"\t \t  r="<<r<<" phi="<<point->gp.phi()<<" eta="<<point->gp.eta()<<" bx="<<point->bx<<" outOfTime"<<outOfTime<<" increasing"<<increasing<<" anydif\
-ferentzero"<<anydifferentzero<<point->id<<std::endl;
+      std::cout<<"\t \t  r="<<r<<" phi="<<point->gp.phi()<<" eta="<<point->gp.eta()<<" bx="<<point->bx<<" outOfTime"<<outOfTime<<" increasing"<<increasing<<" anyddfferentzero"<<anydifferentzero<<point->id<<std::endl;
     }
     std::cout<<"\t \t";
 
@@ -240,13 +298,25 @@ ferentzero"<<anydifferentzero<<point->id<<std::endl;
 // ------------ method called once each job just before starting event loop  ------------
 void 
 RPChscpFilter::beginJob(){
+  std::cout<<"Begin Job"<<std::endl;
+  firstbook = true;
+}
 
-  
+void
+RPChscpFilter::beginRun(const edm::Run& run, const edm::EventSetup& iSetup){
+  std::cout<<"Begin Run"<<std::endl;
 }
 
 // ------------ method called once each job just after ending the event loop  ------------
+
+void 
+RPChscpFilter::endRun(){
+  std::cout<<"end Run"<<std::endl;
+}
+
 void 
 RPChscpFilter::endJob(){
+  std::cout<<"end Job"<<std::endl;
 }
 
 //define this as a plug-in

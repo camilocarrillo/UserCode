@@ -15,7 +15,11 @@ process.selRPC = cms.EDFilter("RPChscpFilter",
 #  tracks = cms.untracked.string('standAloneSETMuons'), doesn't work
    tracks = cms.untracked.string('globalMuons'),
    rootFileName = cms.untracked.string('/tmp/carrillo/hscp.root'),
-   MinRPCRecHits = cms.untracked.int32(2)
+   MinRPCRecHits = cms.untracked.int32(2), #Hits in tracker track
+   rootFileNameCal = cms.untracked.string('/afs/cern.ch/user/c/carrillo/scratch0/muonMonitor/PromptReco/PromptReco.root'),
+   synchth = cms.untracked.double(0.02), #percentage of RPCRecHIts outside bx=0
+   minIntegral = cms.untracked.double(20), #minimum number of hits asociated to a track in order to say something about the efficiency
+   minMean = cms.untracked.double(0.02)
 )
 
 process.source = cms.Source("PoolSource",
