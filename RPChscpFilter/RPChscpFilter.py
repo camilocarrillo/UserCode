@@ -10,8 +10,6 @@ process.maxEvents = cms.untracked.PSet(
     input = cms.untracked.int32(-1)
 )
 
-
-
 process.selRPC = cms.EDFilter("RPChscpFilter",
 #  tracks = cms.untracked.string('standAloneMuons'),
 #  tracks = cms.untracked.string('standAloneSETMuons'), doesn't work
