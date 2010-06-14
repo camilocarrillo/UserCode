@@ -67,16 +67,17 @@ class MuonRPCMonitor : public edm::EDAnalyzer {
       ~MuonRPCMonitor();
       edm::ESHandle<RPCGeometry> rpcGeo;
       std::map<std::string, MonitorElement*> bookDetUnitSeg(RPCDetId & detId);
+      virtual void beginJob() ;
       virtual void beginRun(const edm::Run&, const edm::EventSetup&);
       virtual void analyze(const edm::Event&, const edm::EventSetup&);
-      virtual void endRun(const edm::Run&, const edm::EventSetup&) ;
+      virtual void endJob() ;
       MonitorElement * observedeta;
       MonitorElement * observedphi;
       MonitorElement * observedp;
       MonitorElement * observedNhits;
       MonitorElement * observedNhitsRPC;
       MonitorElement * observedTracksPerEvent;
-
+      bool firstbook;
   private:
       
       // ----------member data ---------------------------
@@ -86,4 +87,5 @@ class MuonRPCMonitor : public edm::EDAnalyzer {
       int MinRPCRecHits;
       DQMStore * dbe;
       std::map<std::string, std::map<std::string, MonitorElement*> >  meCollection;
+
 };

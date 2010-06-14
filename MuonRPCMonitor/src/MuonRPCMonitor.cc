@@ -13,7 +13,7 @@
 //
 // Original Author:  Camilo Andres Carrillo Montoya,40 2-B15,+41227671625,
 //         Created:  Sun Jun 13 13:55:21 CEST 2010
-// $Id$
+// $Id: MuonRPCMonitor.cc,v 1.1 2010/06/13 16:08:22 carrillo Exp $
 //
 //
 #include "FWCore/Framework/interface/Event.h"
@@ -114,10 +114,15 @@ MuonRPCMonitor::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 
 // ------------ method called once each job just before starting event loop  ------------
-void MuonRPCMonitor::beginRun(const edm::Run& run, const edm::EventSetup& iSetup){
+void MuonRPCMonitor::beginJob(){
   std::cout<<"Begin Job"<<std::endl;
+  firstbook = true;
+}
+void MuonRPCMonitor::beginRun(const edm::Run& run, const edm::EventSetup& iSetup){
+  std::cout<<"Begin Run"<<std::endl;
   iSetup.get<MuonGeometryRecord>().get(rpcGeo);
 
+  if(firstbook){
   dbe = edm::Service<DQMStore>().operator->();
 
   observedeta = dbe->book1D("EtaObserved","Eta Observed Tracks",100,-2.5,2.5); 
@@ -141,10 +146,13 @@ void MuonRPCMonitor::beginRun(const edm::Run& run, const edm::EventSetup& iSetup
       }
     }
   }
+  firstbook=false;
+  }
 }
 
 // ------------ method called once each job just after ending the event loop  ------------
-void MuonRPCMonitor::endRun(const edm::Run& r, const edm::EventSetup& iSetup){
+void MuonRPCMonitor::endJob(){
+  std::cout<<"End Job"<<std::endl;
   std::cout<<"Saving root file under "<<rootFileName<<std::endl;
   dbe->save(rootFileName);
 }
