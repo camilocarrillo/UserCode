@@ -13,7 +13,7 @@
 //
 // Original Author:  Camilo Andres Carrillo Montoya
 //         Created:  Mon Feb 23 15:41:52 CET 2009
-// $Id: SIMHITANALIZER.cc,v 1.1 2009/03/22 21:39:40 carrillo Exp $
+// $Id: SIMHITANALIZER.cc,v 1.2 2009/07/29 21:38:56 carrillo Exp $
 //
 //
 
@@ -45,7 +45,6 @@
 #include "DataFormats/DetId/interface/DetId.h"
 #include <Geometry/Records/interface/MuonGeometryRecord.h>
 #include "Geometry/Records/interface/GlobalTrackingGeometryRecord.h"
-#include "beta/BETA/interface/BETA.h"
 #include "DataFormats/Candidate/interface/Candidate.h"
 #include "DataFormats/Candidate/interface/CandMatchMap.h"
 #include "DataFormats/Candidate/interface/CandidateFwd.h"
