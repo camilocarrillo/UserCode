@@ -13,7 +13,7 @@
 //
 // Original Author:  Camilo Andres Carrillo Montoya,40 2-B15,+41227671625,
 //         Created:  Mon Aug 30 18:35:05 CEST 2010
-// $Id$
+// $Id: SimHitShifter.cc,v 1.1 2010/09/04 11:47:23 carrillo Exp $
 //
 //
 
@@ -154,6 +154,12 @@ SimHitShifter::SimHitShifter(const edm::ParameterSet& iConfig)
     std::cout<<"rawId ="<<rawId<<" offset="<<offset<<std::endl;
   }
   
+  produces<edm::PSimHitContainer>("MuonCSCshiftedHits");
+  produces<edm::PSimHitContainer>("MuonDTshiftedHits");
+  produces<edm::PSimHitContainer>("MuonRPCshiftedHits");
+ 
+
+
    //register your products
 /* Examples
    produces<ExampleData2>();
@@ -179,8 +185,7 @@ SimHitShifter::~SimHitShifter()
 
 // ------------ method called to produce the data  ------------
 void
-SimHitShifter::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
-{
+SimHitShifter::produce(edm::Event& iEvent, const edm::EventSetup& iSetup){
    using namespace edm;
 
    std::cout << " Getting the SimHits " <<std::endl;
@@ -188,7 +193,12 @@ SimHitShifter::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    iEvent.getManyByType(theSimHitContainers);
    std::cout << " The Number of sim Hits is  " << theSimHitContainers.size() <<std::endl;
 
-      std::vector<PSimHit> theSimHits;
+   std::auto_ptr<edm::PSimHitContainer> pcsc(new edm::PSimHitContainer);
+   std::auto_ptr<edm::PSimHitContainer> pdt(new edm::PSimHitContainer);
+   std::auto_ptr<edm::PSimHitContainer> prpc(new edm::PSimHitContainer);
+
+
+   std::vector<PSimHit> theSimHits;
    
    for (int i = 0; i < int(theSimHitContainers.size()); i++){
      theSimHits.insert(theSimHits.end(),theSimHitContainers.at(i)->begin(),theSimHitContainers.at(i)->end());
@@ -200,12 +210,15 @@ SimHitShifter::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
      if(simdetid.det()==DetId::Muon &&  simdetid.subdetId()== MuonSubdetId::RPC){//Only RPCs
        std::cout<<"\t\t We have an RPC Sim Hit! in t="<<(*iHit).timeOfFlight()<<" DetId="<<(*iHit).detUnitId()<<std::endl;
+       prpc->push_back(*iHit);
      }
      if(simdetid.det()==DetId::Muon &&  simdetid.subdetId()== MuonSubdetId::DT){//Only DTs
        std::cout<<"\t\t We have an DT Sim Hit! in t="<<(*iHit).timeOfFlight()<<" DetId="<<(*iHit).detUnitId()<<std::endl;
+       pdt->push_back(*iHit);
      }
      if(simdetid.det()==DetId::Muon &&  simdetid.subdetId()== MuonSubdetId::CSC){//Only CSCs
        std::cout<<"\t\t We have an CSC Sim Hit! in t="<<(*iHit).timeOfFlight()<<" DetId="<<(*iHit).detUnitId()<<std::endl;
+       pcsc->push_back(*iHit);
      }
    }
 
@@ -226,6 +239,9 @@ SimHitShifter::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    iSetup.get<SetupRecord>().get(pSetup);
 */
  
+   iEvent.put(pcsc,"MuonCSCshiftedHits");
+   iEvent.put(pdt,"MuonDTshiftedHits");
+   iEvent.put(prpc,"MuonRPCshiftedHits");
 }
 
 void 
