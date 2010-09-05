@@ -13,7 +13,7 @@
 //
 // Original Author:  Camilo Andres Carrillo Montoya,40 2-B15,+41227671625,
 //         Created:  Mon Aug 30 18:35:05 CEST 2010
-// $Id: SimHitShifter.cc,v 1.1 2010/09/04 11:47:23 carrillo Exp $
+// $Id: SimHitShifter.cc,v 1.2 2010/09/05 09:25:12 carrillo Exp $
 //
 //
 
@@ -208,17 +208,34 @@ SimHitShifter::produce(edm::Event& iEvent, const edm::EventSetup& iSetup){
      DetId theDetUnitId((*iHit).detUnitId());
      DetId simdetid= DetId((*iHit).detUnitId());
 
+     float newtof = 0;
+     if(shiftinfo.find(simdetid.rawId())==shiftinfo.end()){
+       std::cout<<"Warning the RawId = "<<simdetid.rawId()<<"is not in the map"<<std::endl;
+       newtof = (*iHit).timeOfFlight();
+     }else{
+       newtof = (*iHit).timeOfFlight()-shiftinfo[simdetid.rawId()];
+     }
+
      if(simdetid.det()==DetId::Muon &&  simdetid.subdetId()== MuonSubdetId::RPC){//Only RPCs
        std::cout<<"\t\t We have an RPC Sim Hit! in t="<<(*iHit).timeOfFlight()<<" DetId="<<(*iHit).detUnitId()<<std::endl;
-       prpc->push_back(*iHit);
+       PSimHit hit((*iHit).entryPoint(),(*iHit).exitPoint(),(*iHit).pabs(),
+		   newtof,
+		   (*iHit).energyLoss(),(*iHit).particleType(),simdetid,(*iHit). trackId(),(*iHit).thetaAtEntry(),(*iHit).phiAtEntry(),(*iHit).processType());
+       prpc->push_back(hit);
      }
      if(simdetid.det()==DetId::Muon &&  simdetid.subdetId()== MuonSubdetId::DT){//Only DTs
        std::cout<<"\t\t We have an DT Sim Hit! in t="<<(*iHit).timeOfFlight()<<" DetId="<<(*iHit).detUnitId()<<std::endl;
-       pdt->push_back(*iHit);
+       PSimHit hit((*iHit).entryPoint(),(*iHit).exitPoint(),(*iHit).pabs(),
+		   newtof,
+		   (*iHit).energyLoss(),(*iHit).particleType(),simdetid,(*iHit). trackId(),(*iHit).thetaAtEntry(),(*iHit).phiAtEntry(),(*iHit).processType());
+      pdt->push_back(hit);
      }
      if(simdetid.det()==DetId::Muon &&  simdetid.subdetId()== MuonSubdetId::CSC){//Only CSCs
        std::cout<<"\t\t We have an CSC Sim Hit! in t="<<(*iHit).timeOfFlight()<<" DetId="<<(*iHit).detUnitId()<<std::endl;
-       pcsc->push_back(*iHit);
+       PSimHit hit((*iHit).entryPoint(),(*iHit).exitPoint(),(*iHit).pabs(),
+		   newtof,
+		   (*iHit).energyLoss(),(*iHit).particleType(),simdetid,(*iHit). trackId(),(*iHit).thetaAtEntry(),(*iHit).phiAtEntry(),(*iHit).processType());
+       pcsc->push_back(hit);
      }
    }
 
