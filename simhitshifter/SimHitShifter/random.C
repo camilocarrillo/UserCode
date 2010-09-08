@@ -39,7 +39,7 @@ void random(){
     cout<<valueDT<<endl;
   }
 
-  for(int i=1;i<=10000;i++){
+  for(int i=1;i<=4284;i++){
     double valueCSC = numberGenerator->Gaus(meanCSC,sigmaCSC);
     histoCSC->Fill(valueCSC);
     CSCtext<<valueCSC<<endl;
