@@ -13,7 +13,7 @@
 //
 // Original Author:  Camilo Andres Carrillo Montoya,40 2-B15,+41227671625,
 //         Created:  Mon Aug 30 18:35:05 CEST 2010
-// $Id: SimHitShifter.cc,v 1.3 2010/09/05 10:20:05 carrillo Exp $
+// $Id: SimHitShifter.cc,v 1.4 2010/09/08 16:59:07 carrillo Exp $
 //
 //
 
@@ -215,7 +215,7 @@ SimHitShifter::produce(edm::Event& iEvent, const edm::EventSetup& iSetup){
        std::cout<<"Warning the RawId = "<<simdetid.rawId()<<"is not in the map"<<std::endl;
        newtof = (*iHit).timeOfFlight();
      }else{
-       newtof = (*iHit).timeOfFlight()-shiftinfo[simdetid.rawId()];
+       newtof = (*iHit).timeOfFlight()+shiftinfo[simdetid.rawId()];
      }
 
      if(simdetid.det()==DetId::Muon &&  simdetid.subdetId()== MuonSubdetId::RPC){//Only RPCs

@@ -4,12 +4,15 @@ void random(){
 
   TRandom *numberGenerator = new TRandom();
   
-  float meanRPC = 0.;
+  float meanRPC = 25.;
   float sigmaRPC = 1.;
 
-  float meanDT = 2.;
-  float sigmaDT = 10.;
+  float meanDT = 25.;
+  float sigmaDT = 1.;
 
+  float meanCSC = 25.;
+  float sigmaCSC = 1.;
+  
   std::ofstream RPCtext;
   std::ofstream DTtext;
   std::ofstream CSCtext;
@@ -18,9 +21,6 @@ void random(){
   DTtext.open("DT.dat");
   CSCtext.open("CSC.dat");
 
-  float meanCSC = 0.;
-  float sigmaCSC = 1.;
-  
   TH1F * histoRPC = new TH1F("histoRPC","RPC dToF",101,meanRPC-3*sigmaRPC,meanRPC+3*sigmaRPC);
   TH1F * histoDT = new TH1F("histoDT","DT dToF",101,meanDT-3*sigmaDT,meanDT+3*sigmaDT);
   TH1F * histoCSC = new TH1F("histoCSC","CSC dToF",101,meanCSC-3*sigmaCSC,meanCSC+3*sigmaCSC);
@@ -32,7 +32,7 @@ void random(){
     cout<<valueRPC<<endl;
   }
 
-  for(int i=1;i<=4000;i++){
+  for(int i=1;i<=38586;i++){
     double valueDT = numberGenerator->Gaus(meanDT,sigmaDT);
     histoDT->Fill(valueDT);
     DTtext<<valueDT<<endl;
