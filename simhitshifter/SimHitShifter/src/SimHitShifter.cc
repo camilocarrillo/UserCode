@@ -13,7 +13,7 @@
 //
 // Original Author:  Camilo Andres Carrillo Montoya,40 2-B15,+41227671625,
 //         Created:  Mon Aug 30 18:35:05 CEST 2010
-// $Id: SimHitShifter.cc,v 1.4 2010/09/08 16:59:07 carrillo Exp $
+// $Id: SimHitShifter.cc,v 1.5 2010/09/09 15:42:16 carrillo Exp $
 //
 //
 
@@ -258,6 +258,8 @@ SimHitShifter::produce(edm::Event& iEvent, const edm::EventSetup& iSetup){
    iSetup.get<SetupRecord>().get(pSetup);
 */
  
+   std::cout<<"Putting collections in the event"<<std::endl;
+
    iEvent.put(pcsc,"MuonCSCshiftedHits");
    iEvent.put(pdt,"MuonDTshiftedHits");
    iEvent.put(prpc,"MuonRPCshiftedHits");
