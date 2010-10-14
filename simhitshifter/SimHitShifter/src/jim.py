@@ -19,14 +19,14 @@ process.MuonGeometryDBConverter = cms.EDAnalyzer("MuonGeometryDBConverter",
                                                                       suppressDTBarrel = cms.untracked.bool(True),
                                                                       suppressDTWheels = cms.untracked.bool(True),
                                                                       suppressDTStations = cms.untracked.bool(True),
-                                                                      suppressDTChambers = cms.untracked.bool(True),
+                                                                      suppressDTChambers = cms.untracked.bool(False),
                                                                       suppressDTSuperLayers = cms.untracked.bool(True),
-                                                                      suppressDTLayers = cms.untracked.bool(False),
+                                                                      suppressDTLayers = cms.untracked.bool(True),
                                                                       suppressCSCEndcaps = cms.untracked.bool(True),
                                                                       suppressCSCStations = cms.untracked.bool(True),
                                                                       suppressCSCRings = cms.untracked.bool(True),
                                                                       suppressCSCChambers = cms.untracked.bool(True),
-                                                                      suppressCSCLayers = cms.untracked.bool(False)
+                                                                      suppressCSCLayers = cms.untracked.bool(True)
                                                                       ))
 
 process.Path = cms.Path(process.MuonGeometryDBConverter)

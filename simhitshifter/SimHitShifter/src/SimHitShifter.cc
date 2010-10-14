@@ -13,7 +13,7 @@
 //
 // Original Author:  Camilo Andres Carrillo Montoya,40 2-B15,+41227671625,
 //         Created:  Mon Aug 30 18:35:05 CEST 2010
-// $Id: SimHitShifter.cc,v 1.5 2010/09/09 15:42:16 carrillo Exp $
+// $Id: SimHitShifter.cc,v 1.6 2010/09/27 08:32:00 carrillo Exp $
 //
 //
 
@@ -154,9 +154,13 @@ SimHitShifter::SimHitShifter(const edm::ParameterSet& iConfig)
     std::cout<<"rawId ="<<rawId<<" offset="<<offset<<std::endl;
   }
   
-  produces<edm::PSimHitContainer>("MuonCSCshiftedHits");
-  produces<edm::PSimHitContainer>("MuonDTshiftedHits");
-  produces<edm::PSimHitContainer>("MuonRPCshiftedHits");
+//    produces<edm::PSimHitContainer>("MuonCSCshiftedHits");
+//    produces<edm::PSimHitContainer>("MuonDTshiftedHits");
+//    produces<edm::PSimHitContainer>("MuonRPCshiftedHits");
+
+  produces<edm::PSimHitContainer>("MuonCSCHits");
+  produces<edm::PSimHitContainer>("MuonDTHits");
+  produces<edm::PSimHitContainer>("MuonRPCHits");
  
 
 
@@ -197,8 +201,10 @@ SimHitShifter::produce(edm::Event& iEvent, const edm::EventSetup& iSetup){
    std::auto_ptr<edm::PSimHitContainer> pdt(new edm::PSimHitContainer);
    std::auto_ptr<edm::PSimHitContainer> prpc(new edm::PSimHitContainer);
 
-
    std::vector<PSimHit> theSimHits;
+
+   using std::oct;
+   using std::dec;
    
    for (int i = 0; i < int(theSimHitContainers.size()); i++){
      theSimHits.insert(theSimHits.end(),theSimHitContainers.at(i)->begin(),theSimHitContainers.at(i)->end());
@@ -210,12 +216,42 @@ SimHitShifter::produce(edm::Event& iEvent, const edm::EventSetup& iSetup){
 
      if(simdetid.det()!=DetId::Muon) continue;
 
+     bool isDT = false;
+     
+     if(simdetid.rawId()<600000000) isDT = true;
+     
      float newtof = 0;
-     if(shiftinfo.find(simdetid.rawId())==shiftinfo.end()){
-       std::cout<<"Warning the RawId = "<<simdetid.rawId()<<"is not in the map"<<std::endl;
-       newtof = (*iHit).timeOfFlight();
-     }else{
-       newtof = (*iHit).timeOfFlight()+shiftinfo[simdetid.rawId()];
+
+     //for RPCs and CSCs
+     if(!isDT){
+       if(shiftinfo.find(simdetid.rawId())==shiftinfo.end()){
+	 std::cout<<"Warning the RawId = "<<simdetid.rawId()<<"is not in the map"<<std::endl;
+	 newtof = (*iHit).timeOfFlight();
+       }else{
+	 newtof = (*iHit).timeOfFlight()+shiftinfo[simdetid.rawId()];
+       }
+     }else{//for DTs
+       int RawId = simdetid.rawId(); 
+       std::cout<<"We found a DT simhit the RawId in Dec is";
+       std::cout<<dec<<RawId<<std::endl;
+       std::cout<<"and in oct"<<std::endl;
+       std::cout<<oct<<RawId<< std::endl;
+       std::cout<<"once masked in oct "<<std::endl;
+       int compressedRawId = RawId/8/8/8/8/8;
+       std::cout<<compressedRawId<<std::endl;
+       std::cout<<"extendedRawId"<<std::endl;
+       int extendedRawId = compressedRawId*8*8*8*8*8;
+       std::cout<<extendedRawId<<std::endl;
+       std::cout<<"converted again in decimal"<<std::endl;
+       std::cout<<dec<<extendedRawId<<std::endl;
+       if(shiftinfo.find(extendedRawId)==shiftinfo.end()){
+	 std::cout<<"Warning the RawId = "<<extendedRawId<<"is not in the map"<<std::endl;
+	 newtof = (*iHit).timeOfFlight();
+       }else{
+	 newtof = (*iHit).timeOfFlight()+shiftinfo[extendedRawId];
+	 std::cout<<"RawId = "<<extendedRawId<<"is in the map "<<(*iHit).timeOfFlight()<<" "<<newtof<<std::endl;
+
+       }
      }
 
      if(simdetid.det()==DetId::Muon &&  simdetid.subdetId()== MuonSubdetId::RPC){//Only RPCs
@@ -242,7 +278,7 @@ SimHitShifter::produce(edm::Event& iEvent, const edm::EventSetup& iSetup){
    }
 
 /* This is an event example
-   //Read 'ExampleData' from the Event
+//Read 'ExampleData' from the Event
    Handle<ExampleData> pIn;
    iEvent.getByLabel("example",pIn);
 
@@ -260,9 +296,14 @@ SimHitShifter::produce(edm::Event& iEvent, const edm::EventSetup& iSetup){
  
    std::cout<<"Putting collections in the event"<<std::endl;
 
-   iEvent.put(pcsc,"MuonCSCshiftedHits");
-   iEvent.put(pdt,"MuonDTshiftedHits");
-   iEvent.put(prpc,"MuonRPCshiftedHits");
+iEvent.put(pcsc,"MuonCSCHits");
+iEvent.put(pdt,"MuonDTHits");
+iEvent.put(prpc,"MuonRPCHits");
+
+//     iEvent.put(pcsc,"MuonCSCshiftedHits");
+//     iEvent.put(pdt,"MuonDTshiftedHits");
+//    iEvent.put(prpc,"MuonRPCshiftedHits");
+
 }
 
 void 

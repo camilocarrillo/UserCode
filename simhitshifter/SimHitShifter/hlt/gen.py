@@ -27,7 +27,7 @@ process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 process.load('Configuration.EventContent.EventContent_cff')
 
 process.configurationMetadata = cms.untracked.PSet(
-    version = cms.untracked.string('$Revision: 1.168.2.1 $'),
+    version = cms.untracked.string('$Revision: 1.1 $'),
     annotation = cms.untracked.string('Configuration/GenProduction/python/PYTHIA6_Exotica_HSCP_stau200_cfg.py nevts:10'),
     name = cms.untracked.string('PyReleaseValidation')
 )
@@ -40,15 +40,20 @@ process.options = cms.untracked.PSet(
 # Input source
 process.source = cms.Source("EmptySource")
 
+process.option = cms.untracked.PSet(
+  SkipEvent = cms.untracked.vstring('ProductNotFound'),
+  wantSummary = cms.untracked.bool(True)
+)
+
 # Output definition
 process.output = cms.OutputModule("PoolOutputModule",
     splitLevel = cms.untracked.int32(0),
-    outputCommands = process.RAWSIMEventContent.outputCommands,
+#    outputCommands = process.RAWSIMEventContent.outputCommands,
     fileName = cms.untracked.string('/tmp/carrillo/PYTHIA6_Exotica_HSCP_stau200_cfg_py_GEN_SIM_SHIFT_DIGI_L1_DIGI2RAW_HLT.root'),
-    dataset = cms.untracked.PSet(
-        dataTier = cms.untracked.string('GEN-SIM-RAW'),
-        filterName = cms.untracked.string('')
-    ),
+#    dataset = cms.untracked.PSet(
+#        dataTier = cms.untracked.string('GEN-SIM-RAW'),
+#        filterName = cms.untracked.string('')
+#    ),
     SelectEvents = cms.untracked.PSet(
         SelectEvents = cms.vstring('generation_step')
     )
@@ -57,6 +62,10 @@ process.output = cms.OutputModule("PoolOutputModule",
 # Additional output definition
 
 # Other statements
+process.simMuonCSCDigis.InputCollection = 'theshifterMuonCSCHits'
+process.simMuonRPCDigis.InputCollection = 'theshifterMuonRPCHits'
+process.simMuonDTDigis.InputCollection = 'theshifterMuonDTHits'
+
 process.GlobalTag.globaltag = 'START3X_V26::All'
 process.generator = cms.EDFilter("Pythia6GeneratorFilter",
     pythiaPylistVerbosity = cms.untracked.int32(0),
@@ -118,8 +127,9 @@ process.endjob_step = cms.Path(process.endOfProcess)
 process.out_step = cms.EndPath(process.output)
 
 # Schedule definition
-process.schedule = cms.Schedule(process.generation_step,process.simulation_step,process.digitisation_step,process.L1simulation_step,process.digi2raw_step)
-process.schedule.extend(process.HLTSchedule)
+#process.schedule = cms.Schedule(process.generation_step,process.simulation_step,process.digitisation_step,process.L1simulation_step,process.digi2raw_step)
+process.schedule = cms.Schedule(process.generation_step,process.simulation_step)
+#process.schedule.extend(process.HLTSchedule)
 process.schedule.extend([process.endjob_step,process.out_step])
 # special treatment in case of production filter sequence  
 for path in process.paths: 

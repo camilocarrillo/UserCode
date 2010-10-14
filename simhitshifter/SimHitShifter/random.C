@@ -32,7 +32,7 @@ void random(){
     cout<<valueRPC<<endl;
   }
 
-  for(int i=1;i<=38586;i++){
+  for(int i=1;i<=250;i++){
     double valueDT = numberGenerator->Gaus(meanDT,sigmaDT);
     histoDT->Fill(valueDT);
     DTtext<<valueDT<<endl;
