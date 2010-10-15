@@ -72,6 +72,9 @@ class MuonRPCMonitor2 : public edm::EDAnalyzer {
       TFile * theFile;
       TFile * theFileOut;
       TH1F * theHisto;
+      TH1F * theHistoAll;
+      TH1F * theHistoAllblack;
+      TH1F * theHistoAlldiffBlack;
       TH1F * ratioHistoBarrel;
       TH1F * ratioHistoEndCapP;
       TH1F * ratioHistoEndCapN;
