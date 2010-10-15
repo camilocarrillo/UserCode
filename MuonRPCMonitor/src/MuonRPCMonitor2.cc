@@ -13,7 +13,7 @@
 //
 // Original Author:  Camilo Andres Carrillo Montoya,40 2-B15,+41227671625,
 //         Created:  Sun Jun 13 13:55:21 CEST 2010
-// $Id$
+// $Id: MuonRPCMonitor2.cc,v 1.1 2010/06/14 16:16:15 carrillo Exp $
 //
 //
 #include "FWCore/Framework/interface/Event.h"
@@ -77,6 +77,9 @@ void MuonRPCMonitor2::beginRun(const edm::Run& run, const edm::EventSetup& iSetu
   ratioHistoBarrel = new TH1F("ratiosychBarrel","ratio synch Barrel",100,0,1); 
   ratioHistoEndCapP = new TH1F("ratiosychEndCapP","ratio synch EndCap +",100,0,1); 
   ratioHistoEndCapN = new TH1F("ratiosychEndCapN","ratio synch EndCap -",100,0,1); 
+  theHistoAllblack = new TH1F("AllBXblack","AllBXblack",11,-5.5, 5.5);
+  theHistoAlldiffBlack = new TH1F("Alldiffblack","All - black",11,-5.5, 5.5);
+  theHistoAll = new TH1F("AllBXblack","AllBXblack",11,-5.5, 5.5);
   BXRMSBarrel = new TH2F("BXVsRMSBarrel","BX Vs RMS Barrel",51,-5.0,5.0,51,0.,4.);  
   BXRMSEndCapP = new TH2F("BXVsRMSEndCapP","BX Vs RMS EndCap+ ",51,-5.0,5.0,51,0.,4.);    
   BXRMSEndCapN = new TH2F("BXVsRMSEndCapN","BX Vs RMS EndCap- ",51,-5.0,5.0,51,0.,4.);    
@@ -97,6 +100,7 @@ void MuonRPCMonitor2::beginRun(const edm::Run& run, const edm::EventSetup& iSetu
 	folder = "DQMData/BXMuon_";
 	meIdRES = folder + nameRoll;
 	theHisto = (TH1F*)theFile->Get(meIdRES.c_str());
+	theHistoAll->Add(theHisto);
 	int noGoodHits = theHisto->Integral()-theHisto->GetBinContent(6);
 	float ratio = 0;
 	Integrals->Fill(theHisto->Integral());
@@ -111,7 +115,10 @@ void MuonRPCMonitor2::beginRun(const edm::Run& run, const edm::EventSetup& iSetu
 	if(theHisto->Integral()<minIntegral) std::cout<<"NotEnoughMuonHits_for "<<nameRoll<<std::endl;
 	if(ratio>synchth) std::cout<<"S "<<nameRoll<<" ratio="<<ratio<<std::endl;
 	if(ratio>synchth  && theHisto->Integral() >= minIntegral) std::cout<<"SI "<<nameRoll<<" ratio"<<ratio<<" integral="<<theHisto->Integral()<<std::endl;
-	if(ratio>synchth  && theHisto->Integral() >= minIntegral && fabs(theHisto->GetMean()) >= minMean)  std::cout<<"SIM "<<nameRoll<<" ratio="<<ratio<<" integral="<<theHisto->Integral()<<" mean="<<theHisto->GetMean()<<std::endl;
+	if(ratio>synchth  && theHisto->Integral() >= minIntegral && fabs(theHisto->GetMean()) >= minMean){
+	  std::cout<<"SIM "<<nameRoll<<" ratio="<<ratio<<" integral="<<theHisto->Integral()<<" mean="<<theHisto->GetMean()<<std::endl;
+	  theHistoAllblack->Add(theHisto);
+	}
       }
     }
   }
@@ -126,7 +133,8 @@ void MuonRPCMonitor2::endRun(const edm::Run& r, const edm::EventSetup& iSetup){
   ratioHistoEndCapP->SetFillColor(1);
   ratioHistoEndCapN->SetFillColor(1);
   Integrals->SetFillColor(1);
-
+  theHistoAll->Write();
+  theHistoAllblack->Write();
   BXRMSBarrel->Write();
   BXRMSEndCapP->Write();
   BXRMSEndCapN->Write();
@@ -137,9 +145,7 @@ void MuonRPCMonitor2::endRun(const edm::Run& r, const edm::EventSetup& iSetup){
   Means->Write();
   RealMeans->Write();
   RMSs->Write();  
-  TCanvas * Ca1;
-  Ca1 = new TCanvas("Ca1","Synch",800,600);
-  
+  TCanvas * Ca1 = new TCanvas("Ca1","Synch",800,600);
   Means->SetFillColor(1);
   Means->Draw();
   RealMeans->SetFillColor(5);
@@ -147,6 +153,17 @@ void MuonRPCMonitor2::endRun(const edm::Run& r, const edm::EventSetup& iSetup){
   Ca1->SetLogy();
   Ca1->SaveAs("Means.png");
   Ca1->Write();
+
+  TCanvas * BXAllCanvas = new TCanvas("BXAllCanvas","Synch",800,600);
+  theHistoAll->SetFillColor(1);
+  theHistoAll->Draw();
+  theHistoAllblack->SetFillColor(5);
+  theHistoAllblack->Draw("same");
+  BXAllCanvas->SetLogy();
+  BXAllCanvas->SaveAs("theHistoAll.png");
+  BXAllCanvas->Write();
+  theHistoAlldiffBlack->Add(theHistoAll,theHistoAllblack,1,-1);
+  theHistoAlldiffBlack->Write();
   theFileOut->Close();
 }
 
