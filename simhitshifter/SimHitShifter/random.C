@@ -4,15 +4,15 @@ void random(){
 
   TRandom *numberGenerator = new TRandom();
   
-  float meanRPC = 25.;
-  float sigmaRPC = 1.;
+  float meanRPC = 0.25;
+  float sigmaRPC = 5.2;
 
-  float meanDT = 25.;
-  float sigmaDT = 1.;
+  float meanDT = 0.;
+  float sigmaDT = 2.;
 
-  float meanCSC = 25.;
-  float sigmaCSC = 1.;
-  
+  float meanCSC = 5.;
+  float sigmaCSC = 3.;
+
   std::ofstream RPCtext;
   std::ofstream DTtext;
   std::ofstream CSCtext;

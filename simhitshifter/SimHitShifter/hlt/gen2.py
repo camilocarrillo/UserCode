@@ -41,7 +41,7 @@ process.options = cms.untracked.PSet(
 #process.source = cms.Source("EmptySource")
 
 process.source = cms.Source("PoolSource",
-    fileNames = cms.untracked.vstring('file:/tmp/carrillo/afterdrop.root')
+    fileNames = cms.untracked.vstring('file:/tmp/carrillo/marcelloNoShiftOnTimex3.root')
 )
 
 
@@ -134,7 +134,7 @@ process.out_step = cms.EndPath(process.output)
 # Schedule definition
 #process.schedule = cms.Schedule(process.generation_step,process.simulation_step,process.digitisation_step,process.L1simulation_step,process.digi2raw_step)
 #process.schedule = cms.Schedule(process.generation_step,process.simulation_step)
-process.schedule = cms.Schedule(process.digitisation_step,process.L1simulation_step,process.digi2raw_step)
+process.schedule = cms.Schedule()
 process.schedule.extend(process.HLTSchedule)
 process.schedule.extend([process.endjob_step,process.out_step])
 # special treatment in case of production filter sequence  
