@@ -13,7 +13,7 @@
 //
 // Original Author:  Camilo Andres Carrillo Montoya,40 2-B15,+41227671625,
 //         Created:  Sun Jun 13 13:55:21 CEST 2010
-// $Id: MuonRPCMonitor.cc,v 1.1 2010/06/13 16:08:22 carrillo Exp $
+// $Id: MuonRPCMonitor.cc,v 1.2 2010/06/14 16:15:59 carrillo Exp $
 //
 //
 #include "FWCore/Framework/interface/Event.h"
@@ -30,7 +30,6 @@ MuonRPCMonitor::MuonRPCMonitor(const edm::ParameterSet& iConfig)
 
   m_trackTag = iConfig.getUntrackedParameter<std::string>("tracks");
   rootFileName = iConfig.getUntrackedParameter<std::string>("rootFileName");
-  MinRPCRecHits = iConfig.getUntrackedParameter<int>("MinRPCRecHits");//not usefull in this analysis
 
 }
 

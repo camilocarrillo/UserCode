@@ -19,7 +19,8 @@
 #include "FWCore/ServiceRegistry/interface/Service.h"
 
 #include <DataFormats/MuonDetId/interface/RPCDetId.h>
-#include "FWCore/ParameterSet/interface/InputTag.h"
+//#include "FWCore/ParameterSet/interface/InputTag.h"
+#include "FWCore/Utilities/interface/InputTag.h"
 #include <Geometry/CommonDetUnit/interface/GeomDet.h>
 #include "MagneticField/Engine/interface/MagneticField.h"
 #include "MagneticField/Records/interface/IdealMagneticFieldRecord.h"
