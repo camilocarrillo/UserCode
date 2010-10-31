@@ -13,7 +13,7 @@
 //
 // Original Author:  Camilo Andres Carrillo Montoya,40 2-B15,+41227671625,
 //         Created:  Thu Jun 10 11:34:48 CEST 2010
-// $Id: RPChscpFilter.cc,v 1.3 2010/06/14 16:28:46 carrillo Exp $
+// $Id: RPChscpFilter.cc,v 1.4 2010/06/14 21:58:49 carrillo Exp $
 //
 //
 
@@ -29,7 +29,8 @@
 #include "DQMServices/Core/interface/DQMStore.h"
 #include "DQMServices/Core/interface/MonitorElement.h"
 #include <DataFormats/MuonDetId/interface/RPCDetId.h>
-#include "FWCore/ParameterSet/interface/InputTag.h"
+//#include "FWCore/ParameterSet/interface/InputTag.h"
+#include "FWCore/Utilities/interface/InputTag.h"
 #include <Geometry/CommonDetUnit/interface/GeomDet.h>
 #include "MagneticField/Engine/interface/MagneticField.h"
 #include "MagneticField/Records/interface/IdealMagneticFieldRecord.h"
@@ -64,6 +65,7 @@
 #include <Geometry/RPCGeometry/interface/RPCGeomServ.h>
 #include "AnalysisDataFormats/SUSYBSMObjects/interface/HSCParticle.h"
 #include <DataFormats/RPCRecHit/interface/RPCRecHit.h>
+#include "DataFormats/RPCRecHit/interface/RPCRecHitCollection.h"
 #include "DataFormats/TrajectorySeed/interface/TrajectorySeedCollection.h"
 #include "TrackingTools/PatternTools/interface/Trajectory.h"
 #include "TrackingTools/PatternTools/interface/TrajTrackAssociation.h"
@@ -92,6 +94,7 @@ class RPChscpFilter : public edm::EDFilter {
       double minIntegral;
       double minMean;
   private:
+      edm::InputTag rpcRecHitsLabel;
       virtual void beginJob();
       virtual void beginRun(const edm::Run&, const edm::EventSetup&);
       virtual bool filter(edm::Event&, const edm::EventSetup&);
@@ -117,12 +120,12 @@ RPChscpFilter::RPChscpFilter(const edm::ParameterSet& iConfig)
 {
   //now do what ever initialization is needed
   m_trackTag = iConfig.getUntrackedParameter<std::string>("tracks");
+  rpcRecHitsLabel = iConfig.getParameter<edm::InputTag>("rpcRecHits");
   MinRPCRecHits = iConfig.getUntrackedParameter<int>("MinRPCRecHits");
   rootFileNameCal =iConfig.getUntrackedParameter<std::string>("rootFileNameCal");
   synchth = iConfig.getUntrackedParameter<double>("synchth");
   minIntegral = iConfig.getUntrackedParameter<double>("minIntegral");
   minMean = iConfig.getUntrackedParameter<double>("minMean");
-
 }
 
 
@@ -192,6 +195,11 @@ RPChscpFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
   edm::Handle<reco::TrackCollection> trackCollectionHandle;
   iEvent.getByLabel(m_trackTag,trackCollectionHandle);
+
+  std::cout <<"\t Getting the RPC RecHits"<<std::endl;
+  edm::Handle<RPCRecHitCollection> rpcHits;
+  iEvent.getByLabel(rpcRecHitsLabel,rpcHits);
+  
   std::vector<susybsm::RPCHit4D> HSCPRPCRecHits;
 
   iSetup.get<MuonGeometryRecord>().get(rpcGeo);
@@ -203,17 +211,27 @@ RPChscpFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
     
 
   std::cout<<"\t Loop on all the reconstructed muons"<<std::endl;
-  std::cout<<"\t We found "<<trackCollectionHandle->size()<<" muon tracks in this event"<<std::endl;
+  std::cout<<"\t There are "<<trackCollectionHandle->size()<<" muon tracks in this event"<<std::endl;
+
+  
+  //  if(trackCollectionHandle->size()>=2)for (reco::TrackCollection::const_iterator leg1 = trackCollectionHandle->begin(); leg1!=trackCollectionHandle->end(); leg1++) {
+  //    for (reco::TrackCollection::const_iterator leg2 = leg1; leg2!=trackCollectionHandle->end(); leg2++){
+  //    leg1->p()
+  //  }
+  // }
+  
   for (reco::TrackCollection::const_iterator muon = trackCollectionHandle->begin(); muon!=trackCollectionHandle->end(); muon++) {
     counter++;
-    std::cout<<"counter = "<<counter<<std::endl;
-    
-    std::cout<<"going"<<std::endl;
     
     eta=muon->eta();
     phi=muon->phi();
     p=muon->p();
 
+    std::cout<<" muon->pt = "<<muon->pt()<<" GeV dxy = "<<muon->dxy()<<std::endl;
+
+    if (muon->pt() < 30); continue; //Is the Muon pt smaller than 30GeV.
+    if(fabs(muon->dxy()) > 0.25) continue;  //Is the transverse impact parameter bigger than 0.25cm?.
+    
     int rechitcounter = 0;
     for(trackingRecHit_iterator recHit2 = muon->recHitsBegin(); recHit2 != muon->recHitsEnd(); ++recHit2) {
       rechitcounter++;
@@ -222,17 +240,30 @@ RPChscpFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
     if(rechitcounter==0){
       std::cout<<"!!!!!!!!!!!!No recHits in this track"<<std::endl;
     }
+
     std::cout<<"\t \t Rechitcounter in this muon = "<<rechitcounter<<std::endl;
     std::cout<<"\t \t phi  ="<<phi<<" eta  ="<<eta<<std::endl;
     std::cout<<"\t \t Loop on the rechits"<<std::endl;
     
     HSCPRPCRecHits.clear();
     for(trackingRecHit_iterator recHit = muon->recHitsBegin(); recHit != muon->recHitsEnd(); ++recHit){
-      if ( (*recHit)->geographicalId().det() != DetId::Muon  ) continue;
-      if ( (*recHit)->geographicalId().subdetId() != MuonSubdetId::RPC ) continue;
-      if (!(*recHit)->isValid()) continue;
-      if(IsBadRoll((RPCDetId)(*recHit)->geographicalId().rawId(),blacklist)) continue;
+      if ( (*recHit)->geographicalId().det() != DetId::Muon  ) continue; //Is a hit in the Muon System?
+      if ( (*recHit)->geographicalId().subdetId() != MuonSubdetId::RPC ) continue; //Is an RPC Hit?
+      if (!(*recHit)->isValid()) continue; //Is Valid
+      if(IsBadRoll((RPCDetId)(*recHit)->geographicalId().rawId(),blacklist)) continue; //The Hit belongs to a good roll.?
       RPCDetId rollId = (RPCDetId)(*recHit)->geographicalId();
+      std::cout<<"Getting RecHits in Roll Asociated"<<std::endl;
+      typedef std::pair<RPCRecHitCollection::const_iterator, RPCRecHitCollection::const_iterator> rangeRecHits;
+      rangeRecHits recHitCollection =  rpcHits->get(rollId);
+      RPCRecHitCollection::const_iterator recHitC;
+      int size = 0;
+      int clusterS;
+      for(recHitC = recHitCollection.first; recHitC != recHitCollection.second ; recHitC++) {
+	clusterS=(*recHitC).clusterSize(); 
+	size++;
+      }
+      if(size>1) continue; //Is the only RecHit in this roll.?
+      if(clusterS>4); //Is the Cluster Size 5 or bigger? 
       LocalPoint recHitPos=(*recHit)->localPosition();
       const RPCRoll* rollasociated = rpcGeo->roll(rollId); 
       const BoundPlane & RPCSurface = rollasociated->surface();
@@ -251,7 +282,7 @@ RPChscpFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
     bool anydifferentzero = true;
     bool anydifferentone = true;
     
-    if(HSCPRPCRecHits.size()<MinRPCRecHits){
+    if((int) HSCPRPCRecHits.size()<MinRPCRecHits){
       std::cout<<"\t Less than"<<MinRPCRecHits<<"RecHits in this muon!!! = "<<HSCPRPCRecHits.size()<<std::endl;
       continue;
     }
@@ -266,7 +297,7 @@ RPChscpFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
       anydifferentzero &= (!point->bx==0); //to check one knee withoutzeros                                                                                          
       anydifferentone &= (!point->bx==1); //to check one knee withoutones                                                                                            
       lastbx = point->bx;
-      std::cout<<"\t \t  r="<<r<<" phi="<<point->gp.phi()<<" eta="<<point->gp.eta()<<" bx="<<point->bx<<" outOfTime"<<outOfTime<<" increasing"<<increasing<<" anyddfferentzero"<<anydifferentzero<<point->id<<std::endl;
+      std::cout<<"\t \t  r="<<r<<" phi="<<point->gp.phi()<<" eta="<<point->gp.eta()<<" bx="<<point->bx<<" outOfTime"<<outOfTime<<" increasing"<<increasing<<" anyddfferentzero"<<anydifferentzero<<" "<<point->id<<std::endl;
     }
     std::cout<<"\t \t";
 
@@ -276,10 +307,9 @@ RPChscpFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
     std::cout<<std::endl;
     
     bool pp = true;
-
     float delay = 0;
     if(pp){
-      delay=12.5; //half bunch crossing delay for pp collisions                                                                                                          }
+      delay=12.5; //half bunch crossing delay for pp collisions
     }
     
     bool Candidate = (outOfTime&&increasing);
