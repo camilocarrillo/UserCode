@@ -42,7 +42,7 @@
 
 <flags EDM_PLUGIN=1>
 <export>
-   <lib name=RPCHSCPFilterRPChscpFilter>
+   <lib name=RPCHSCPFilterRPCcosmicFilter>
    <use name=FWCore/Framework>
    <use name=FWCore/PluginManager>
    <use name=FWCore/ParameterSet>
