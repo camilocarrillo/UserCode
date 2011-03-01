@@ -24,8 +24,7 @@ process.selRPC = cms.EDFilter("RPChscpFilter",
 )
 
 process.source = cms.Source("PoolSource",
-   fileNames = cms.untracked.vstring('/store/data/Run2010B/Mu/RECO/PromptReco-v2/000/146/804/5AF410C9-F8CA-DF11-8486-0030487D05B0.root')
-#  fileNames = cms.untracked.vstring('file:/tmp/carrillo/filtering.root')
+  fileNames = cms.untracked.vstring('file:/tmp/carrillo/antipv_46_1_VHP.root')
 )
 
 process.FEVT = cms.OutputModule("PoolOutputModule",
