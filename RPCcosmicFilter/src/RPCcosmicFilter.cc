@@ -451,6 +451,7 @@ RPCcosmicFilter::endJob(){
 
   theFileOut->cd();
   bxupleg->Write();
+  bxdiff->Write();
   bxdownleg->Write();
   hitshisto->Write();
   hitsupleghisto->Write();
