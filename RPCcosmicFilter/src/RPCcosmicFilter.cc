@@ -13,7 +13,7 @@
 //
 // Original Author:  Camilo Andres Carrillo Montoya,40 2-B15,+41227671625,
 //         Created:  Thu Jun 10 11:34:48 CEST 2010
-// $Id: RPCcosmicFilter.cc,v 1.1 2011/03/03 13:36:31 carrillo Exp $
+// $Id: RPCcosmicFilter.cc,v 1.2 2011/03/03 15:24:37 carrillo Exp $
 //
 //
 
@@ -427,8 +427,6 @@ RPCcosmicFilter::endJob(){
   Ca0->SaveAs("etadistrodownleg.png");Ca0->Clear();
   bxdiff->Draw();
   Ca0->SaveAs("bxdiff.png");Ca0->Clear();
-  statistics->Draw();
-  Ca0->SaveAs("statistics.png");Ca0->Clear();
   bxscatter->Draw();
   bxscatter->SetDrawOption("COLZ");
   Ca0->SaveAs("bxscatter.png");Ca0->Clear();
@@ -447,7 +445,10 @@ RPCcosmicFilter::endJob(){
   Ca0->SetLogy();
   muondistro->Draw();
   Ca0->SaveAs("muondistro.png");Ca0->Clear();
-  
+  Ca0->SetLogy();
+  statistics->Draw();
+  Ca0->SaveAs("statistics.png");Ca0->Clear();
+
   theFileOut->cd();
   bxupleg->Write();
   bxdownleg->Write();
