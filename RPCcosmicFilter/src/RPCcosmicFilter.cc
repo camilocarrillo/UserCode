@@ -13,7 +13,7 @@
 //
 // Original Author:  Camilo Andres Carrillo Montoya,40 2-B15,+41227671625,
 //         Created:  Thu Jun 10 11:34:48 CEST 2010
-// $Id: RPCcosmicFilter.cc,v 1.1 2011/02/28 22:28:33 carrillo Exp $
+// $Id: RPCcosmicFilter.cc,v 1.1 2011/03/03 13:36:31 carrillo Exp $
 //
 //
 
@@ -108,6 +108,7 @@ class RPCcosmicFilter : public edm::EDFilter {
       TH2F * etascatter;
       TH2F * bxscatter;
       TH1F * muondistro;
+      TH1F * bxdiff;
 
       std::string  m_trackTag;
       std::string rootFileNameCal;
@@ -161,10 +162,11 @@ RPCcosmicFilter::RPCcosmicFilter(const edm::ParameterSet& iConfig)
   etadistroupleg = new TH1F("etadistroupleg","etadistroupleg",100,-2.5,2.5);
   etadistrodownleg = new TH1F("etadistrodownleg","etadistrodownleg",100,-2.5,2.5);
   statistics = new TH1F("statistics","statistics",8,-0.5,7.5);
-  phiscatter = new TH2F("phiscatter","phiscatter",100,-3.141592,3.141592,100,-3.141592,3.141592);
-  etascatter = new TH2F("etascatter","etascatter",100,-2.5,2.5,100,-2.5,2.5);
-  bxscatter = new TH2F("bxscatter","bxscatter",70,-3.5,3.5,60,-3.5,3.5);
+  phiscatter = new TH2F("phiscatter","phiscatter",1000,-3.141592,3.141592,1000,-3.141592,3.141592);
+  etascatter = new TH2F("etascatter","etascatter",100,-2.5,2.5,1000,-2.5,2.5);
+  bxscatter = new TH2F("bxscatter","bxscatter",70,-3.5,3.5,70,-3.5,3.5);
   muondistro = new TH1F("muondistro","muondistro",10,-0.5,9.5);
+  bxdiff = new TH1F("bxdiff","bxdiff up - down",100,-6,6);
 }
 
 
@@ -312,8 +314,8 @@ RPCcosmicFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
     hitsupleghisto->Fill(hitsupleg);
     hitsdownleghisto->Fill(hitsdownleg);
     
-    if(fabs(upleg->eta()<=1.6)) hitsupleghistoeta->Fill(hitsupleg);
-    if(fabs(downleg->eta()<=1.6))  hitsdownleghistoeta->Fill(hitsdownleg);
+    if(fabs(upleg->eta())>=1.6) hitsupleghistoeta->Fill(hitsupleg);
+    if(fabs(downleg->eta())>=1.6)  hitsdownleghistoeta->Fill(hitsdownleg);
 
     hitshisto->Fill(hitsupleg+hitsdownleg);
 
@@ -327,7 +329,8 @@ RPCcosmicFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
       avedownleg = avedownleg/hitsdownleg;
       std::cout<<"the averdownleg = "<<avedownleg<<std::endl;
       std::cout<<"Filling the Histogram"<<std::endl;
-      bxscatter->Fill(aveupleg,avedownleg);  
+      bxscatter->Fill(aveupleg,avedownleg);
+      bxdiff->Fill(aveupleg-avedownleg);
       if(aveupleg <= -0.5 && avedownleg>=-0.5){
 	statistics->Fill(5);
 	statistics->Fill(7);
@@ -396,6 +399,7 @@ RPCcosmicFilter::endJob(){
   bxscatter->GetYaxis()->SetTitle("Average bx down leg");
 
   muondistro->GetXaxis()->SetTitle("Number of muons");
+  bxdiff->GetXaxis()->SetTitle("<bx up> - <bx down>");
 
   TCanvas * Ca0;
 
@@ -403,10 +407,6 @@ RPCcosmicFilter::endJob(){
 
   Ca0 = new TCanvas("Ca5a","Scatter Angle Plots",800,600);
   Ca0->Clear();
-  bxupleg->Draw();
-  Ca0->SaveAs("bxupleg.png");Ca0->Clear();
-  bxdownleg->Draw();
-  Ca0->SaveAs("bxdownleg.png");Ca0->Clear();
   hitshisto->Draw();
   Ca0->SaveAs("hitshisto.png");Ca0->Clear();
   hitsupleghisto->Draw();
@@ -425,10 +425,10 @@ RPCcosmicFilter::endJob(){
   Ca0->SaveAs("etadistroupleg.png");Ca0->Clear();
   etadistrodownleg->Draw();
   Ca0->SaveAs("etadistrodownleg.png");Ca0->Clear();
+  bxdiff->Draw();
+  Ca0->SaveAs("bxdiff.png");Ca0->Clear();
   statistics->Draw();
   Ca0->SaveAs("statistics.png");Ca0->Clear();
-  muondistro->Draw();
-  Ca0->SaveAs("muondistro.png");Ca0->Clear();
   bxscatter->Draw();
   bxscatter->SetDrawOption("COLZ");
   Ca0->SaveAs("bxscatter.png");Ca0->Clear();
@@ -438,7 +438,15 @@ RPCcosmicFilter::endJob(){
   etascatter->Draw();
   etascatter->SetDrawOption("COLZ");
   Ca0->SaveAs("etascatter.png");Ca0->Clear();
-
+  Ca0->SetLogy();
+  bxupleg->Draw();
+  Ca0->SaveAs("bxupleg.png");Ca0->Clear();
+  Ca0->SetLogy();
+  bxdownleg->Draw();
+  Ca0->SaveAs("bxdownleg.png");Ca0->Clear();
+  Ca0->SetLogy();
+  muondistro->Draw();
+  Ca0->SaveAs("muondistro.png");Ca0->Clear();
   
   theFileOut->cd();
   bxupleg->Write();
