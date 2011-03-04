@@ -13,7 +13,7 @@
 //
 // Original Author:  Camilo Andres Carrillo Montoya,40 2-B15,+41227671625,
 //         Created:  Thu Jun 10 11:34:48 CEST 2010
-// $Id: RPCcosmicFilter.cc,v 1.2 2011/03/03 15:24:37 carrillo Exp $
+// $Id: RPCcosmicFilter.cc,v 1.4 2011/03/03 16:22:08 carrillo Exp $
 //
 //
 
@@ -111,9 +111,9 @@ class RPCcosmicFilter : public edm::EDFilter {
       TH1F * bxdiff;
 
       std::string  m_trackTag;
-      std::string rootFileNameCal;
+      std::string rootFileName;
       int MinRPCRecHits;
-      double synchth;
+      double etacut;
       double minIntegral;
       double minMean;
   private:
@@ -145,8 +145,8 @@ RPCcosmicFilter::RPCcosmicFilter(const edm::ParameterSet& iConfig)
   m_trackTag = iConfig.getUntrackedParameter<std::string>("tracks");
   rpcRecHitsLabel = iConfig.getParameter<edm::InputTag>("rpcRecHits");
   MinRPCRecHits = iConfig.getUntrackedParameter<int>("MinRPCRecHits");
-  rootFileNameCal =iConfig.getUntrackedParameter<std::string>("rootFileNameCal");
-  synchth = iConfig.getUntrackedParameter<double>("synchth");
+  rootFileName =iConfig.getUntrackedParameter<std::string>("rootFileName");
+  etacut = iConfig.getUntrackedParameter<double>("etacut");
   minIntegral = iConfig.getUntrackedParameter<double>("minIntegral");
   minMean = iConfig.getUntrackedParameter<double>("minMean");
 
@@ -264,10 +264,8 @@ RPCcosmicFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
       rangeRecHits recHitCollection =  rpcHits->get(rollId);
       RPCRecHitCollection::const_iterator recHitC;
       int size = 0;
-      int clusterS=0;
       std::cout<<"\t \t \t Looping on the rechits of the same roll"<<std::endl;
       for(recHitC = recHitCollection.first; recHitC != recHitCollection.second ; recHitC++) {
-	clusterS=(*recHitC).clusterSize(); 
 	RPCDetId rollId = (RPCDetId)(*recHitC).geographicalId();
 	std::cout<<"\t \t \t \t"<<rollId<<" bx "<<(*recHitC).BunchX()<<std::endl;
 	size++;
@@ -295,10 +293,8 @@ RPCcosmicFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
       rangeRecHits recHitCollection =  rpcHits->get(rollId);
       RPCRecHitCollection::const_iterator recHitC;
       int size = 0;
-      int clusterS=0;
       std::cout<<"\t \t \t Looping on the rechits of the same roll"<<std::endl;
       for(recHitC = recHitCollection.first; recHitC != recHitCollection.second ; recHitC++) {
-	clusterS=(*recHitC).clusterSize(); 
 	RPCDetId rollId = (RPCDetId)(*recHitC).geographicalId();
 	std::cout<<"\t \t \t \t"<<rollId<<" bx "<<(*recHitC).BunchX()<<std::endl;
 	size++;
@@ -314,8 +310,8 @@ RPCcosmicFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
     hitsupleghisto->Fill(hitsupleg);
     hitsdownleghisto->Fill(hitsdownleg);
     
-    if(fabs(upleg->eta())>=1.6) hitsupleghistoeta->Fill(hitsupleg);
-    if(fabs(downleg->eta())>=1.6)  hitsdownleghistoeta->Fill(hitsdownleg);
+    if(fabs(upleg->eta())>=etacut) hitsupleghistoeta->Fill(hitsupleg);
+    if(fabs(downleg->eta())>=etacut)  hitsdownleghistoeta->Fill(hitsdownleg);
 
     hitshisto->Fill(hitsupleg+hitsdownleg);
 
@@ -336,7 +332,7 @@ RPCcosmicFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	statistics->Fill(7);
 	return true;
       }
-    }else if(hitsupleg==0 && fabs(upleg->eta())>=1.6){
+    }else if(hitsupleg==0 && fabs(upleg->eta())<=etacut){
       statistics->Fill(6);
       statistics->Fill(7);
       return true;
@@ -350,7 +346,7 @@ void
 RPCcosmicFilter::beginJob(){
   std::cout<<"Begin Job"<<std::endl;
   firstbook = true;
-  theFileOut = new TFile("cosmics.root", "RECREATE");
+  theFileOut = new TFile(rootFileName.c_str(), "RECREATE");
 }
 
 void
@@ -374,9 +370,9 @@ RPCcosmicFilter::endJob(){
   statistics->GetXaxis()->SetBinLabel(3,"RPChits up-leg");
   statistics->GetXaxis()->SetBinLabel(4,"RPChits down-leg");
   statistics->GetXaxis()->SetBinLabel(5,"RPChits both-legs");
-  statistics->GetXaxis()->SetBinLabel(6,"Cosmic BX");
-  statistics->GetXaxis()->SetBinLabel(7,"Cosmic No hits up leg");
-  statistics->GetXaxis()->SetBinLabel(8,"Cosmic OR Both");
+  statistics->GetXaxis()->SetBinLabel(6,"Cosmic BX criteria");
+  statistics->GetXaxis()->SetBinLabel(7,"Cosmic No Hits Criteria");
+  statistics->GetXaxis()->SetBinLabel(8,"Cosmic OR Both criteria");
   statistics->GetXaxis()->SetLabelSize(0.03);
   
   bxupleg->GetXaxis()->SetTitle("bx");
@@ -401,54 +397,9 @@ RPCcosmicFilter::endJob(){
   muondistro->GetXaxis()->SetTitle("Number of muons");
   bxdiff->GetXaxis()->SetTitle("<bx up> - <bx down>");
 
-  TCanvas * Ca0;
-
   gStyle->SetPalette(1);
 
-  Ca0 = new TCanvas("Ca5a","Scatter Angle Plots",800,600);
-  Ca0->Clear();
-  hitshisto->Draw();
-  Ca0->SaveAs("hitshisto.png");Ca0->Clear();
-  hitsupleghisto->Draw();
-  hitsupleghistoeta->SetFillColor(2);
-  hitsupleghistoeta->Draw("same");
-  Ca0->SaveAs("hitsupleghisto.png");Ca0->Clear();
-  hitsdownleghisto->Draw();
-  hitsdownleghistoeta->SetFillColor(2);
-  hitsdownleghistoeta->Draw("same");
-  Ca0->SaveAs("hitsdownleghisto.png");Ca0->Clear();
-  phidistro->Draw();
-  Ca0->SaveAs("phidistro.png");Ca0->Clear();
-  etadistro->Draw();
-  Ca0->SaveAs("etadistro.png");Ca0->Clear();
-  etadistroupleg->Draw();
-  Ca0->SaveAs("etadistroupleg.png");Ca0->Clear();
-  etadistrodownleg->Draw();
-  Ca0->SaveAs("etadistrodownleg.png");Ca0->Clear();
-  bxdiff->Draw();
-  Ca0->SaveAs("bxdiff.png");Ca0->Clear();
-  bxscatter->Draw();
-  bxscatter->SetDrawOption("COLZ");
-  Ca0->SaveAs("bxscatter.png");Ca0->Clear();
-  phiscatter->Draw();
-  phiscatter->SetDrawOption("COLZ");
-  Ca0->SaveAs("phiscatter.png");Ca0->Clear();
-  etascatter->Draw();
-  etascatter->SetDrawOption("COLZ");
-  Ca0->SaveAs("etascatter.png");Ca0->Clear();
-  Ca0->SetLogy();
-  bxupleg->Draw();
-  Ca0->SaveAs("bxupleg.png");Ca0->Clear();
-  Ca0->SetLogy();
-  bxdownleg->Draw();
-  Ca0->SaveAs("bxdownleg.png");Ca0->Clear();
-  Ca0->SetLogy();
-  muondistro->Draw();
-  Ca0->SaveAs("muondistro.png");Ca0->Clear();
-  Ca0->SetLogy();
-  statistics->Draw();
-  Ca0->SaveAs("statistics.png");Ca0->Clear();
-
+  //the image production was moved to scripts/getPNG.C
   theFileOut->cd();
   bxupleg->Write();
   bxdiff->Write();
