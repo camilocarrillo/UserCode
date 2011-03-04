@@ -6,7 +6,7 @@
 
 void getPng(){
   gROOT->Reset();
-  gStyle->SetOptStat(0);
+  gStyle->SetOptStat(1);
   gStyle->SetPalette(1);
   cout<<"getting the file"<<endl;
 
@@ -51,11 +51,16 @@ void getPng(){
   Ca0->SaveAs("etadistroupleg.png");Ca0->Clear();
   etadistrodownleg->Draw();
   Ca0->SaveAs("etadistrodownleg.png");Ca0->Clear();
+  statistics->GetXaxis()->SetBinLabel(6,"Cosmic BX criteria");
+  statistics->GetXaxis()->SetBinLabel(7,"Cosmic No Hits Criteria");
+  statistics->GetXaxis()->SetBinLabel(8,"Cosmic OR Both criteria");
+  statistics->Draw();
+  Ca0->SaveAs("statistics.png");Ca0->Clear();
   bxscatter->Draw();
   bxscatter->SetDrawOption("COLZ");
   Ca0->SaveAs("bxscatter.png");Ca0->Clear();
   phiscatter->Draw();
-  //  phiscatter->SetDrawOption("COLZ");
+  phiscatter->SetDrawOption("COLZ");
   Ca0->SaveAs("phiscatter.png");Ca0->Clear();
   etascatter->Draw();
   etascatter->SetDrawOption("COLZ");
@@ -71,7 +76,8 @@ void getPng(){
   Ca0->SaveAs("muondistro.png");Ca0->Clear();
   Ca0->SetLogy();
   statistics->Draw();
-  Ca0->SaveAs("statistics.png");Ca0->Clear();
+  statistics->SetDrawOption("text");
+  Ca0->SaveAs("statisticstext.png");Ca0->Clear();
   Ca0->SetLogy();
   bxdiff->Draw();
   Ca0->SaveAs("bxdiff.png");Ca0->Clear();
