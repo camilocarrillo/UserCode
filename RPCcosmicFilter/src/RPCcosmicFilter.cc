@@ -13,7 +13,7 @@
 //
 // Original Author:  Camilo Andres Carrillo Montoya,40 2-B15,+41227671625,
 //         Created:  Thu Jun 10 11:34:48 CEST 2010
-// $Id: RPCcosmicFilter.cc,v 1.4 2011/03/03 16:22:08 carrillo Exp $
+// $Id: RPCcosmicFilter.cc,v 1.5 2011/03/04 13:58:08 carrillo Exp $
 //
 //
 
@@ -115,7 +115,7 @@ class RPCcosmicFilter : public edm::EDFilter {
       int MinRPCRecHits;
       double etacut;
       double minIntegral;
-      double minMean;
+      bool debug;
   private:
       edm::InputTag rpcRecHitsLabel;
       virtual void beginJob();
@@ -148,7 +148,7 @@ RPCcosmicFilter::RPCcosmicFilter(const edm::ParameterSet& iConfig)
   rootFileName =iConfig.getUntrackedParameter<std::string>("rootFileName");
   etacut = iConfig.getUntrackedParameter<double>("etacut");
   minIntegral = iConfig.getUntrackedParameter<double>("minIntegral");
-  minMean = iConfig.getUntrackedParameter<double>("minMean");
+  debug = iConfig.getUntrackedParameter<bool>("debug",false);
 
   bxupleg = new TH1F("bxupleg","bxupleg",7,-3.5,3.5);
   bxdownleg = new TH1F("bxdownleg","bxdownleg",7,-3.5,3.5);
@@ -209,14 +209,14 @@ RPCcosmicFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
   edm::Handle<reco::TrackCollection> trackCollectionHandle;
   iEvent.getByLabel(m_trackTag,trackCollectionHandle);
 
-  std::cout <<"\t Getting the RPC RecHits"<<std::endl;
+  if(debug)std::cout <<"\t Getting the RPC RecHits"<<std::endl;
   edm::Handle<RPCRecHitCollection> rpcHits;
   iEvent.getByLabel(rpcRecHitsLabel,rpcHits);
   
   iSetup.get<MuonGeometryRecord>().get(rpcGeo);
   
-  std::cout<<"\t Loop on all the reconstructed muons"<<std::endl;
-  std::cout<<"\t There are "<<trackCollectionHandle->size()<<" muon tracks in this event"<<std::endl;
+  if(debug)std::cout<<"\t Loop on all the reconstructed muons"<<std::endl;
+  if(debug)std::cout<<"\t There are "<<trackCollectionHandle->size()<<" muon tracks in this event"<<std::endl;
   
   statistics->Fill(0); //number of analyzed events
   
@@ -251,26 +251,26 @@ RPCcosmicFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
     //upleg
     float aveupleg = 0;
     float hitsupleg = 0;
-    std::cout<<"\t going with leg 1"<<std::endl;
+    if(debug)std::cout<<"\t going with leg 1"<<std::endl;
     for(trackingRecHit_iterator recHit = upleg->recHitsBegin(); recHit != upleg->recHitsEnd(); ++recHit){
       if ( (*recHit)->geographicalId().det() != DetId::Muon  ) continue; //Is a hit in the Muon System?
       if ( (*recHit)->geographicalId().subdetId() != MuonSubdetId::RPC ) continue; //Is an RPC Hit?
-      std::cout<<"\t \t 1/6 Is a hit in the Muon System? "<<std::endl;
-      std::cout<<"\t \t 2/6 Is an RPCHit? "<<std::endl;
-      std::cout<<"\t \t 3/6 Is a valid hit? "<<std::endl;
+      if(debug)std::cout<<"\t \t 1/6 Is a hit in the Muon System? "<<std::endl;
+      if(debug)std::cout<<"\t \t 2/6 Is an RPCHit? "<<std::endl;
+      if(debug)std::cout<<"\t \t 3/6 Is a valid hit? "<<std::endl;
       if (!(*recHit)->isValid()) continue; //Is Valid
       RPCDetId rollId = (RPCDetId)(*recHit)->geographicalId();
       typedef std::pair<RPCRecHitCollection::const_iterator, RPCRecHitCollection::const_iterator> rangeRecHits;
       rangeRecHits recHitCollection =  rpcHits->get(rollId);
       RPCRecHitCollection::const_iterator recHitC;
       int size = 0;
-      std::cout<<"\t \t \t Looping on the rechits of the same roll"<<std::endl;
+      if(debug)std::cout<<"\t \t \t Looping on the rechits of the same roll"<<std::endl;
       for(recHitC = recHitCollection.first; recHitC != recHitCollection.second ; recHitC++) {
 	RPCDetId rollId = (RPCDetId)(*recHitC).geographicalId();
-	std::cout<<"\t \t \t \t"<<rollId<<" bx "<<(*recHitC).BunchX()<<std::endl;
+	if(debug)std::cout<<"\t \t \t \t"<<rollId<<" bx "<<(*recHitC).BunchX()<<std::endl;
 	size++;
       }
-      std::cout<<"\t \t 5/6 Is the only RecHit in this roll.? size = "<<size<<std::endl;
+      if(debug)std::cout<<"\t \t 5/6 Is the only RecHit in this roll.? size = "<<size<<std::endl;
       if(size>1) continue; //Is the only RecHit in this roll.?
       int bx = ((RPCRecHit*)(&(**recHit)))->BunchX();
       bxupleg->Fill(bx);
@@ -280,26 +280,26 @@ RPCcosmicFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
     //now downleg
     float avedownleg = 0;
     float hitsdownleg = 0;
-    std::cout<<"\t going with leg 1"<<std::endl;
+    if(debug)std::cout<<"\t going with leg 1"<<std::endl;
     for(trackingRecHit_iterator recHit = downleg->recHitsBegin(); recHit != downleg->recHitsEnd(); ++recHit){
       if ( (*recHit)->geographicalId().det() != DetId::Muon  ) continue; //Is a hit in the Muon System?
       if ( (*recHit)->geographicalId().subdetId() != MuonSubdetId::RPC ) continue; //Is an RPC Hit?
-      std::cout<<"\t \t 1/6 Is a hit in the Muon System? "<<std::endl;
-      std::cout<<"\t \t 2/6 Is an RPCHit? "<<std::endl;
-      std::cout<<"\t \t 3/6 Is a valid hit? "<<std::endl;
+      if(debug)std::cout<<"\t \t 1/6 Is a hit in the Muon System? "<<std::endl;
+      if(debug)std::cout<<"\t \t 2/6 Is an RPCHit? "<<std::endl;
+      if(debug)std::cout<<"\t \t 3/6 Is a valid hit? "<<std::endl;
       if (!(*recHit)->isValid()) continue; //Is Valid
       RPCDetId rollId = (RPCDetId)(*recHit)->geographicalId();
       typedef std::pair<RPCRecHitCollection::const_iterator, RPCRecHitCollection::const_iterator> rangeRecHits;
       rangeRecHits recHitCollection =  rpcHits->get(rollId);
       RPCRecHitCollection::const_iterator recHitC;
       int size = 0;
-      std::cout<<"\t \t \t Looping on the rechits of the same roll"<<std::endl;
+      if(debug)std::cout<<"\t \t \t Looping on the rechits of the same roll"<<std::endl;
       for(recHitC = recHitCollection.first; recHitC != recHitCollection.second ; recHitC++) {
 	RPCDetId rollId = (RPCDetId)(*recHitC).geographicalId();
-	std::cout<<"\t \t \t \t"<<rollId<<" bx "<<(*recHitC).BunchX()<<std::endl;
+	if(debug)std::cout<<"\t \t \t \t"<<rollId<<" bx "<<(*recHitC).BunchX()<<std::endl;
 	size++;
       }
-      std::cout<<"\t \t 5/6 Is the only RecHit in this roll.? size = "<<size<<std::endl;
+      if(debug)std::cout<<"\t \t 5/6 Is the only RecHit in this roll.? size = "<<size<<std::endl;
       if(size>1) continue; //Is the only RecHit in this roll.?
       int bx = ((RPCRecHit*)(&(**recHit)))->BunchX();
       bxdownleg->Fill(bx);
@@ -321,10 +321,10 @@ RPCcosmicFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
     if(hitsupleg != 0 && hitsdownleg!=0){
       statistics->Fill(4); //number of analyzed events with two muons and hits in both legs
       aveupleg = aveupleg/hitsupleg;
-      std::cout<<"the averupleg = "<<aveupleg<<" "<<hitsupleg<<std::endl;
+      if(debug)std::cout<<"the averupleg = "<<aveupleg<<" "<<hitsupleg<<std::endl;
       avedownleg = avedownleg/hitsdownleg;
-      std::cout<<"the averdownleg = "<<avedownleg<<std::endl;
-      std::cout<<"Filling the Histogram"<<std::endl;
+      if(debug)std::cout<<"the averdownleg = "<<avedownleg<<std::endl;
+      if(debug)std::cout<<"Filling the Histogram"<<std::endl;
       bxscatter->Fill(aveupleg,avedownleg);
       bxdiff->Fill(aveupleg-avedownleg);
       if(aveupleg <= -0.5 && avedownleg>=-0.5){
