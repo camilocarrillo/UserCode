@@ -17,9 +17,9 @@ process.source = cms.Source("PoolSource",
 )
 
 process.g4SimHits = cms.EDProducer("SimHitShifter",
-   ShiftFileName = cms.untracked.string('/afs/cern.ch/user/c/carrillo/simhits/marcelloTEst/CMSSW_3_5_8_patch2/src/simhitshifter/SimHitShifter/goodtest.txt')
-#  ShiftFileName = cms.untracked.string('/afs/cern.ch/user/c/carrillo/simhits/marcelloTEst/CMSSW_3_5_8_patch2/src/simhitshifter/SimHitShifter/noMap.txt')
-#  ShiftFileName = cms.untracked.string('/afs/cern.ch/user/c/carrillo/simhits/marcelloTEst/CMSSW_3_5_8_patch2/src/simhitshifter/SimHitShifter/goodMap.txt')
+#  ShiftFileName = cms.untracked.string('../data/goodtest.txt')
+#  ShiftFileName = cms.untracked.string('../data/noMap.txt')
+   ShiftFileName = cms.untracked.string('../data/goodMap.txt')
 )
 
 
