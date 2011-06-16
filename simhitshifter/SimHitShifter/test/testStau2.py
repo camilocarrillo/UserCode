@@ -32,6 +32,29 @@ process.mixSimHits.input = cms.VInputTag(cms.InputTag("g4SimHits","BSCHits"),
                                          cms.InputTag("g4SimHits","TrackerHitsTOBLowTof")
                                          )
 
+process.mix.mixObjects.mixSH.input = cms.VInputTag(cms.InputTag("g4SimHits","BSCHits"),
+                                         cms.InputTag("g4SimHits","FP420SI"),
+                                         cms.InputTag("theshifter","MuonCSCHits"),
+                                         cms.InputTag("theshifter","MuonDTHits"),
+                                         cms.InputTag("theshifter","MuonRPCHits"),
+                                         cms.InputTag("g4SimHits","TotemHitsRP"),
+                                         cms.InputTag("g4SimHits","TotemHitsT1"),
+                                         cms.InputTag("g4SimHits","TotemHitsT2Gem"),
+                                         cms.InputTag("g4SimHits","TrackerHitsPixelBarrelHighTof"),
+                                         cms.InputTag("g4SimHits","TrackerHitsPixelBarrelLowTof"),
+                                         cms.InputTag("g4SimHits","TrackerHitsPixelEndcapHighTof"),
+                                         cms.InputTag("g4SimHits","TrackerHitsPixelEndcapLowTof"),
+                                         cms.InputTag("g4SimHits","TrackerHitsTECHighTof"),
+                                         cms.InputTag("g4SimHits","TrackerHitsTECLowTof"),
+                                         cms.InputTag("g4SimHits","TrackerHitsTIBHighTof"),
+                                         cms.InputTag("g4SimHits","TrackerHitsTIBLowTof"),
+                                         cms.InputTag("g4SimHits","TrackerHitsTIDHighTof"),
+                                         cms.InputTag("g4SimHits","TrackerHitsTIDLowTof"),
+                                         cms.InputTag("g4SimHits","TrackerHitsTOBHighTof"),
+                                         cms.InputTag("g4SimHits","TrackerHitsTOBLowTof")
+                                         )
+
+
 process.load('Configuration.StandardSequences.GeometryDB_cff')
 process.load('Configuration.StandardSequences.MagneticField_38T_cff')
 process.load('Configuration.StandardSequences.Generator_cff')
@@ -91,7 +114,10 @@ process.GlobalTag.globaltag = 'START42_V11::All'
 # Path and EndPath definitions
 process.shifter_step = cms.Path(process.theshifter)
 process.simulation_step = cms.Path(process.psim*process.theshifter)
-process.digitisation_step = cms.Path(process.pdigi)
+process.content = cms.EDAnalyzer("EventContentAnalyzer")
+
+process.digitisation_step = cms.Path(process.mix+process.content+process.pdigi)
+#process.digitisation_step = cms.Path(process.pdigi)
 process.L1simulation_step = cms.Path(process.SimL1Emulator)
 process.digi2raw_step = cms.Path(process.DigiToRaw)
 process.genfiltersummary_step = cms.EndPath(process.genFilterSummary)
