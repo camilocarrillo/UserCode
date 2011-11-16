@@ -7,11 +7,11 @@ void random(){
   float meanRPC = 0.25;
   float sigmaRPC = 5.2;
 
-  float meanDT = 0.;
-  float sigmaDT = 2.;
+  float meanDT = 0.5;
+  float sigmaDT = 1.;
 
-  float meanCSC = 5.;
-  float sigmaCSC = 3.;
+  float meanCSC = 0;
+  float sigmaCSC = 1.;
 
   std::ofstream RPCtext;
   std::ofstream DTtext;
@@ -39,7 +39,7 @@ void random(){
     cout<<valueDT<<endl;
   }
 
-  for(int i=1;i<=4284;i++){
+  for(int i=1;i<=540;i++){
     double valueCSC = numberGenerator->Gaus(meanCSC,sigmaCSC);
     histoCSC->Fill(valueCSC);
     CSCtext<<valueCSC<<endl;

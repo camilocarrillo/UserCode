@@ -12,23 +12,14 @@ process.load("Geometry.MuonNumbering.muonNumberingInitialization_cfi")
 
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
-      'file:/tmp/carrillo/HSCPstau_M_200_7TeV_pythia6_cff_py_GEN_SIM_DIGI_L1_DIGI2RAW_HLT_98_1_yUz.root'
+      'file:/tmp/carrillo/HSCPstau_M_100_7TeV_pythia6_cff_py_DIGI_L1_DIGI2RAW.root'
    )
 )
 
-
 process.load('simhitshifter.SimHitShifter.simhitshifter_cfi')
 
-#process.g4SimHits = cms.EDProducer("SimHitShifter",
-#  ShiftFileName = cms.untracked.string('../data/goodtest.txt')
-#  ShiftFileName = cms.untracked.string('../data/noMap.txt')
-#  ShiftFileName = cms.untracked.string('../data/goodMap.txt')
-#  ShiftFileName = cms.untracked.string('../data/2011Map.txt')
-#)
-
-
 process.out = cms.OutputModule("PoolOutputModule",
-    fileName = cms.untracked.string('/tmp/carrillo/HSCPstau_M_200_7TeV_pythia6_cff_py_GEN_SIM_SHIFT.root'),
+    fileName = cms.untracked.string('/tmp/carrillo/Stau100_GEN_SIM_SHIFT.root'),
     outputCommands = cms.untracked.vstring('keep *','keep *_g4SimHits_Muon*Hits_SIMHITSHIFTER','drop *_g4SimHits_Muon*Hits_HLT','drop *_simMuon*_*_*','drop CrossingFrame*_mix_*_*')
 )
   
