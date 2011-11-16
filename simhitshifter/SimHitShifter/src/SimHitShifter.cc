@@ -13,7 +13,7 @@
 //
 // Original Author:  Camilo Andres Carrillo Montoya,40 2-B15,+41227671625,
 //         Created:  Mon Aug 30 18:35:05 CEST 2010
-// $Id: SimHitShifter.cc,v 1.6 2010/09/27 08:32:00 carrillo Exp $
+// $Id: SimHitShifter.cc,v 1.7 2010/10/14 09:11:38 carrillo Exp $
 //
 //
 
@@ -73,6 +73,8 @@
 
 #include "DataFormats/MuonDetId/interface/MuonSubdetId.h"
 
+#include "DataFormats/MuonDetId/interface/CSCDetId.h"
+
 #include "Geometry/RPCGeometry/interface/RPCGeometry.h"
 #include <Geometry/RPCGeometry/interface/RPCRoll.h>
 #include <Geometry/Records/interface/MuonGeometryRecord.h>
@@ -120,25 +122,12 @@ class SimHitShifter : public edm::EDProducer {
       virtual void produce(edm::Event&, const edm::EventSetup&);
       virtual void endJob() ;
     
-      // ----------member data ---------------------------
 };
 
-//
-// constants, enums and typedefs
-//
-
-
-//
-// static data member definitions
-//
-
-//
-// constructors and destructor
-//
 SimHitShifter::SimHitShifter(const edm::ParameterSet& iConfig)
 {
   std::cout<<"in the constructor"<<std::endl;
-
+  
   ShiftFileName  = iConfig.getUntrackedParameter<std::string>("ShiftFileName","/afs/cern.ch/user/c/carrillo/simhits/CMSSW_3_5_8_patch2/src/simhitshifter/SimHitShifter/Merged_Muon_RawId_Shift.txt");
  
   //iSetup.get<MuonGeometryRecord>().get(rpcGeo);
@@ -148,54 +137,34 @@ SimHitShifter::SimHitShifter(const edm::ParameterSet& iConfig)
   int rawId;
   float offset;
 
+  std::cout<<"In the constructor, The name of the file is "<<ShiftFileName.c_str()<<std::endl;
+
+  if(!ifin) std::cout<<"Problem reading the map rawId shift "<<ShiftFileName.c_str()<<std::endl;
+  assert(ifin);
+
   while (ifin.good()){
     ifin >>rawId >>offset;
     shiftinfo[rawId]=offset;
     std::cout<<"rawId ="<<rawId<<" offset="<<offset<<std::endl;
   }
   
-//    produces<edm::PSimHitContainer>("MuonCSCshiftedHits");
-//    produces<edm::PSimHitContainer>("MuonDTshiftedHits");
-//    produces<edm::PSimHitContainer>("MuonRPCshiftedHits");
-
   produces<edm::PSimHitContainer>("MuonCSCHits");
   produces<edm::PSimHitContainer>("MuonDTHits");
   produces<edm::PSimHitContainer>("MuonRPCHits");
- 
-
-
-   //register your products
-/* Examples
-   produces<ExampleData2>();
-
-   //if do put with a label
-   produces<ExampleData2>("label");
-*/
-   //now do what ever other initialization is needed
-  
 }
 
 
 SimHitShifter::~SimHitShifter()
 {
-  // do anything here that needs to be done at desctruction time
-  // (e.g. close files, deallocate resources etc.)
 }
 
-
-//
-// member functions
-//
-
-// ------------ method called to produce the data  ------------
-void
-SimHitShifter::produce(edm::Event& iEvent, const edm::EventSetup& iSetup){
+void SimHitShifter::produce(edm::Event& iEvent, const edm::EventSetup& iSetup){
    using namespace edm;
 
-   std::cout << " Getting the SimHits " <<std::endl;
+   //std::cout << " Getting the SimHits " <<std::endl;
    std::vector<edm::Handle<edm::PSimHitContainer> > theSimHitContainers;
    iEvent.getManyByType(theSimHitContainers);
-   std::cout << " The Number of sim Hits is  " << theSimHitContainers.size() <<std::endl;
+   //std::cout << " The Number of sim Hits is  " << theSimHitContainers.size() <<std::endl;
 
    std::auto_ptr<edm::PSimHitContainer> pcsc(new edm::PSimHitContainer);
    std::auto_ptr<edm::PSimHitContainer> pdt(new edm::PSimHitContainer);
@@ -216,21 +185,23 @@ SimHitShifter::produce(edm::Event& iEvent, const edm::EventSetup& iSetup){
 
      if(simdetid.det()!=DetId::Muon) continue;
 
-     bool isDT = false;
-     
-     if(simdetid.rawId()<600000000) isDT = true;
-     
      float newtof = 0;
-
-     //for RPCs and CSCs
-     if(!isDT){
+    
+     if(simdetid.det()==DetId::Muon &&  simdetid.subdetId()== MuonSubdetId::RPC){//Only RPCs
+       //std::cout<<"\t\t We have an RPC Sim Hit! in t="<<(*iHit).timeOfFlight()<<" DetId="<<(*iHit).detUnitId()<<std::endl;
        if(shiftinfo.find(simdetid.rawId())==shiftinfo.end()){
-	 std::cout<<"Warning the RawId = "<<simdetid.rawId()<<"is not in the map"<<std::endl;
+	 std::cout<<"RPC Warning the RawId = "<<simdetid.det()<<" | "<<simdetid.rawId()<<"is not in the map"<<std::endl;
 	 newtof = (*iHit).timeOfFlight();
        }else{
 	 newtof = (*iHit).timeOfFlight()+shiftinfo[simdetid.rawId()];
        }
-     }else{//for DTs
+       
+       PSimHit hit((*iHit).entryPoint(),(*iHit).exitPoint(),(*iHit).pabs(),
+		   newtof,
+		   (*iHit).energyLoss(),(*iHit).particleType(),simdetid,(*iHit). trackId(),(*iHit).thetaAtEntry(),(*iHit).phiAtEntry(),(*iHit).processType());
+       prpc->push_back(hit);
+     }
+     else if(simdetid.det()==DetId::Muon &&  simdetid.subdetId()== MuonSubdetId::DT){//Only DTs
        int RawId = simdetid.rawId(); 
        std::cout<<"We found a DT simhit the RawId in Dec is";
        std::cout<<dec<<RawId<<std::endl;
@@ -244,66 +215,59 @@ SimHitShifter::produce(edm::Event& iEvent, const edm::EventSetup& iSetup){
        std::cout<<extendedRawId<<std::endl;
        std::cout<<"converted again in decimal"<<std::endl;
        std::cout<<dec<<extendedRawId<<std::endl;
+       
        if(shiftinfo.find(extendedRawId)==shiftinfo.end()){
-	 std::cout<<"Warning the RawId = "<<extendedRawId<<"is not in the map"<<std::endl;
+	 //std::cout<<"DT Warning the RawId = "<<extendedRawId<<"is not in the map"<<std::endl;
 	 newtof = (*iHit).timeOfFlight();
        }else{
 	 newtof = (*iHit).timeOfFlight()+shiftinfo[extendedRawId];
 	 std::cout<<"RawId = "<<extendedRawId<<"is in the map "<<(*iHit).timeOfFlight()<<" "<<newtof<<std::endl;
-
        }
-     }
-
-     if(simdetid.det()==DetId::Muon &&  simdetid.subdetId()== MuonSubdetId::RPC){//Only RPCs
-       std::cout<<"\t\t We have an RPC Sim Hit! in t="<<(*iHit).timeOfFlight()<<" DetId="<<(*iHit).detUnitId()<<std::endl;
-       PSimHit hit((*iHit).entryPoint(),(*iHit).exitPoint(),(*iHit).pabs(),
-		   newtof,
-		   (*iHit).energyLoss(),(*iHit).particleType(),simdetid,(*iHit). trackId(),(*iHit).thetaAtEntry(),(*iHit).phiAtEntry(),(*iHit).processType());
-       prpc->push_back(hit);
-     }
-     if(simdetid.det()==DetId::Muon &&  simdetid.subdetId()== MuonSubdetId::DT){//Only DTs
+       
        std::cout<<"\t\t We have an DT Sim Hit! in t="<<(*iHit).timeOfFlight()<<" DetId="<<(*iHit).detUnitId()<<std::endl;
        PSimHit hit((*iHit).entryPoint(),(*iHit).exitPoint(),(*iHit).pabs(),
 		   newtof,
 		   (*iHit).energyLoss(),(*iHit).particleType(),simdetid,(*iHit). trackId(),(*iHit).thetaAtEntry(),(*iHit).phiAtEntry(),(*iHit).processType());
-      pdt->push_back(hit);
+       pdt->push_back(hit);
      }
-     if(simdetid.det()==DetId::Muon &&  simdetid.subdetId()== MuonSubdetId::CSC){//Only CSCs
-       std::cout<<"\t\t We have an CSC Sim Hit! in t="<<(*iHit).timeOfFlight()<<" DetId="<<(*iHit).detUnitId()<<std::endl;
+     else if(simdetid.det()==DetId::Muon &&  simdetid.subdetId()== MuonSubdetId::CSC){//Only CSCs
+       //std::cout<<"\t\t We have an CSC Sim Hit! in t="<<(*iHit).timeOfFlight()<<" DetId="<<(*iHit).detUnitId()<<std::endl;
+       
+       CSCDetId TheCSCDetId = CSCDetId(simdetid);
+       CSCDetId TheChamberDetId = TheCSCDetId.chamberId();
+       
+       if(shiftinfo.find(TheChamberDetId.rawId())==shiftinfo.end()){
+	 std::cout<<"The RawId is not in the map,perhaps it is on the CSCs station 1 ring 4"<<std::endl;
+	 if(TheChamberDetId.station()==1 && TheChamberDetId.ring()==4){
+	   CSCDetId TheChamberDetIdNoring4= CSCDetId(TheChamberDetId.endcap(),TheChamberDetId.station(),1 //1 instead of 4
+						     ,TheChamberDetId.chamber(),TheChamberDetId.layer());
+	   
+	   if(shiftinfo.find(TheChamberDetIdNoring4.rawId())==shiftinfo.end()){
+	     std::cout<<"CSC Warning the RawId = "<<TheChamberDetIdNoring4<<" "<<TheChamberDetIdNoring4.rawId()<<"is not in the map"<<std::endl;
+	     newtof = (*iHit).timeOfFlight();
+	   }else{
+	     newtof = (*iHit).timeOfFlight()+shiftinfo[TheChamberDetIdNoring4.rawId()];
+	   }
+	 }
+       }else{
+	 newtof = (*iHit).timeOfFlight()+shiftinfo[simdetid.rawId()];
+       }
+       
        PSimHit hit((*iHit).entryPoint(),(*iHit).exitPoint(),(*iHit).pabs(),
 		   newtof,
 		   (*iHit).energyLoss(),(*iHit).particleType(),simdetid,(*iHit). trackId(),(*iHit).thetaAtEntry(),(*iHit).phiAtEntry(),(*iHit).processType());
+       
+       //std::cout<<"CSC check "<<TheChamberDetId<<" "<<TheChamberDetId.rawId()<<std::endl;
        pcsc->push_back(hit);
-     }
+     }     
    }
 
-/* This is an event example
-//Read 'ExampleData' from the Event
-   Handle<ExampleData> pIn;
-   iEvent.getByLabel("example",pIn);
-
-   //Use the ExampleData to create an ExampleData2 which 
-   // is put into the Event
-   std::auto_ptr<ExampleData2> pOut(new ExampleData2(*pIn));
-   iEvent.put(pOut);
-*/
-
-/* this is an EventSetup example
-   //Read SetupData from the SetupRecord in the EventSetup
-   ESHandle<SetupData> pSetup;
-   iSetup.get<SetupRecord>().get(pSetup);
-*/
- 
    std::cout<<"Putting collections in the event"<<std::endl;
 
-iEvent.put(pcsc,"MuonCSCHits");
-iEvent.put(pdt,"MuonDTHits");
-iEvent.put(prpc,"MuonRPCHits");
-
-//     iEvent.put(pcsc,"MuonCSCshiftedHits");
-//     iEvent.put(pdt,"MuonDTshiftedHits");
-//    iEvent.put(prpc,"MuonRPCshiftedHits");
-
+   iEvent.put(pcsc,"MuonCSCHits");
+   iEvent.put(pdt,"MuonDTHits");
+   iEvent.put(prpc,"MuonRPCHits");
+   
 }
 
 void 
