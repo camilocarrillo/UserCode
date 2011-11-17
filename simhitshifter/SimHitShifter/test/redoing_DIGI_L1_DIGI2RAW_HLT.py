@@ -44,7 +44,7 @@ process.RAWSIMoutput = cms.OutputModule("PoolOutputModule",
                                         splitLevel = cms.untracked.int32(0),
                                         eventAutoFlushCompressedSize = cms.untracked.int32(5242880),
                                         outputCommands = process.RAWSIMEventContent.outputCommands,
-                                        fileName = cms.untracked.string('/tmp/carrillo/HSCPstau_M_100_7TeV_pythia6_cff_py_DIGI_L1_DIGI2RAW.root'),
+                                        fileName = cms.untracked.string('/tmp/carrillo/HSCPstau_M_100_7TeV_pythia6_cff_py_SHIFT_DIGI_L1_DIGI2RAW.root'),
                                         dataset = cms.untracked.PSet(filterName = cms.untracked.string(''),
                                                                      dataTier = cms.untracked.string('GEN-SIM-SHIFT-DIGI_L1_DIGI2RAW')
                                                                      ),

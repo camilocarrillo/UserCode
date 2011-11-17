@@ -12,7 +12,7 @@ process.load("Geometry.MuonNumbering.muonNumberingInitialization_cfi")
 
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
-      'file:/tmp/carrillo/HSCPstau_M_100_7TeV_pythia6_cff_py_DIGI_L1_DIGI2RAW.root'
+      'file:/tmp/carrillo/EXO_HSCP_Stau100_Summer11ReproduceBX1_GEN_SIM.root'
    )
 )
 
