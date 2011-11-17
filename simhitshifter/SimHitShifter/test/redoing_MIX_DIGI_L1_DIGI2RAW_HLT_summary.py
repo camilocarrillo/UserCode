@@ -29,7 +29,7 @@ process.maxEvents = cms.untracked.PSet(
 
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
-       'file:/tmp/carrillo/HSCPstau_M_200_7TeV_pythia6_cff_py_GEN_SIM_SHIFT.root'
+       'file:/tmp/carrillo/Stau100_GEN_SIM_SHIFT.root'
    )
 )
 
