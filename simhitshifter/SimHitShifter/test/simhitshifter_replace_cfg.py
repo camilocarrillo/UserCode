@@ -20,7 +20,7 @@ process.load('simhitshifter.SimHitShifter.simhitshifter_cfi')
 
 process.out = cms.OutputModule("PoolOutputModule",
     fileName = cms.untracked.string('/tmp/carrillo/Stau100_GEN_SIM_SHIFT.root'),
-    outputCommands = cms.untracked.vstring('keep *','keep *_g4SimHits_Muon*Hits_SIMHITSHIFTER','drop *_g4SimHits_Muon*Hits_HLT','drop *_simMuon*_*_*','drop CrossingFrame*_mix_*_*')
+    outputCommands = cms.untracked.vstring('keep *','keep *_g4SimHits_Muon*Hits_SIMHITSHIFTER','drop *_g4SimHits_Muon*Hits_SIM','drop *_simMuon*_*_*','drop CrossingFrame*_mix_*_*')
 )
   
 process.p = cms.Path(process.g4SimHits)

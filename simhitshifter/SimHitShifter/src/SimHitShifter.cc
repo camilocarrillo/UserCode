@@ -13,7 +13,7 @@
 //
 // Original Author:  Camilo Andres Carrillo Montoya,40 2-B15,+41227671625,
 //         Created:  Mon Aug 30 18:35:05 CEST 2010
-// $Id: SimHitShifter.cc,v 1.7 2010/10/14 09:11:38 carrillo Exp $
+// $Id: SimHitShifter.cc,v 1.8 2011/11/16 23:19:52 carrillo Exp $
 //
 //
 
@@ -250,14 +250,15 @@ void SimHitShifter::produce(edm::Event& iEvent, const edm::EventSetup& iSetup){
 	   }
 	 }
        }else{
-	 newtof = (*iHit).timeOfFlight()+shiftinfo[simdetid.rawId()];
+	 newtof = (*iHit).timeOfFlight()+shiftinfo[TheChamberDetId.rawId()];
        }
        
        PSimHit hit((*iHit).entryPoint(),(*iHit).exitPoint(),(*iHit).pabs(),
 		   newtof,
 		   (*iHit).energyLoss(),(*iHit).particleType(),simdetid,(*iHit). trackId(),(*iHit).thetaAtEntry(),(*iHit).phiAtEntry(),(*iHit).processType());
        
-       //std::cout<<"CSC check "<<TheChamberDetId<<" "<<TheChamberDetId.rawId()<<std::endl;
+       std::cout<<"CSC check newtof"<<newtof<<" "<<(*iHit).timeOfFlight()<<std::endl;
+       if(newtof==(*iHit).timeOfFlight())std::cout<<"Warning!!!"<<std::endl;
        pcsc->push_back(hit);
      }     
    }
