@@ -1,4 +1,0 @@
-touch UNDER_src_beta
-cvs add UNDER*
-cvs ci -m "first release" UNDER*
-
