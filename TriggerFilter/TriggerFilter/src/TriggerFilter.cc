@@ -2,7 +2,7 @@
 //
 // Package:    TriggerFilter
 // Class:      TriggerFilter
-// 
+// Gt
 /**\class TriggerFilter TriggerFilter.cc TriggerFilter/TriggerFilter/src/TriggerFilter.cc
 
  Description: [one line class summary]
@@ -13,7 +13,7 @@
 //
 // Original Author:  Camilo Andres Carrillo Montoya,40 2-B15,+41227671625,
 //         Created:  Tue Apr  5 10:35:59 CEST 2011
-// $Id$
+// $Id: TriggerFilter.cc,v 1.1 2011/04/05 10:03:11 carrillo Exp $
 //
 //
 
@@ -98,7 +98,8 @@ bool
 TriggerFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
   edm::Handle<L1MuGMTReadoutCollection> gmtrc_handle;
-  iEvent.getByLabel("hltGtDigis",gmtrc_handle);
+  //  iEvent.getByLabel("hltGtDigis",gmtrc_handle);
+  iEvent.getByLabel("gtDigis",gmtrc_handle);
   
   std::vector<L1MuGMTExtendedCand> gmt_candidates = (*gmtrc_handle).getRecord().getGMTCands();
   std::vector<L1MuGMTExtendedCand>::const_iterator candidate;
