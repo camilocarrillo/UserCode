@@ -25,11 +25,8 @@ process.source = cms.Source("PoolSource",
    fileNames = cms.untracked.vstring('file:/tmp/carrillo/DYToMuMu_M60_RECO_Eta16_oldCLS_12.root')
 )
 
-process.L1Filter = cms.EDFilter('TriggerFilter'
-)
-
-
-process.p = cms.Path(process.L1Filter)
+process.load("TriggerFilter.TriggerFilter.triggerFilter_cfi")
+process.p = cms.Path(process.triggerFilter)
 
 process.DQM.collectorHost = ''
 process.DQM.collectorPort = 9090

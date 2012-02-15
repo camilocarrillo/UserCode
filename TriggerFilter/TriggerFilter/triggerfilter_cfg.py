@@ -84,7 +84,7 @@ process.museg = cms.EDAnalyzer("MuonSegmentEff",
     rpcCSCPoints = cms.InputTag("rpcPointProducer","RPCCSCExtrapolatedPoints"),
 
     EffSaveRootFile = cms.untracked.bool(True),
-    EffRootFileName = cms.untracked.string('/tmp/carrillo/efficiency-160808.5A1AC46A-7951-E011-830F-0030487C912E.root'),
+    EffRootFileName = cms.untracked.string('/tmp/jgomezca/efficiency-160808.5A1AC46A-7951-E011-830F-0030487C912E.root'),
     EffSaveRootFileEventsInterval = cms.untracked.int32(100)
 )
 
@@ -96,11 +96,9 @@ process.normfilter = cms.EDFilter("HLTHighLevel",
     throw = cms.bool(True)
 )
 
-process.L1Filter = cms.EDFilter('TriggerFilter'
-)
+process.load("TriggerFilter.TriggerFilter.triggerFilter_cfi")
 
-
-process.p = cms.Path(process.normfilter*process.L1Filter*process.rpcPointProducer*process.museg)
+process.p = cms.Path(process.normfilter*process.triggerFilter*process.rpcPointProducer*process.museg)
 
 process.DQM.collectorHost = ''
 process.DQM.collectorPort = 9090

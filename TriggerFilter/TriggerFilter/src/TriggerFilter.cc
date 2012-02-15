@@ -13,7 +13,7 @@
 //
 // Original Author:  Camilo Andres Carrillo Montoya,40 2-B15,+41227671625,
 //         Created:  Tue Apr  5 10:35:59 CEST 2011
-// $Id: TriggerFilter.cc,v 1.1 2011/04/05 10:03:11 carrillo Exp $
+// $Id: TriggerFilter.cc,v 1.2 2012/02/13 11:50:53 carrillo Exp $
 //
 //
 
@@ -55,6 +55,7 @@ class TriggerFilter : public edm::EDFilter {
       ~TriggerFilter();
 
    private:
+      edm::InputTag gtDigis;
       virtual void beginJob() ;
       virtual bool filter(edm::Event&, const edm::EventSetup&);
       virtual void endJob() ;
@@ -76,6 +77,7 @@ class TriggerFilter : public edm::EDFilter {
 TriggerFilter::TriggerFilter(const edm::ParameterSet& iConfig)
 {
    //now do what ever initialization is needed
+  gtDigis=iConfig.getParameter<edm::InputTag>("gtDigis");
 
 }
 
@@ -98,8 +100,8 @@ bool
 TriggerFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
   edm::Handle<L1MuGMTReadoutCollection> gmtrc_handle;
-  //  iEvent.getByLabel("hltGtDigis",gmtrc_handle);
-  iEvent.getByLabel("gtDigis",gmtrc_handle);
+  iEvent.getByLabel(gtDigis,gmtrc_handle);
+  
   
   std::vector<L1MuGMTExtendedCand> gmt_candidates = (*gmtrc_handle).getRecord().getGMTCands();
   std::vector<L1MuGMTExtendedCand>::const_iterator candidate;
