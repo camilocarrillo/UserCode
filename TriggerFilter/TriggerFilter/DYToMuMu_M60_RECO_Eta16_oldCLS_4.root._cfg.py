@@ -84,7 +84,7 @@ process.museg = cms.EDAnalyzer("MuonSegmentEff",
     rpcCSCPoints = cms.InputTag("rpcPointProducer","RPCCSCExtrapolatedPoints"),
 
     EffSaveRootFile = cms.untracked.bool(True),
-    EffRootFileName = cms.untracked.string('efficiency_L1Filter.DYToMuMu_M60_RECO_Eta16_oldCLS_4.root'),
+    EffRootFileName = cms.untracked.string('/tmp/carrillo/efficiency_L1Filter.DYToMuMu_M60_RECO_Eta16_oldCLS_4.root'),
     EffSaveRootFileEventsInterval = cms.untracked.int32(100)
 )
 
