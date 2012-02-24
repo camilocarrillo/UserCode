@@ -3,12 +3,13 @@ import FWCore.ParameterSet.Config as cms
 process = cms.Process("selDTEvents")
 
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(-1)
+    input = cms.untracked.int32(10)
 )
 
-process.selDTEvents = cms.EDFilter("DTSegEvents",
-# dt4DSegments = cms.untracked.string('dt4DSegments'),
-  dt4DSegments = cms.untracked.string('hltDt4DSegments'),
+process.selDTEvents = cms.EDFilter("DTcomparison",
+  dt4DSegments = cms.untracked.InputTag('hltDt4DSegments'), 
+# dt4DSegments = cms.untracked.InputTag("DTChamberIdDTRecSegment4DsOwnedRangeMap","dTandCSCSegmentsinTracks","SelectedDtSegments","OwnParticles"),
+  fileName =cms.untracked.string('histograms.root'),	
   Wheel = cms.untracked.int32(2),
   Sector = cms.untracked.int32(4),
   Station = cms.untracked.int32(1)
