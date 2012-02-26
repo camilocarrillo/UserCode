@@ -13,7 +13,7 @@
 //
 // Original Author:  Camilo Andres Carrillo Montoya
 //         Created:  Thu Feb  5 11:30:12 CET 2009
-// $Id: DTcomparison.cc,v 1.1 2009/05/18 10:10:57 carrillo Exp $
+// $Id: DTcomparison.cc,v 1.1 2012/02/24 15:11:59 carrillo Exp $
 //
 //
 
@@ -93,6 +93,8 @@ DTcomparison::DTcomparison(const edm::ParameterSet& iConfig)
   dt4DSegments=iConfig.getUntrackedParameter<edm::InputTag>("dt4DSegments");
   filename=iConfig.getUntrackedParameter<std::string>("fileName");
 
+  std::cout<<"the file name is "<<filename<<std::endl;
+  theFile = new TFile(filename.c_str(),"RECREATE");
 
   Wheel = iConfig.getUntrackedParameter<int>("Wheel",0); 
   Station = iConfig.getUntrackedParameter<int>("Station",0); 
@@ -162,8 +164,7 @@ DTcomparison::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
 void 
 DTcomparison::beginJob(const edm::EventSetup&)
 {
-  std::cout<<"the file name is "<<filename<<std::endl;
-  theFile = new TFile(filename.c_str());
+  
 }
 
 // ------------ method called once each job just after ending the event loop  ------------
