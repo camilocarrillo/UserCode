@@ -13,7 +13,7 @@
 //
 // Original Author:  Camilo Andres Carrillo Montoya
 //         Created:  Thu Feb  5 11:30:12 CET 2009
-// $Id: DTcomparison.cc,v 1.1 2012/02/24 15:11:59 carrillo Exp $
+// $Id: DTcomparison.cc,v 1.2 2012/02/26 12:06:18 carrillo Exp $
 //
 //
 
@@ -51,46 +51,30 @@
 class TFile;
 
 class DTcomparison : public edm::EDFilter {
-   public:
-
+public:
+  explicit DTcomparison(const edm::ParameterSet&);
+  ~DTcomparison();
   TFile * theFile;
-
   TH2F * OccupancyWheelm2;
   TH2F * OccupancyWheelm1;
   TH2F * OccupancyWheel0;
   TH2F * OccupancyWheel1;
   TH2F * OccupancyWheel2;
-
-  explicit DTcomparison(const edm::ParameterSet&);
-  ~DTcomparison();
-
-   private:
+  edm::InputTag dt4DSegments;
+private:
   std::string filename;
   virtual void beginJob(const edm::EventSetup&) ;
   virtual bool filter(edm::Event&, const edm::EventSetup&);
   virtual void endJob() ;
-  edm::InputTag dt4DSegments;
   int Wheel;
   int Station;
   int Sector;
-  
-  // ----------member data ---------------------------
 };
 
-//
-// constants, enums and typedefs
-//
-
-//
-// static data member definitions
-//
-
-//
-// constructors and destructor
-//
 DTcomparison::DTcomparison(const edm::ParameterSet& iConfig)
 {
-  dt4DSegments=iConfig.getUntrackedParameter<edm::InputTag>("dt4DSegments");
+  dt4DSegments=iConfig.getParameter<edm::InputTag>("dt4DSegments");
+  
   filename=iConfig.getUntrackedParameter<std::string>("fileName");
 
   std::cout<<"the file name is "<<filename<<std::endl;
@@ -117,15 +101,15 @@ DTcomparison::~DTcomparison()
 bool
 DTcomparison::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
-  std::cout<<"Getting the DT Segments"<<std::endl;
+
+  std::cout<<"the input tag is"<<dt4DSegments<<std::endl;
   edm::Handle<DTRecSegment4DCollection> all4DSegments;
-
-  
   iEvent.getByLabel(dt4DSegments, all4DSegments);
-
+  
   bool interestingEvent = false;
 
-  if(all4DSegments->size()>0){
+
+  if(all4DSegments.isValid()) if(all4DSegments->size()>0){
     std::cout<<"We have DT Segments"<<std::endl;
     DTRecSegment4DCollection::const_iterator segment;  
     
