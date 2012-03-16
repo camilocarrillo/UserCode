@@ -13,7 +13,7 @@
 //
 // Original Author:  Camilo Andres Carrillo Montoya
 //         Created:  Thu Feb  5 11:30:12 CET 2009
-// $Id: DTcomparison.cc,v 1.2 2012/02/26 12:06:18 carrillo Exp $
+// $Id: DTcomparison.cc,v 1.3 2012/02/28 13:20:25 carrillo Exp $
 //
 //
 
@@ -60,6 +60,13 @@ public:
   TH2F * OccupancyWheel0;
   TH2F * OccupancyWheel1;
   TH2F * OccupancyWheel2;
+  TH1F * nHits;
+  TH1F * nHitsZ;
+  TH1F * nHitsPhi;
+  TH1F * chi2;
+  TH1F * dimen;
+  TH1F * proy;     
+  
   edm::InputTag dt4DSegments;
 private:
   std::string filename;
@@ -90,6 +97,13 @@ DTcomparison::DTcomparison(const edm::ParameterSet& iConfig)
   OccupancyWheel1 =  new TH2F ("OccupancyWheel1","Segment Occupancy Wheel 1",  12,0.5,12.5,4,0.5,4.5);
   OccupancyWheel2 =  new TH2F ("OccupancyWheel2","Segment Occupancy Wheel 2",  12,0.5,12.5,4,0.5,4.5);
 
+  nHits= new TH1F ("NumberOfHits","NumberOfHits",20,0,20);
+  nHitsPhi= new TH1F ("NumberOfHitsPhi","NumberOfHitsPhi",10,0,10);
+  nHitsZ= new TH1F ("NumberOfHitsZ","NumberOfHitsZ",10,0,10);
+  
+  chi2= new TH1F ("chi2","chi2",100,0,20);
+  dimen= new TH1F ("dimen","dimen",10,-0.5,9.5);
+  proy= new TH1F ("proy","proy",2,-0.5,1.5);
 }
 
 
@@ -115,7 +129,20 @@ DTcomparison::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
     
     for (segment = all4DSegments->begin();segment!=all4DSegments->end(); ++segment){
       DTChamberId DTId = segment->chamberId();
-
+      
+      if(segment->hasPhi()) 
+	proy->Fill(0); 
+      if(segment->hasZed()) 
+	proy->Fill(1);
+      
+      //int HitsZ = ((((*segment).zSegment())->specificRecHits()).size());
+      //int HitsPhi = (((*segment).phiSegment())->specificRecHits()).size();
+      //nHitsPhi->Fill(HitsPhi);
+      //nHitsZ->Fill(HitsZ);
+      //nHits->Fill(HitsZ+HitsPhi);
+      chi2->Fill(segment->chi2());
+      dimen->Fill(segment->dimension());
+      
       int thisWheel = DTId.wheel();
       int thisStation = DTId.station();
       int thisSector = DTId.sector();
@@ -162,6 +189,14 @@ DTcomparison::endJob() {
   OccupancyWheel0 ->Write();
   OccupancyWheel1 ->Write();
   OccupancyWheel2 ->Write();
+  
+  nHits->Write();	   
+  nHitsZ->Write();   
+  nHitsPhi->Write(); 
+  chi2->Write();	   
+  dimen->Write();	   
+  proy->Write();     
+
   std::cout<<"files wrote "<<std::endl;
   theFile->Write();
   theFile->Close();
