@@ -13,7 +13,7 @@
 //
 // Original Author:  Camilo Andres Carrillo Montoya
 //         Created:  Thu Feb  5 11:30:12 CET 2009
-// $Id: DTcomparison.cc,v 1.3 2012/02/28 13:20:25 carrillo Exp $
+// $Id: DTcomparison.cc,v 1.4 2012/03/16 13:08:34 carrillo Exp $
 //
 //
 
@@ -63,6 +63,9 @@ public:
   TH1F * nHits;
   TH1F * nHitsZ;
   TH1F * nHitsPhi;
+  TH1F * Hdof;
+  TH1F * HdofZ;
+  TH1F * HdofPhi;
   TH1F * chi2;
   TH1F * dimen;
   TH1F * proy;     
@@ -97,10 +100,15 @@ DTcomparison::DTcomparison(const edm::ParameterSet& iConfig)
   OccupancyWheel1 =  new TH2F ("OccupancyWheel1","Segment Occupancy Wheel 1",  12,0.5,12.5,4,0.5,4.5);
   OccupancyWheel2 =  new TH2F ("OccupancyWheel2","Segment Occupancy Wheel 2",  12,0.5,12.5,4,0.5,4.5);
 
-  nHits= new TH1F ("NumberOfHits","NumberOfHits",20,0,20);
-  nHitsPhi= new TH1F ("NumberOfHitsPhi","NumberOfHitsPhi",10,0,10);
-  nHitsZ= new TH1F ("NumberOfHitsZ","NumberOfHitsZ",10,0,10);
-  
+  nHits= new TH1F ("NumberOfHits","NumberOfHits",20,-0.5,19.5);
+  nHitsPhi= new TH1F ("NumberOfHitsPhi","NumberOfHitsPhi",15,-0.5,14.5);
+  nHitsZ= new TH1F ("NumberOfHitsZ","NumberOfHitsZ",10,-0.5,9.5);
+
+
+  Hdof= new TH1F ("DegreesOfFreedom","DegreesOfFreedom",20,-0.5,19.5);
+  HdofPhi= new TH1F ("DegreesOfFreedomPhi","DegreesOfFreedomPhi",15,-0.5,14.5);
+  HdofZ= new TH1F ("DegreesOfFreedomZ","DegreesOfFreedomZ",10,-0.5,9.5);
+
   chi2= new TH1F ("chi2","chi2",100,0,20);
   dimen= new TH1F ("dimen","dimen",10,-0.5,9.5);
   proy= new TH1F ("proy","proy",2,-0.5,1.5);
@@ -130,16 +138,43 @@ DTcomparison::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
     for (segment = all4DSegments->begin();segment!=all4DSegments->end(); ++segment){
       DTChamberId DTId = segment->chamberId();
       
-      if(segment->hasPhi()) 
-	proy->Fill(0); 
-      if(segment->hasZed()) 
-	proy->Fill(1);
+      int Hits=0;
+      int HitsZ=0;
+      int HitsPhi=0;
+      int dof=0;
+      int dofZ=0;
+      int dofPhi=0;
       
-      //int HitsZ = ((((*segment).zSegment())->specificRecHits()).size());
-      //int HitsPhi = (((*segment).phiSegment())->specificRecHits()).size();
-      //nHitsPhi->Fill(HitsPhi);
-      //nHitsZ->Fill(HitsZ);
-      //nHits->Fill(HitsZ+HitsPhi);
+      Hits=(segment->recHits()).size();
+      dof=segment->degreesOfFreedom();
+      Hdof->Fill(dof);
+      
+      std::cout<<"allinfo "<<segment->dimension()<<" | "<<segment->hasZed()<<" "<<segment->hasPhi()<<" | "<<dof<<" "<<Hits<<" | ";
+      
+      if(segment->hasPhi()){
+	proy->Fill(0); 
+	dofPhi = segment->phiSegment()->degreesOfFreedom();
+	HitsPhi = (segment->phiSegment()->recHits()).size();
+	std::cout<<" | "<<dofPhi<<" "<<HitsPhi;
+	HdofPhi->Fill(dofPhi);
+	nHitsPhi->Fill(HitsPhi);
+      }
+      
+    
+      if(segment->hasZed()){
+	proy->Fill(1);
+      	dofZ = segment->zSegment()->degreesOfFreedom(); 
+	HitsZ = (segment->zSegment()->recHits()).size(); 
+	std::cout<<" | "<<dofZ<<" "<<HitsZ;
+	HdofZ->Fill(dofZ);
+	nHitsZ->Fill(HitsZ);
+      }
+    
+      nHits->Fill(HitsPhi+HitsZ);
+	    
+
+      std::cout<<std::endl;
+      
       chi2->Fill(segment->chi2());
       dimen->Fill(segment->dimension());
       
@@ -196,7 +231,11 @@ DTcomparison::endJob() {
   chi2->Write();	   
   dimen->Write();	   
   proy->Write();     
-
+  
+  Hdof->Write();
+  HdofZ->Write();
+  HdofPhi->Write();
+  
   std::cout<<"files wrote "<<std::endl;
   theFile->Write();
   theFile->Close();
