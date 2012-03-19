@@ -19,9 +19,8 @@ void DTOccupancy(){
   //  TFile * theFile = new TFile("../histograms.root");  
   //TFile * theFile = new TFile("../histograms180250.root");  
   //  TFile * theFile = new TFile("../histograms180250_STASegments.root");  
-  TFile * theFile = new TFile("../histograms163286STA.root");  
-
-	
+  TFile * theFile = new TFile("../histogramsHiLumiAllSegments.root");  
+  
   cout<<"getting the histo"<<endl;
 
   TH2F * OccupancyWheelm2 = (TH2F*) (theFile->Get("OccupancyWheelm2"));
@@ -29,7 +28,19 @@ void DTOccupancy(){
   TH2F * OccupancyWheel0 = (TH2F*) (theFile->Get("OccupancyWheel0"));
   TH2F * OccupancyWheel1 = (TH2F*) (theFile->Get("OccupancyWheel1"));
   TH2F * OccupancyWheel2 = (TH2F*) (theFile->Get("OccupancyWheel2"));
+
+  TH1F * nHits= (TH1F*) (theFile->Get("NumberOfHits"));
+  TH1F * nHitsPhi= (TH1F*) (theFile->Get("NumberOfHitsPhi"));
+  TH1F * nHitsZ= (TH1F*) (theFile->Get("NumberOfHitsZ"));
+	 					   
+  TH1F * Hdof= (TH1F*) (theFile->Get("DegreesOfFreedom"));
+  TH1F * HdofPhi= (TH1F*) (theFile->Get("DegreesOfFreedomPhi"));
+  TH1F * HdofZ= (TH1F*) (theFile->Get("DegreesOfFreedomZ"));
   
+  TH1F * chi2= (TH1F*) (theFile->Get("chi2"));
+  TH1F * dimen= (TH1F*) (theFile->Get("dimen"));
+  TH1F * proy= (TH1F*) (theFile->Get("proy"));
+
   //  if(!occupancy) cout<<"histo not found"<<endl;
 
   cout<<"creating canvas"<<endl;
@@ -71,7 +82,32 @@ void DTOccupancy(){
   Ca0_5->cd();
   OccupancyWheel2->Draw("COLZ"); OccupancyWheel2->GetXaxis()->SetTitle("Sector"); OccupancyWheel2->GetYaxis()->SetTitle("Station Wheel 2"); OccupancyWheel2->SetTitle("Occupancy Wheel 2");
   cout<<"saving plot"<<endl;
-  Ca0->SaveAs("occupancy_163286STA.png");
+  Ca0->SaveAs("occupancy_HiLumiAllSegments.png");
+
+  TCanvas * Ca1= new TCanvas("Ca1","Canvas",1200,800);  
+
+  Ca1->Divide(3,3); 
+  Ca1_1->cd();
+  nHits->Draw(); nHits->GetXaxis()->SetTitle("Number of Hits 4D Segment");
+  Ca1_2->cd();
+  nHitsPhi->Draw(); nHitsPhi->GetXaxis()->SetTitle("Number of Hits #phi Segment");
+  Ca1_3->cd();
+  nHitsZ->Draw(); nHitsZ->GetXaxis()->SetTitle("Number of Hits Z Segment");
+  Ca1_4->cd();
+  Hdof->Draw(); Hdof->GetXaxis()->SetTitle("Number of Degrees of Freedom 4D Segment");
+  Ca1_5->cd();
+  HdofPhi->Draw(); HdofPhi->GetXaxis()->SetTitle("Number of Degrees of Freedom #phi segment");
+  Ca1_6->cd();
+  HdofZ->Draw(); HdofZ->GetXaxis()->SetTitle("Number of Degrees of Freedom Z segment");
+  Ca1_7->cd();
+  chi2->Draw(); chi2->GetXaxis()->SetTitle("#chi^2/ndof");
+  Ca1_8->cd();
+  dimen->Draw(); dimen->GetXaxis()->SetTitle("Segment Dimension");
+  Ca1_9->cd();
+  proy->Draw(); proy->GetXaxis()->SetTitle("Segment Proyection");
+
+  cout<<"saving plot"<<endl;
+  Ca1->SaveAs("DistributionsHiLumiAllSegments.png");
 
   exit(0);
   
