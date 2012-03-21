@@ -13,7 +13,7 @@
 //
 // Original Author:  Camilo Andres Carrillo Montoya
 //         Created:  Thu Feb  5 11:30:12 CET 2009
-// $Id: DTcomparison.cc,v 1.4 2012/03/16 13:08:34 carrillo Exp $
+// $Id: DTcomparison.cc,v 1.5 2012/03/19 11:27:50 carrillo Exp $
 //
 //
 
@@ -104,7 +104,6 @@ DTcomparison::DTcomparison(const edm::ParameterSet& iConfig)
   nHitsPhi= new TH1F ("NumberOfHitsPhi","NumberOfHitsPhi",15,-0.5,14.5);
   nHitsZ= new TH1F ("NumberOfHitsZ","NumberOfHitsZ",10,-0.5,9.5);
 
-
   Hdof= new TH1F ("DegreesOfFreedom","DegreesOfFreedom",20,-0.5,19.5);
   HdofPhi= new TH1F ("DegreesOfFreedomPhi","DegreesOfFreedomPhi",15,-0.5,14.5);
   HdofZ= new TH1F ("DegreesOfFreedomZ","DegreesOfFreedomZ",10,-0.5,9.5);
@@ -137,6 +136,10 @@ DTcomparison::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
     
     for (segment = all4DSegments->begin();segment!=all4DSegments->end(); ++segment){
       DTChamberId DTId = segment->chamberId();
+
+      if(segment->dimension()!=4) continue;
+
+      if(abs(DTId.wheel())!=2 || DTId.station()!=1) continue;
       
       int Hits=0;
       int HitsZ=0;
