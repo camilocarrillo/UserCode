@@ -16,10 +16,9 @@ void DTOccupancy(){
   gStyle->SetPalette(1);
   cout<<"getting the file"<<endl;
 
-  //  TFile * theFile = new TFile("../histograms.root");  
-  //TFile * theFile = new TFile("../histograms180250.root");  
-  //  TFile * theFile = new TFile("../histograms180250_STASegments.root");  
-  TFile * theFile = new TFile("../histogramsHiLumiAllSegments.root");  
+  string name = "LowLumi_AllSegments" ;
+  
+  TFile * theFile = new TFile(("../"+name+".root").c_str());  
   
   cout<<"getting the histo"<<endl;
 
@@ -40,6 +39,9 @@ void DTOccupancy(){
   TH1F * chi2= (TH1F*) (theFile->Get("chi2"));
   TH1F * dimen= (TH1F*) (theFile->Get("dimen"));
   TH1F * proy= (TH1F*) (theFile->Get("proy"));
+
+  TH1F * HnumberOfSegmentsPerEvent = (TH1F*) (theFile->Get("HnumberOfSegmentsPerEvent"));
+  TH1F * HnumberOfSegmentsPerEventDim4 = (TH1F*) (theFile->Get("HnumberOfSegmentsPerEventDim4"));
 
   //  if(!occupancy) cout<<"histo not found"<<endl;
 
@@ -82,32 +84,34 @@ void DTOccupancy(){
   Ca0_5->cd();
   OccupancyWheel2->Draw("COLZ"); OccupancyWheel2->GetXaxis()->SetTitle("Sector"); OccupancyWheel2->GetYaxis()->SetTitle("Station Wheel 2"); OccupancyWheel2->SetTitle("Occupancy Wheel 2");
   cout<<"saving plot"<<endl;
-  Ca0->SaveAs("occupancy_HiLumiAllSegments.png");
+  Ca0->SaveAs(("Occupancy_"+name+".png").c_str());
 
   TCanvas * Ca1= new TCanvas("Ca1","Canvas",1200,800);  
 
   Ca1->Divide(3,3); 
   Ca1_1->cd();
-  nHits->Draw(); nHits->GetXaxis()->SetTitle("Number of Hits 4D Segment");
+  nHits->Draw(); nHits->GetXaxis()->SetTitle("Number of Hits 4D Segment");  nHits->GetXaxis()->SetTitleSize(0.06);nHits->GetXaxis()->SetLabelSize(0.04);
   Ca1_2->cd();
-  nHitsPhi->Draw(); nHitsPhi->GetXaxis()->SetTitle("Number of Hits #phi Segment");
+  nHitsPhi->Draw(); nHitsPhi->GetXaxis()->SetTitle("Number of Hits #phi Segment"); nHitsPhi->GetXaxis()->SetTitleSize(0.06);nHitsPhi->GetXaxis()->SetLabelSize(0.04);
   Ca1_3->cd();
-  nHitsZ->Draw(); nHitsZ->GetXaxis()->SetTitle("Number of Hits Z Segment");
+  nHitsZ->Draw(); nHitsZ->GetXaxis()->SetTitle("Number of Hits Z Segment");nHitsZ->GetXaxis()->SetTitleSize(0.06);nHitsZ->GetXaxis()->SetLabelSize(0.04);
   Ca1_4->cd();
-  Hdof->Draw(); Hdof->GetXaxis()->SetTitle("Number of Degrees of Freedom 4D Segment");
+  Hdof->Draw(); Hdof->GetXaxis()->SetTitle("Number of Degrees of Freedom 4D Segment");Hdof->GetXaxis()->SetTitleSize(0.06);Hdof->GetXaxis()->SetLabelSize(0.04);
   Ca1_5->cd();
-  HdofPhi->Draw(); HdofPhi->GetXaxis()->SetTitle("Number of Degrees of Freedom #phi segment");
+  HdofPhi->Draw(); HdofPhi->GetXaxis()->SetTitle("Number of Degrees of Freedom #phi segment");HdofPhi->GetXaxis()->SetTitleSize(0.06);HdofPhi->GetXaxis()->SetLabelSize(0.04);
   Ca1_6->cd();
-  HdofZ->Draw(); HdofZ->GetXaxis()->SetTitle("Number of Degrees of Freedom Z segment");
+  HdofZ->Draw(); HdofZ->GetXaxis()->SetTitle("Number of Degrees of Freedom Z segment");HdofZ->GetXaxis()->SetTitleSize(0.06);HdofZ->GetXaxis()->SetLabelSize(0.04);
   Ca1_7->cd();
-  chi2->Draw(); chi2->GetXaxis()->SetTitle("#chi^2/ndof");
+  chi2->Draw(); chi2->GetXaxis()->SetTitle("#chi^2/ndof");chi2->GetXaxis()->SetTitleSize(0.06);chi2->GetXaxis()->SetLabelSize(0.04);
   Ca1_8->cd();
-  dimen->Draw(); dimen->GetXaxis()->SetTitle("Segment Dimension");
+  dimen->Draw(); dimen->GetXaxis()->SetTitle("Segment Dimension");dimen->GetXaxis()->SetTitleSize(0.06);dimen->GetXaxis()->SetLabelSize(0.04);
   Ca1_9->cd();
-  proy->Draw(); proy->GetXaxis()->SetTitle("Segment Proyection");
+  HnumberOfSegmentsPerEvent->Draw(); HnumberOfSegmentsPerEvent->GetXaxis()->SetTitle("Number of Segments Per Event");HnumberOfSegmentsPerEvent->GetXaxis()->SetTitleSize(0.06);HnumberOfSegmentsPerEvent->GetXaxis()->SetLabelSize(0.04);
+  HnumberOfSegmentsPerEventDim4->Draw("same"); HnumberOfSegmentsPerEventDim4->GetXaxis()->SetTitle("Number of Segments Per Event");HnumberOfSegmentsPerEventDim4->GetXaxis()->SetTitleSize(0.06);HnumberOfSegmentsPerEventDim4->GetXaxis()->SetLabelSize(0.04);
+  HnumberOfSegmentsPerEventDim4->SetFillColor(4);
 
   cout<<"saving plot"<<endl;
-  Ca1->SaveAs("DistributionsHiLumiAllSegments.png");
+  Ca1->SaveAs(("Distributions_"+name+".png").c_str());
 
   exit(0);
   

@@ -13,7 +13,7 @@
 //
 // Original Author:  Camilo Andres Carrillo Montoya
 //         Created:  Thu Feb  5 11:30:12 CET 2009
-// $Id: DTcomparison.cc,v 1.5 2012/03/19 11:27:50 carrillo Exp $
+// $Id: DTcomparison.cc,v 1.6 2012/03/21 09:57:10 carrillo Exp $
 //
 //
 
@@ -69,6 +69,9 @@ public:
   TH1F * chi2;
   TH1F * dimen;
   TH1F * proy;     
+  TH1F * HnumberOfSegmentsPerEvent;
+  TH1F * HnumberOfSegmentsPerEventDim4;
+
   
   edm::InputTag dt4DSegments;
 private:
@@ -111,6 +114,9 @@ DTcomparison::DTcomparison(const edm::ParameterSet& iConfig)
   chi2= new TH1F ("chi2","chi2",100,0,20);
   dimen= new TH1F ("dimen","dimen",10,-0.5,9.5);
   proy= new TH1F ("proy","proy",2,-0.5,1.5);
+
+  HnumberOfSegmentsPerEvent = new TH1F ("HnumberOfSegmentsPerEvent","Number Of Segments Per Event",16,-0.5,15.5);
+  HnumberOfSegmentsPerEventDim4 = new TH1F ("HnumberOfSegmentsPerEventDim4","Number Of Segments Per Event Dimension 4",16,-0.5,15.5);
 }
 
 
@@ -129,17 +135,19 @@ DTcomparison::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
   
   bool interestingEvent = false;
 
-
+  int numberOfSegmentsPerEvent=0;
+  int numberOfSegmentsPerEventDim4=0;
+    
   if(all4DSegments.isValid()) if(all4DSegments->size()>0){
     std::cout<<"We have DT Segments"<<std::endl;
     DTRecSegment4DCollection::const_iterator segment;  
     
     for (segment = all4DSegments->begin();segment!=all4DSegments->end(); ++segment){
       DTChamberId DTId = segment->chamberId();
-
       if(segment->dimension()!=4) continue;
-
-      if(abs(DTId.wheel())!=2 || DTId.station()!=1) continue;
+      numberOfSegmentsPerEvent++;
+      numberOfSegmentsPerEventDim4++;
+      //if(abs(DTId.wheel())!=2 || DTId.station()!=1) continue;
       
       int Hits=0;
       int HitsZ=0;
@@ -200,6 +208,10 @@ DTcomparison::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
       }
     }  
   }
+
+  HnumberOfSegmentsPerEventDim4->Fill(numberOfSegmentsPerEventDim4);
+  HnumberOfSegmentsPerEvent->Fill(numberOfSegmentsPerEvent);
+  
   if(interestingEvent){
     std::cout<<"\t \t Saving Event"<<std::endl;
     return true;
@@ -234,6 +246,9 @@ DTcomparison::endJob() {
   chi2->Write();	   
   dimen->Write();	   
   proy->Write();     
+
+  HnumberOfSegmentsPerEvent->Write();
+  HnumberOfSegmentsPerEventDim4->Write();
   
   Hdof->Write();
   HdofZ->Write();
