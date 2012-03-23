@@ -1,0 +1,30 @@
+#include "Riostream.h"
+#include <fstream>
+#include <iomanip>
+#include <vector>
+#include <string>
+
+void unoDhisto(){
+  gROOT->Reset();
+  gStyle->SetOptStat(0);
+
+  ifstream data;
+  
+  data.open("DTSegLocalPosRPCMon.txt");
+  //data.open("DTSegLocalPosPromt.txt");
+
+  float value;
+  
+  TH1F * histo = new TH1F("histo","DT LocalY for W-2",100,-200,200);
+  
+  while(!data.eof()){
+    data >>value;
+    cout<<value<<endl;
+    histo->Fill(value);
+  }
+  
+  TCanvas * Ca0 = new TCanvas("Ca0","Canvas",1200,800);
+  
+  histo->Draw();
+  
+}

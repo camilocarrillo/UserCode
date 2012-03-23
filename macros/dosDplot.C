@@ -1,0 +1,51 @@
+#include "Riostream.h"
+#include <fstream>
+#include <iomanip>
+#include <vector>
+#include <string>
+
+void setHisto(TH2F * histo){
+  //  histo->GetXaxis()->LabelsOption("v");
+  //  histo->GetXaxis()->SetLabelSize(0.03);
+  //histo->Draw("CONT4COLZ ");         
+  histo->Draw("COLZ ");         
+  //histo->Draw("");         
+  histo->GetXaxis()->SetTitle("cm");
+  histo->GetYaxis()->SetTitle("cm");
+  histo->SetTitle("2D Efficiency for W+2_RB2in_S04_Forward");
+}
+
+void dosDplot(){
+  gROOT->Reset();
+  gStyle->SetOptStat(0);
+  gStyle->SetPalette(1);
+  cout<<"getting the file"<<endl;
+
+  TFile * theFile = new TFile("/var/www/html/tmp/eff69912_300pre10_Straighter/seceff69912_300pre10_Straighter.root");  
+  //TFile * theFile = new TFile("/var/www/html/efficiency/_Cosmics_Commissioning08_CRAFT_ALL_V4_ReReco-v1_RECO/69912/sec69912.root");
+  //TFile * theFile = new TFile("/var/www/html/efficiency/_Eff_My_HLT_Skim/alineamiento70195/seceffalineamiento70195.root");
+  //TFile * theFile = new TFile("eff110900.root");  
+  //TFile * theFile = new TFile("sec220_9200.root");  
+  //TFile * theFile = new TFile("sec220_9400.root");
+  //TFile * theFile = new TFile("secondmuon.root");
+	
+  cout<<"getting the histo"<<endl;
+
+  TH2F * muography = (TH2F*) (theFile->Get("Profile2D_For_W+2_RB2in_S04_Forward"));
+  //TH2F * muography = (TH2F*) (theFile->Get("Profile2D_For_W+0_RB2in_S03_Forward"));
+  //TH2F * muography = (TH2F*) (theFile->Get("Profile2D_For_W+0_RB2in_S03_Forward"));
+
+  //TH2F * muography = (TH2F*) (theFile->Get("DQMData/Muons/MuonSegEff/Barrel/Wheel_-2/sector_5/station_1/ExpectedOccupancy2DFromDT_W+2_RB2in_S03_Forward"));
+  //TH2F * muography = (TH2F*) (theFile->Get("DQMData/Muons/MuonSegEff/Barrel/Wheel_-2/sector_5/station_1/Inefficiency2DFromDT_W+2_RB2in_S03_Forward"));
+  
+  if(muography) cout<<"histo not found"<<endl;
+
+  cout<<"creating canvas"<<endl;
+  TCanvas * Ca0 = new TCanvas("Ca0","Muography",1200,800);
+  setHisto(muography);	
+  cout<<"saving plot"<<endl;
+  Ca0->SaveAs("Eficiency_W+2_RB2in_S04_Forward.png");
+
+  //  exit(0);
+  
+}

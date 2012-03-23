@@ -1,0 +1,149 @@
+{
+
+#include "Riostream.h"
+  
+  gROOT->Reset();
+
+
+  // gluino
+//  TFile * theFile1 = new TFile("_HSCPgluino_M-200_7TeV-pythia6_Spring10-START3X_V26-v1_GEN-SIM-RECO/hscpVal.root");
+//  TFile * theFile2 = new TFile("_HSCPgluino_M-300_7TeV-pythia6_Spring10-START3X_V26-v1_GEN-SIM-RECO/hscpVal.root");
+//  TFile * theFile3 = new TFile("_HSCPgluino_M-400_7TeV-pythia6_Spring10-START3X_V26-v1_GEN-SIM-RECO/hscpVal.root");
+//  TFile * theFile4 = new TFile("_HSCPgluino_M-500_7TeV-pythia6_Spring10-START3X_V26-v1_GEN-SIM-RECO/hscpVal.root");
+//  TFile * theFile5 = new TFile("_HSCPgluino_M-600_7TeV-pythia6_Spring10-START3X_V26-v1_GEN-SIM-RECO/hscpVal.root");
+//  TFile * theFile6 = new TFile("_HSCPgluino_M-900_7TeV-pythia6_Spring10-START3X_V26-v1_GEN-SIM-RECO/hscpVal.root");
+
+// stop pythia and madgraph just replacing madgraph for pythia
+//  TFile * theFile1 = new TFile("_HSCPstop_M-130_7TeV-madgraph_Spring10-START3X_V26-v1_GEN-SIM-RECO/hscpVal.root");
+//  TFile * theFile2 = new TFile("_HSCPstop_M-200_7TeV-madgraph_Spring10-START3X_V26-v1_GEN-SIM-RECO/hscpVal.root");
+//  TFile * theFile3 = new TFile("_HSCPstop_M-300_7TeV-madgraph_Spring10-START3X_V26-v1_GEN-SIM-RECO/hscpVal.root");
+//  TFile * theFile4 = new TFile("_HSCPstop_M-500_7TeV-madgraph_Spring10-START3X_V26-v1_GEN-SIM-RECO/hscpVal.root");
+//  TFile * theFile5 = new TFile("_HSCPstop_M-800_7TeV-madgraph_Spring10-START3X_V26-v1_GEN-SIM-RECO/hscpVal.root");
+// // TFile * theFile6 = new TFile("/hscpVal.root");
+
+
+//stau
+// TFile * theFile1 = new TFile("_HSCPstau_M-100_7TeV-pythia6_Spring10-START3X_V26-v1_GEN-SIM-RECO/hscpVal.root");
+// TFile * theFile2 = new TFile("_HSCPstau_M-126_7TeV-pythia6_Spring10-START3X_V26-v1_GEN-SIM-RECO/hscpVal.root");
+// TFile * theFile3 = new TFile("_HSCPstau_M-156_7TeV-pythia6_Spring10-START3X_V26-v1_GEN-SIM-RECO/hscpVal.root");
+// TFile * theFile4 = new TFile("_HSCPstau_M-200_7TeV-pythia6_Spring10-START3X_V26-v1_GEN-SIM-RECO/hscpVal.root");
+// TFile * theFile5 = new TFile("_HSCPstau_M-247_7TeV-pythia6_Spring10-START3X_V26-v1_GEN-SIM-RECO/hscpVal.root");
+// TFile * theFile6 = new TFile("_HSCPstau_M-308_7TeV-pythia6_Spring10-START3X_V26-v1_GEN-SIM-RECO/hscpVal.root");
+
+//comparison stop
+
+TFile * theFile1 = new TFile("_HSCPstop_M--N-_7TeV-madgraph_Spring10-START3X_V26-v1_GEN-SIM-RECO/hscpVal.root");
+TFile * theFile2 = new TFile("_HSCPstop_M--N-_7TeV-pythia6_Spring10-START3X_V26-v1_GEN-SIM-RECO/hscpVal.root");
+
+ std::cout<<"Reading histos"<<std::endl;
+
+ const int N = 2;	
+
+ TH1F * particleBeta[N+1];
+ int mass[N+1];
+ int color[N+1];
+
+particleBeta[1] = (TH1F*) (theFile1->Get("hscpValidator/particleBeta"));mass[1]=-N-;  color[1]=1; 
+particleBeta[2] = (TH1F*) (theFile2->Get("hscpValidator/particleBeta"));mass[2]=-N-;  color[2]=9; 
+// particleBeta[3] = (TH1F*) (theFile3->Get("hscpValidator/particleBeta"));mass[3]=400;  color[3]=2; 
+// particleBeta[4] = (TH1F*) (theFile4->Get("hscpValidator/particleBeta"));mass[4]=500;  color[4]=4; 
+// particleBeta[5] = (TH1F*) (theFile5->Get("hscpValidator/particleBeta"));mass[5]=600; color[5]=6;
+// particleBeta[6] = (TH1F*) (theFile6->Get("hscpValidator/particleBeta"));mass[6]=900; color[6]=5;
+
+
+//stop replacing mass after commeting particleBeta[6]
+
+//  mass[1]=130;
+//  mass[2]=200;
+//  mass[3]=300;
+//  mass[4]=500;
+//  mass[5]=900;
+
+
+ //stau replacing masses
+
+//  mass[1]=100;
+//  mass[2]=126;
+//  mass[3]=156;
+//  mass[4]=200;
+//  mass[5]=247;
+//  mass[6]=308;
+
+ std::cout<<"Creating Canvas"<<std::endl;
+ TCanvas *Ca1 = new TCanvas("Ca1","Beta",1200,800);
+
+ float max = -1;
+ 
+ for(int i = 1;i<N+1;i++){
+   if(i==1){
+     std::cout<<"Drawing "<<i<<"th"<<std::endl;
+     particleBeta[i]->SetMarkerColor(color[i]);
+     particleBeta[i]->SetLineColor(color[i]);  
+     particleBeta[i]->SetLineWidth(2);  
+     particleBeta[i]->Draw("E");
+     float thismax = particleBeta[i]->GetBinContent(particleBeta[i]->GetMaximumBin());
+     if(thismax>max) max = thismax;
+   }
+   else{
+     std::cout<<"Drawing "<<i<<"th"<<std::endl;
+     particleBeta[i]->SetMarkerColor(color[i]);
+     particleBeta[i]->SetLineColor(color[i]);  
+     particleBeta[i]->SetLineWidth(2);  
+     particleBeta[i]->Draw("sameE");
+     float thismax = particleBeta[i]->GetBinContent(particleBeta[i]->GetMaximumBin());
+     if(thismax>max) max = thismax;
+   }
+ }
+   
+ std::stringstream sta[N+1];
+ 
+ TLegend *leg = new TLegend(0.4974874,0.8304196,0.9974874,0.9965035,NULL,"brNDC");
+ leg->SetTextFont(62);
+ leg->SetLineColor(1);
+ leg->SetLineStyle(1);
+ leg->SetLineWidth(1);
+ leg->SetFillColor(19);
+ leg->SetFillStyle(1001);
+
+ float x[N+1], y[N+1], ey[N+1];
+ 
+ for(int i = 1;i<N+1;i++){
+   sta[i]<<"Mass "<<mass[i]<<"GeV Mean "<<endl<<particleBeta[i]->GetMean()<<endl<<" RMS "<<particleBeta[i]->GetRMS();
+   x[i]=mass[i];
+   y[i]=particleBeta[i]->GetMean();
+   ey[i]=particleBeta[i]->GetRMS();
+   particleBeta[i]->SetMaximum(1.2*max);
+ }
+ 
+ for(int i = 1;i<N+1;i++){
+   leg->AddEntry(particleBeta[i],(sta[i].str()).c_str(),"l");
+ }
+ 
+ leg->Draw("same");
+
+ Ca1->SaveAs("BetaComparison.png");
+
+ TGraphErrors * grp = new TGraphErrors(N+1,x,y,0,ey);
+ 
+ TCanvas * Ca0 = new TCanvas("Ca0","Canvas",1200,800);    
+ 
+ grp->SetTitle("Beta for different mass points");
+ grp->SetLineColor(kRed);
+ grp->SetMarkerStyle(20);
+ grp->SetMarkerSize(1.0);
+ grp->GetXaxis()->SetTitle("gluino mass(GeV)");
+ grp->GetYaxis()->SetTitle("Mean Beta error bars RMS");
+ grp->Draw("AP");
+
+ Ca0->SaveAs("BetaVsMass.png");
+ exit(0) ;
+}
+
+
+
+
+
+
+
+
+

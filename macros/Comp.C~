@@ -19,11 +19,11 @@ gROOT->ForceStyle();
  string descriptionRun2 = "9.3kV";
 */
 
- string run2 = "133440_Cosmics_Commissioning10-PromptReco-v8_RECO";
- string run1 = "133440__RPCMonitor_Commissioning10-v4_RAW";
+ string run2 = "133440";
+ string run1 = "hlt133440";
 
- string descriptionRun2 = "Cosmics_Comm";
- string descriptionRun1 = "RPCMonitor_Comm";
+ string descriptionRun2 = "reco";
+ string descriptionRun1 = "hlt";
 
 
 //-----------------------------------------------------------------------
