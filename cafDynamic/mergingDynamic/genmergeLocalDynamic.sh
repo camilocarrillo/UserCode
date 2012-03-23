@@ -45,7 +45,7 @@ while [ $fin -lt $numfiles ]
 	let "fin=$ini+$step-1"
 	echo "-----hasta" $fin
 	sed -e "s|-key-|$key|g" -e "s|-ini-|$ini|g" -e "s|-fin-|$fin|g" -e "s|-padCASTOR-|$padCASTOR|g" -e "s|-step-|$step|g" -e "s|-padtorun-|$padtorun|g" -e "s|-currentpad-|$currentpad|g" ~carrillo/public/for_All/cafDynamic/mergingDynamic/jobtemplateLocalDynamic > jobLocal$ini-$fin.lsf
-	echo "bsub -q $q -e jobLocal$ini-$fin.err -o jobLocal$ini-$fin.olsf -J jobLocal$ini-$fin jobLocal$ini-$fin.lsf" 1>> corraBatchLocal
+	echo "/afs/cern.ch/cms/caf/scripts/cmsbsub -q $q -e jobLocal$ini-$fin.err -o jobLocal$ini-$fin.olsf -J jobLocal$ini-$fin jobLocal$ini-$fin.lsf" 1>> corraBatchLocal
 	let "ini=$ini+$step"
 	done
 sed -e "s|-padCASTOR-|$padCASTOR|g" -e "s|-padtorun-|$padtorun|g" -e "s|-currentpad-|$currentpad|g" ~carrillo/public/for_All/cafDynamic/mergingDynamic/jobLocalFinalTemplate > jobLocalFinal.lsf

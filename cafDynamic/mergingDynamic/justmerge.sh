@@ -54,7 +54,7 @@ then
    exit 0
 fi
 
-bsub -q $queue -e jobLocalFinal.err -o jobLocalFinal.olsf -J jobLocalFinal jobLocalFinal.lsf
+/afs/cern.ch/cms/caf/scripts/cmsbsub -q $queue -e jobLocalFinal.err -o jobLocalFinal.olsf -J jobLocalFinal jobLocalFinal.lsf
 echo Submiting Last Merging for $key for $filesInCastorLocal files
 sleep 10
 export numrun=`bjobs | grep RUN | grep $queue | wc -l`

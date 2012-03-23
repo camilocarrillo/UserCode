@@ -190,7 +190,7 @@ then
    echo $singlefile
    rfcp $castorpad/$singlefile $castorpad/$key.root
    echo "!!! $key is done with one job find it under $wd, time=$t, files=$numfiles, host=$HOST." > finbash.txt
-   mail 0041762210358@sms.switch.ch < finbash.txt
+#   mail 0041762210358@mail2sms.cern.ch < finbash.txt
    cat finbash.txt
    rm finbash.txt
    exit 0
@@ -227,7 +227,8 @@ export numrun=`bjobs | grep RUN | grep $queue | wc -l`
 export numpend=`bjobs | grep PEND | grep $queue | wc -l`
 export filesInCastorLocal=`nsls $castorpad | grep Local | wc -l`
 
-until [[ $numrun -eq 0 && $numpend -eq 0 || $expectedInCastorLocal -eq $filesInCastorLocal ]]
+#until [[ $numrun -eq 0 && $numpend -eq 0 || $expectedInCastorLocal -eq $filesInCastorLocal ]]
+until [[ $numrun -eq 0 && $numpend -eq 0 ]]
         do
         export numrun=`bjobs | grep RUN | grep $queue | wc -l`
         export numpend=`bjobs | grep PEND | grep $queue | wc -l`
@@ -249,7 +250,7 @@ then
    exit 0
 fi
 
-bsub -q $queue -e jobLocalFinal.err -o jobLocalFinal.olsf -J jobLocalFinal jobLocalFinal.lsf
+/afs/cern.ch/cms/caf/scripts/cmsbsub -q $queue -e jobLocalFinal.err -o jobLocalFinal.olsf -J jobLocalFinal jobLocalFinal.lsf
 echo Submiting Last Merging for $key for $filesInCastorLocal files
 sleep 10
 export numrun=`bjobs | grep RUN | grep $queue | wc -l`
@@ -267,12 +268,14 @@ until [[ $numrun -eq 0 && $numpend -eq 0 || $filesInCastorLocalfinal -eq 1 ]]
 	~carrillo/public/for_All/cafDynamic/htmline.sh $t $numrun $numpend  $numfilesProduced $numfiles $warn Last_Merge_$key > ~/public/report/$key.html
         sleep 10
         done
-sleep 10
+sleep 120
 rfcp $castorpad/Local.root $castorpad/$key.root
 echo $castorpad
 nsls $castorpad
 echo "$key is done, time=$t, files=$numfiles, warning=($warn,$warn2), host=$HOST" > finbash.txt
-mail 0041762210358@sms.switch.ch < finbash.txt
+#mail 0041762210358@mail2sms.cern.ch < finbash.txt
 cat finbash.txt
 rm finbash.txt
 ~carrillo/public/for_All/cafDynamic/htmline.sh $t 0 0 $numfilesProduced $numfiles $warn done_$key > ~/public/report/$key.html
+sleep 120
+echo DONE! Sleeping 2 minuts for $key in Castor

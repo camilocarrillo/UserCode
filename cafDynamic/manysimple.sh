@@ -7,6 +7,17 @@ echo $NumberOfRuns
 export project=`awk -F"=" '{print $2}' $2 | awk 'NR==4'`
 export dataset=`awk -F"=" '{print $2}' $2 | awk 'NR==2'`
 
+export numparameters=`cat $2 | wc -l`
+
+if [[ $numparameters -ne 5 ]]
+then
+   echo "!!! The Number of parameters(lines) is $numparameters and should be 5, (manysimple RunsList DataSetAndReleaseInfo)"    
+   exit 0
+fi
+
+echo cheking that all the runs are already registered in the dataset
+/afs/cern.ch/user/c/carrillo/scripts/checkRunsInDataSet.sh $1 $dataset
+
 while [[ $i -le $NumberOfRuns ]]
 do
 	export run=`awk 'NR=='$i' {print $1}' $1`

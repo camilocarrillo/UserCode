@@ -36,7 +36,7 @@ for line in `head -n $max files`
 	echo $rootfile
 	sed -e "s|-filename-|$rootfile|g" -e "s|-pad-|$padROOT|g" $cfgtemplate > $rootfile._cfg.py
 	sed -e "s|-filename-|$rootfile|g" -e "s|-pad-|$padROOT|g" -e "s|-padtorun-|$padRUN|g" -e "s|-currentpad-|$padCURR|g" -e "s|-storepad-|$storePAD|g" -e "s|-key-|$key|g" ~carrillo/public/for_All/cafDynamic/jobtemplateDynamicPython > $rootfile.lsf
-	echo "bsub -q $q -e $rootfile.err -o $rootfile.olsf -J $rootfile $rootfile.lsf" 1>> corraBatch
+	echo "/afs/cern.ch/cms/caf/scripts/cmsbsub -q $q -e $rootfile.err -o $rootfile.olsf -J $rootfile $rootfile.lsf" 1>> corraBatch
 	let "i=$i+1"
 	done
 chmod a+x *.lsf
