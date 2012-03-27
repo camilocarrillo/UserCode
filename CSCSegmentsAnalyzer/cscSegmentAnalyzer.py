@@ -9,14 +9,14 @@ process.maxEvents = cms.untracked.PSet(
 process.source = cms.Source("PoolSource",
 # fileNames = cms.untracked.vstring('file:/tmp/carrillo/W2_Se4_St2_HighLumiBis.root')
 # fileNames = cms.untracked.vstring('file:/tmp/carrillo/W2_Se4_St2_LowLumi.root')
-# fileNames = cms.untracked.vstring('rfio:/castor/cern.ch/user/j/jgomezca/NewRun1Container/_RPCMonitor_Run2011B-v1_RAW/180250/NewRun1Container-180250.E843AA1E-FD02-E111-81D3-BCAEC5329714.root')
-  fileNames = cms.untracked.vstring('rfio:/castor/cern.ch/user/j/jgomezca/OldRunContainer/_RPCMonitor_Run2011A-v1_RAW/163286/OldRunContainer-163286.14BFE702-DF6C-E011-8964-0030487C7E18.root')
+  fileNames = cms.untracked.vstring('rfio:/castor/cern.ch/user/j/jgomezca/NewRun1Container/_RPCMonitor_Run2011B-v1_RAW/180250/NewRun1Container-180250.E843AA1E-FD02-E111-81D3-BCAEC5329714.root')
+# fileNames = cms.untracked.vstring('rfio:/castor/cern.ch/user/j/jgomezca/OldRunContainer/_RPCMonitor_Run2011A-v1_RAW/163286/OldRunContainer-163286.14BFE702-DF6C-E011-8964-0030487C7E18.root')
 )
 
 process.CSCSegmentAnalyzer = cms.EDFilter("CSCSegmentAnalyzer",
   cscSegments = cms.InputTag("hltCscSegments"), 
 # dt4DSegments = cms.InputTag("dTandCSCSegmentsinTracks",'SelectedDtSegments'),
-  fileName =cms.untracked.string('LowLumi_AllSegments.root'),	
+  fileName =cms.untracked.string('HighLumi_AllSegments.root'),	
 )
 
 
