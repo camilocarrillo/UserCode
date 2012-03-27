@@ -102,7 +102,7 @@ void DTOccupancy(){
   Ca1_6->cd();
   HdofZ->Draw(); HdofZ->GetXaxis()->SetTitle("Number of Degrees of Freedom Z segment");HdofZ->GetXaxis()->SetTitleSize(0.06);HdofZ->GetXaxis()->SetLabelSize(0.04);
   Ca1_7->cd();
-  chi2->Draw(); chi2->GetXaxis()->SetTitle("#chi^2/ndof");chi2->GetXaxis()->SetTitleSize(0.06);chi2->GetXaxis()->SetLabelSize(0.04);
+  chi2->Draw(); chi2->GetXaxis()->SetTitle("#chi^2");chi2->GetXaxis()->SetTitleSize(0.06);chi2->GetXaxis()->SetLabelSize(0.04);
   Ca1_8->cd();
   dimen->Draw(); dimen->GetXaxis()->SetTitle("Segment Dimension");dimen->GetXaxis()->SetTitleSize(0.06);dimen->GetXaxis()->SetLabelSize(0.04);
   Ca1_9->cd();
