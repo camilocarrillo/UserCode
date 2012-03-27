@@ -10,7 +10,7 @@ void setHisto(TH2F * histo){
   //histo->Draw("CONT4COLZ ");         
 }
 
-void CSCOccupancy(){
+void DTOccupancy(){
   gROOT->Reset();
   gStyle->SetOptStat(0);
   gStyle->SetPalette(1);
@@ -22,13 +22,11 @@ void CSCOccupancy(){
   
   cout<<"getting the histo"<<endl;
 
-  TH2F * OccupancyDiskm3 = (TH2F*) (theFile->Get("OccupancyWheelm2"));
-  TH2F * OccupancyDiskm2 = (TH2F*) (theFile->Get("OccupancyWheelm1"));
-  TH2F * OccupancyDiskm1= (TH2F*) (theFile->Get("OccupancyWheel0"));
-  TH2F * OccupancyDisk1 = (TH2F*) (theFile->Get("OccupancyWheel1"));
-  TH2F * OccupancyDisk2 = (TH2F*) (theFile->Get("OccupancyWheel2"));
-  TH2F * OccupancyDisk3 = (TH2F*) (theFile->Get("OccupancyWheel2"));; 
-
+  TH2F * OccupancyWheelm2 = (TH2F*) (theFile->Get("OccupancyWheelm2"));
+  TH2F * OccupancyWheelm1 = (TH2F*) (theFile->Get("OccupancyWheelm1"));
+  TH2F * OccupancyWheel0 = (TH2F*) (theFile->Get("OccupancyWheel0"));
+  TH2F * OccupancyWheel1 = (TH2F*) (theFile->Get("OccupancyWheel1"));
+  TH2F * OccupancyWheel2 = (TH2F*) (theFile->Get("OccupancyWheel2"));
 
   TH1F * nHits= (TH1F*) (theFile->Get("NumberOfHits"));
   TH1F * nHitsPhi= (TH1F*) (theFile->Get("NumberOfHitsPhi"));
