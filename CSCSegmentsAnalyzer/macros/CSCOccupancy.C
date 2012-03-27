@@ -83,7 +83,7 @@ void CSCOccupancy(){
   Ca1_2->cd();
   Hdof->Draw(); Hdof->GetXaxis()->SetTitle("Number of Degrees of Freedom 4D Segment");Hdof->GetXaxis()->SetTitleSize(0.06);Hdof->GetXaxis()->SetLabelSize(0.04);
   Ca1_3->cd();
-  chi2->Draw(); chi2->GetXaxis()->SetTitle("#chi^2/ndof");chi2->GetXaxis()->SetTitleSize(0.06);chi2->GetXaxis()->SetLabelSize(0.04);
+  chi2->Draw(); chi2->GetXaxis()->SetTitle("#chi^2");chi2->GetXaxis()->SetTitleSize(0.06);chi2->GetXaxis()->SetLabelSize(0.04);
   Ca1_4->cd();
   dimen->Draw(); dimen->GetXaxis()->SetTitle("Segment Dimension");dimen->GetXaxis()->SetTitleSize(0.06);dimen->GetXaxis()->SetLabelSize(0.04);
   Ca1_5->cd();
