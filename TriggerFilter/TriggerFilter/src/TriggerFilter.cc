@@ -13,7 +13,7 @@
 //
 // Original Author:  Camilo Andres Carrillo Montoya,40 2-B15,+41227671625,
 //         Created:  Tue Apr  5 10:35:59 CEST 2011
-// $Id: TriggerFilter.cc,v 1.2 2012/02/13 11:50:53 carrillo Exp $
+// $Id: TriggerFilter.cc,v 1.3 2012/02/15 13:52:37 jgomezca Exp $
 //
 //
 
@@ -106,7 +106,7 @@ TriggerFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
   std::vector<L1MuGMTExtendedCand> gmt_candidates = (*gmtrc_handle).getRecord().getGMTCands();
   std::vector<L1MuGMTExtendedCand>::const_iterator candidate;
   
-  std::cout<<"The number of GMT Candidates in this event is "<<gmt_candidates.size()<<std::endl;
+  //std::cout<<"The number of GMT Candidates in this event is "<<gmt_candidates.size()<<std::endl;
 
   bool atLeastOneDTorCSCTrigger = false;
 
