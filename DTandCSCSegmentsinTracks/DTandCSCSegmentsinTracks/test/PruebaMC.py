@@ -34,7 +34,7 @@ process.load("Configuration.StandardSequences.MagneticField_AutoFromDBCurrent_cf
 
 process.load("FWCore.MessageService.MessageLogger_cfi")
 
-max = -1
+max = 100
  
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32( max ))
 
@@ -50,8 +50,9 @@ process.normfilter = cms.EDFilter("HLTHighLevel",
 process.load("TriggerFilter.TriggerFilter.triggerFilterMC_cfi")
 process.load("MuonTools.StandardSequences.RecoStandAloneMuon_cff")
 
-process.load("RecoLocalMuon.RPCRecHit.dTandCSCSegmentsinTracksMC_cfi")
-process.load("RecoLocalMuon.RPCRecHit.rpcPointProducer_cfi")
+process.load("DTandCSCSegmentsinTracks.DTandCSCSegmentsinTracks.dTandCSCSegmentsinTracksMC_cfi")
+process.load("RecoLocalMuon.RPCRecHit.rpcPointProducerTrackSegments_cfi")
+
 #process.load("RecoLocalMuon.RPCRecHit.rpcPointProducerThreeDetectors_cfi")
 #process.load("RecoLocalMuon.RPCRecHit.rpcPointAnalyzer_cfi")
 
@@ -118,7 +119,7 @@ process.museg = cms.EDAnalyzer("MuonSegmentEff",
                                   # rpcCSCPoints = cms.InputTag("rpcPointProducerThreeDetectors","RPCMixCSCExtrapolatedPoints"),
 
                                    EffSaveRootFile = cms.untracked.bool(True),
-                                   EffRootFileName = cms.untracked.string('/tmp/jgomezca/numerator_denominatorTD.root'),
+                                   EffRootFileName = cms.untracked.string('numerator_denominatorTD.root'),
                                    EffSaveRootFileEventsInterval = cms.untracked.int32(100)
                                )
 
