@@ -1,6 +1,0 @@
-Run =-run-
-DataSet =/RPCMonitor/Run2010B-v1/RAW
-quee =cmscaf1nd
-project =/afs/cern.ch/user/c/carrillo/efficiency/CMSSW_3_8_1/
-pythonTemplate =/afs/cern.ch/user/c/carrillo/scratch0/_RPCMonitor_Run2010B-v1_RAW/rpcPointAndfactSeg2DforHLT.py
-label =pathological
