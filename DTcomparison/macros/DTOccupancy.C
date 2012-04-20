@@ -16,7 +16,7 @@ void DTOccupancy(){
   gStyle->SetPalette(1);
   cout<<"getting the file"<<endl;
 
-  string name = "LowLumi_AllSegments" ;
+  string name = "LowLumi_ExWMB1Segments" ;
   
   TFile * theFile = new TFile(("../"+name+".root").c_str());  
   
@@ -39,6 +39,9 @@ void DTOccupancy(){
   TH1F * chi2= (TH1F*) (theFile->Get("chi2"));
   TH1F * dimen= (TH1F*) (theFile->Get("dimen"));
   TH1F * proy= (TH1F*) (theFile->Get("proy"));
+
+  TH1F * t0phi= (TH1F*) (theFile->Get("t0phi"));
+  TH1F * t0z= (TH1F*) (theFile->Get("t0z"));
 
   TH1F * HnumberOfSegmentsPerEvent = (TH1F*) (theFile->Get("HnumberOfSegmentsPerEvent"));
   TH1F * HnumberOfSegmentsPerEventDim4 = (TH1F*) (theFile->Get("HnumberOfSegmentsPerEventDim4"));
@@ -106,8 +109,12 @@ void DTOccupancy(){
   Ca1_8->cd();
   dimen->Draw(); dimen->GetXaxis()->SetTitle("Segment Dimension");dimen->GetXaxis()->SetTitleSize(0.06);dimen->GetXaxis()->SetLabelSize(0.04);
   Ca1_9->cd();
-  HnumberOfSegmentsPerEvent->Draw(); HnumberOfSegmentsPerEvent->GetXaxis()->SetTitle("Number of Segments Per Event");HnumberOfSegmentsPerEvent->GetXaxis()->SetTitleSize(0.06);HnumberOfSegmentsPerEvent->GetXaxis()->SetLabelSize(0.04);
-  HnumberOfSegmentsPerEventDim4->Draw("same"); HnumberOfSegmentsPerEventDim4->GetXaxis()->SetTitle("Number of Segments Per Event");HnumberOfSegmentsPerEventDim4->GetXaxis()->SetTitleSize(0.06);HnumberOfSegmentsPerEventDim4->GetXaxis()->SetLabelSize(0.04);
+  t0phi->Draw();t0phi->GetXaxis()->SetTitle("t0");t0phi->GetXaxis()->SetTitleSize(0.06);t0phi->GetXaxis()->SetLabelSize(0.04);
+  t0z->Draw("same");t0z->SetFillColor(3);t0z->GetXaxis()->SetTitle("t0");t0z->GetXaxis()->SetTitleSize(0.06);t0z->GetXaxis()->SetLabelSize(0.04);
+
+ 
+  //  HnumberOfSegmentsPerEvent->Draw(); HnumberOfSegmentsPerEvent->GetXaxis()->SetTitle("Number of Segments Per Event");HnumberOfSegmentsPerEvent->GetXaxis()->SetTitleSize(0.06);HnumberOfSegmentsPerEvent->GetXaxis()->SetLabelSize(0.04);
+  //HnumberOfSegmentsPerEventDim4->Draw("same"); HnumberOfSegmentsPerEventDim4->GetXaxis()->SetTitle("Number of Segments Per Event");HnumberOfSegmentsPerEventDim4->GetXaxis()->SetTitleSize(0.06);HnumberOfSegmentsPerEventDim4->GetXaxis()->SetLabelSize(0.04);
   HnumberOfSegmentsPerEventDim4->SetFillColor(4);
 
   cout<<"saving plot"<<endl;

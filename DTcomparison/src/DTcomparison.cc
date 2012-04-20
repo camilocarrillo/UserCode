@@ -13,7 +13,7 @@
 //
 // Original Author:  Camilo Andres Carrillo Montoya
 //         Created:  Thu Feb  5 11:30:12 CET 2009
-// $Id: DTcomparison.cc,v 1.7 2012/03/23 10:27:30 carrillo Exp $
+// $Id: DTcomparison.cc,v 1.9 2012/03/27 09:30:49 carrillo Exp $
 //
 //
 
@@ -67,6 +67,8 @@ public:
   TH1F * HdofZ;
   TH1F * HdofPhi;
   TH1F * chi2;
+  TH1F * t0phi;
+  TH1F * t0z;
   TH1F * dimen;
   TH1F * proy;     
   TH1F * HnumberOfSegmentsPerEvent;
@@ -112,6 +114,8 @@ DTcomparison::DTcomparison(const edm::ParameterSet& iConfig)
   HdofZ= new TH1F ("DegreesOfFreedomZ","DegreesOfFreedomZ",10,-0.5,9.5);
 
   chi2= new TH1F ("chi2","chi2",100,0,20);
+  t0phi= new TH1F ("t0phi","t0phi",100,-120,120);
+  t0z= new TH1F ("t0z","t0z",100,-120,120);
   dimen= new TH1F ("dimen","dimen",10,-0.5,9.5);
   proy= new TH1F ("proy","proy",2,-0.5,1.5);
 
@@ -169,6 +173,7 @@ DTcomparison::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	std::cout<<" | "<<dofPhi<<" "<<HitsPhi;
 	HdofPhi->Fill(dofPhi);
 	nHitsPhi->Fill(HitsPhi);
+	t0phi->Fill(segment->phiSegment()->t0());
       }
       
     
@@ -179,6 +184,7 @@ DTcomparison::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	std::cout<<" | "<<dofZ<<" "<<HitsZ;
 	HdofZ->Fill(dofZ);
 	nHitsZ->Fill(HitsZ);
+	t0z->Fill(segment->zSegment()->t0());
       }
     
       nHits->Fill(HitsPhi+HitsZ);
@@ -244,6 +250,8 @@ DTcomparison::endJob() {
   nHitsZ->Write();   
   nHitsPhi->Write(); 
   chi2->Write();	   
+  t0phi->Write();	   
+  t0z->Write();	   
   dimen->Write();	   
   proy->Write();     
 
