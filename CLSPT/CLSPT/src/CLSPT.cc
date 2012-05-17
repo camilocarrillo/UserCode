@@ -13,7 +13,7 @@
 //
 // Original Author:  Camilo Andres Carrillo Montoya,42 R-021,+41227671624,
 //         Created:  Thu May 17 01:32:34 CEST 2012
-// $Id: CLSPT.cc,v 1.2 2012/05/17 18:50:47 carrillo Exp $
+// $Id: CLSPT.cc,v 1.3 2012/05/17 18:54:33 carrillo Exp $
 //
 //
 
@@ -22,22 +22,14 @@
 #include <memory>
 
 // user include files
+
 #include "FWCore/Framework/interface/Frameworkfwd.h"
 #include "FWCore/Framework/interface/EDAnalyzer.h"
-
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/MakerMacros.h"
-
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
-
-#include "TFile.h"
-#include "TH1F.h"
-#include "TH2F.h"
-
 #include "DataFormats/TrajectorySeed/interface/TrajectorySeedCollection.h"
-#include "DataFormats/TrackReco/interface/Track.h"
-#include "DataFormats/TrackingRecHit/interface/TrackingRecHit.h"
-#include "DataFormats/MuonDetId/interface/MuonSubdetId.h"
+#include "FWCore/Framework/interface/ESHandle.h"
 
 #include "DataFormats/RPCRecHit/interface/RPCRecHitCollection.h"
 
@@ -53,6 +45,7 @@
 #include "DataFormats/TrackReco/interface/TrackFwd.h"
 
 #include "DataFormats/RPCRecHit/interface/RPCRecHitCollection.h"
+#include <DataFormats/RPCRecHit/interface/RPCRecHit.h>
 
 #include "MagneticField/Engine/interface/MagneticField.h"
 #include "MagneticField/Records/interface/IdealMagneticFieldRecord.h"
@@ -61,8 +54,13 @@
 #include "Geometry/CommonDetUnit/interface/GeomDet.h"
 
 
+#include "TFile.h"
+#include "TH1F.h"
+#include "TH2F.h"
 
-using namespace std;
+
+
+//using namespace std;
 
 //
 // class declaration
@@ -78,6 +76,7 @@ class CLSPT : public edm::EDAnalyzer {
   TFile * theFileCal;
   TH1F * theHisto;
   std::string  m_trackTag;
+  edm::InputTag rpcRecHitsLabel;
 
    private:
       virtual void beginJob() ;
@@ -125,6 +124,7 @@ CLSPT::CLSPT(const edm::ParameterSet& iConfig)
 {
    //now do what ever initialization is needed
   m_trackTag = iConfig.getUntrackedParameter<std::string>("tracks");
+  rpcRecHitsLabel = iConfig.getParameter<edm::InputTag>("rpcRecHits");
   rootFileName = iConfig.getUntrackedParameter<std::string>("rootFileName");
 }
 
@@ -145,8 +145,15 @@ CLSPT::~CLSPT()
 // ------------ method called for each event  ------------
 void
 CLSPT::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
+
+  edm::ESHandle<GlobalTrackingGeometry> theTrackingGeometry;
+  iSetup.get<GlobalTrackingGeometryRecord>().get(theTrackingGeometry);
+
   edm::Handle<reco::TrackCollection> alltracks;
   iEvent.getByLabel(m_trackTag,alltracks);
+
+  edm::Handle<RPCRecHitCollection> rpcHits;
+  iEvent.getByLabel(rpcRecHitsLabel,rpcHits);
 
    int counter = 0;
    float eta=0;
@@ -179,6 +186,45 @@ CLSPT::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
      std::cout<<"\t Muon muon->chi2() = "<<muon->chi2()<<std::endl;
      std::cout<<"\t Muon muon->chi2()/ndof = "<<muon->chi2()/muon->ndof() <<std::endl;
      std::cout<<"\t Cheking chi2/ndof"<<std::endl;
+
+     int counterhits=0;
+     int counterhitsRPC=0;
+     
+     for(trackingRecHit_iterator recHit = muon->recHitsBegin(); recHit != muon->recHitsEnd(); ++recHit){
+       counterhits++;
+       if ( (*recHit)->geographicalId().det() != DetId::Muon  ) continue; //Is a hit in the Muon System?
+       if ( (*recHit)->geographicalId().subdetId() != MuonSubdetId::RPC ) continue; //Is an RPC Hit?
+       if (!(*recHit)->isValid()) continue; //Is Valid
+       counterhitsRPC++;
+
+       RPCDetId rollId = (RPCDetId)(*recHit)->geographicalId();
+
+       typedef std::pair<RPCRecHitCollection::const_iterator, RPCRecHitCollection::const_iterator> rangeRecHits;
+       rangeRecHits recHitCollection =  rpcHits->get(rollId);
+
+       RPCRecHitCollection::const_iterator recHitC;
+       int size = 0;
+       int clusterS=0;
+       std::cout<<"\t \t Looping on the rechits of the same roll"<<std::endl;
+       for(recHitC = recHitCollection.first; recHitC != recHitCollection.second ; recHitC++) {
+	 clusterS=(*recHitC).clusterSize(); 
+	 RPCDetId rollId = (RPCDetId)(*recHitC).geographicalId();
+	 size++;
+       }
+       if(size!=1){
+	 continue;
+	 std::cout<<"\t \t \t more than one rechit in this roll discarted for filling histograms"<<std::endl;
+       }
+       
+       std::cout<<"\t \t \t The cluster Size for this hit is"<<clusterS<<" and it is located in "<<rollId<<std::endl;
+      
+     }
+
+     std::cout<<"\t \t number of hits in this muon"<<counterhits<<std::endl;
+     recHitMultiplicity->Fill(counterhits);
+     rpcrecHitMultiplicity->Fill(counterhitsRPC);
+     
+   
    }
    
 }

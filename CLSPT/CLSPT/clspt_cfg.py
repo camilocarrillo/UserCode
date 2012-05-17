@@ -4,6 +4,13 @@ process = cms.Process("Demo")
 
 process.load("FWCore.MessageService.MessageLogger_cfi")
 
+process.load("Configuration.StandardSequences.FrontierConditions_GlobalTag_cff")
+process.GlobalTag.globaltag = "START50_V14::All"
+
+process.load("Geometry.MuonCommonData.muonIdealGeometryXML_cfi")
+process.load("Geometry.MuonNumbering.muonNumberingInitialization_cfi")
+process.load("Configuration.StandardSequences.Geometry_cff")
+
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
 process.source = cms.Source("PoolSource",
