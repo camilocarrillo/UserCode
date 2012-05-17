@@ -13,7 +13,7 @@
 //
 // Original Author:  Camilo Andres Carrillo Montoya,42 R-021,+41227671624,
 //         Created:  Thu May 17 01:32:34 CEST 2012
-// $Id$
+// $Id: CLSPT.cc,v 1.1 2012/05/16 23:33:28 carrillo Exp $
 //
 //
 
@@ -29,6 +29,41 @@
 #include "FWCore/Framework/interface/MakerMacros.h"
 
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
+
+#include "TFile.h"
+#include "TH1F.h"
+#include "TH2F.h"
+
+#include "DataFormats/TrajectorySeed/interface/TrajectorySeedCollection.h"
+#include "DataFormats/TrackReco/interface/Track.h"
+#include "DataFormats/TrackingRecHit/interface/TrackingRecHit.h"
+#include "DataFormats/MuonDetId/interface/MuonSubdetId.h"
+
+#include "DataFormats/RPCRecHit/interface/RPCRecHitCollection.h"
+
+
+#include "FWCore/Framework/interface/MakerMacros.h"
+#include "DataFormats/TrajectorySeed/interface/TrajectorySeedCollection.h"
+#include "DataFormats/TrackReco/interface/Track.h"
+#include "DataFormats/TrackingRecHit/interface/TrackingRecHit.h"
+#include "DataFormats/MuonDetId/interface/MuonSubdetId.h"
+#include "DataFormats/GeometryVector/interface/LocalPoint.h"
+#include "DataFormats/DetId/interface/DetId.h"
+#include "DataFormats/Common/interface/getRef.h"
+#include "DataFormats/TrackReco/interface/TrackFwd.h"
+
+#include "DataFormats/RPCRecHit/interface/RPCRecHitCollection.h"
+
+#include "MagneticField/Engine/interface/MagneticField.h"
+#include "MagneticField/Records/interface/IdealMagneticFieldRecord.h"
+#include "Geometry/Records/interface/GlobalTrackingGeometryRecord.h"
+#include "Geometry/CommonDetUnit/interface/GlobalTrackingGeometry.h"
+#include "Geometry/CommonDetUnit/interface/GeomDet.h"
+
+
+
+using namespace std;
+
 //
 // class declaration
 //
@@ -40,6 +75,9 @@ class CLSPT : public edm::EDAnalyzer {
 
       static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
 
+  TFile * theFileCal;
+  TH1F * theHisto;
+  std::string  m_trackTag;
 
    private:
       virtual void beginJob() ;
@@ -52,6 +90,24 @@ class CLSPT : public edm::EDAnalyzer {
       virtual void endLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&);
 
       // ----------member data ---------------------------
+
+  std::string rootFileName;
+      
+  TFile* theFile;
+      
+  TH1F * muonMultiplicity;
+  
+  TH1F * recHitMultiplicity;
+  TH1F * rpcrecHitMultiplicity;
+  TH1F * chi2;
+  TH1F * dxy;
+  
+  TH1F * trackobservedeta;
+  TH1F * trackobservedphi;
+  TH1F * trackobservedbeta;
+  TH1F * trackobservedp;
+  TH1F * trackobservedpt;
+      
 };
 
 //
@@ -69,7 +125,8 @@ CLSPT::CLSPT(const edm::ParameterSet& iConfig)
 
 {
    //now do what ever initialization is needed
-
+  m_trackTag = iConfig.getUntrackedParameter<std::string>("tracks");
+  rootFileName = iConfig.getUntrackedParameter<std::string>("rootFileName");
 }
 
 
@@ -88,21 +145,43 @@ CLSPT::~CLSPT()
 
 // ------------ method called for each event  ------------
 void
-CLSPT::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
-{
-   using namespace edm;
+CLSPT::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
+  edm::Handle<reco::TrackCollection> alltracks;
+  iEvent.getByLabel(m_trackTag,alltracks);
 
+   int counter = 0;
+   float eta=0;
+   float phi=0;
+   float p=0;
+   float pt=0;
 
+   std::cout<<"There are "<<alltracks->size()<<" muon tracks in this event"<<std::endl;
+   muonMultiplicity->Fill(alltracks->size());
+   std::cout<<"Looping on all the reconstructed muons"<<std::endl;
 
-#ifdef THIS_IS_AN_EVENT_EXAMPLE
-   Handle<ExampleData> pIn;
-   iEvent.getByLabel("example",pIn);
-#endif
+   reco::TrackCollection::const_iterator muon;
+
+   for(muon=alltracks->begin(); muon!=alltracks->end();muon++) {
+     counter++;
+     
+     eta=muon->eta();
+     phi=muon->phi();
+     p=muon->p();
+     pt=muon->pt();
+     
+     trackobservedeta->Fill(eta);
+     trackobservedphi->Fill(phi);
+     trackobservedp->Fill(p);
+     trackobservedpt->Fill(pt);
+     dxy->Fill(muon->dxy());
+     chi2->Fill(muon->chi2()/muon->ndof());
+     
+     std::cout<<"\t phi  ="<<phi<<" eta  ="<<eta<<" p = "<<p<<std::endl;
+     std::cout<<"\t Muon muon->chi2() = "<<muon->chi2()<<std::endl;
+     std::cout<<"\t Muon muon->chi2()/ndof = "<<muon->chi2()/muon->ndof() <<std::endl;
+     std::cout<<"\t Cheking chi2/ndof"<<std::endl;
+   }
    
-#ifdef THIS_IS_AN_EVENTSETUP_EXAMPLE
-   ESHandle<SetupData> pSetup;
-   iSetup.get<SetupRecord>().get(pSetup);
-#endif
 }
 
 
@@ -110,12 +189,46 @@ CLSPT::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 void 
 CLSPT::beginJob()
 {
+
+  std::cout<<"Begin Job"<<std::endl;
+  
+    theFile = new TFile(rootFileName.c_str(),"RECREATE");
+
+    muonMultiplicity = new TH1F("Muon_Multiplicity","Muon_Multiplicity",11,-0.5,10.5); 
+    recHitMultiplicity = new TH1F("recHitMultiplicity","recHitMultiplicity",101,-0.5,100.5);
+    rpcrecHitMultiplicity = new TH1F("RPCrecHitMultiplicity","RPCrecHitMultiplicity",21,-0.5,20.5);
+
+    chi2 = new TH1F("chi2_normalized","chi2_normalized",101,-0.5,100.5);
+    dxy = new TH1F("dxy","dxy",200,-10,10);
+
+    trackobservedeta = new TH1F("EtaObserved","Eta Observed HSCP",100,-2.5,2.5); 
+    trackobservedphi = new TH1F("PhiObserved","Phi Observed HSCP",100,-3.1415926,3.1415926); 
+    trackobservedbeta = new TH1F("BetaObserved","Beta Observed HSCP",101,0,1.1);                
+    trackobservedp = new TH1F("PObserved","P Observed HSCP",100,0,1500);    
+    trackobservedpt = new TH1F("PtObserved","Pt Observed HSCP",100,0,1500);    
+    std::cout<<"Finishing Begin Job"<<std::endl;
+
 }
 
 // ------------ method called once each job just after ending the event loop  ------------
 void 
 CLSPT::endJob() 
 {
+
+  muonMultiplicity->Write();
+
+  recHitMultiplicity->Write();
+  rpcrecHitMultiplicity->Write();
+  chi2->Write();
+  dxy->Write();
+  
+  trackobservedeta->Write();
+  trackobservedphi->Write();
+  trackobservedbeta->Write();
+  trackobservedp->Write();
+  trackobservedpt->Write();
+
+  theFile->Close();
 }
 
 // ------------ method called when starting to processes a run  ------------
