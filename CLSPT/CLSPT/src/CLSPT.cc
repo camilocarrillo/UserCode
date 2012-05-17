@@ -13,7 +13,7 @@
 //
 // Original Author:  Camilo Andres Carrillo Montoya,42 R-021,+41227671624,
 //         Created:  Thu May 17 01:32:34 CEST 2012
-// $Id: CLSPT.cc,v 1.1 2012/05/16 23:33:28 carrillo Exp $
+// $Id: CLSPT.cc,v 1.2 2012/05/17 18:50:47 carrillo Exp $
 //
 //
 
@@ -104,7 +104,6 @@ class CLSPT : public edm::EDAnalyzer {
   
   TH1F * trackobservedeta;
   TH1F * trackobservedphi;
-  TH1F * trackobservedbeta;
   TH1F * trackobservedp;
   TH1F * trackobservedpt;
       
@@ -201,11 +200,10 @@ CLSPT::beginJob()
     chi2 = new TH1F("chi2_normalized","chi2_normalized",101,-0.5,100.5);
     dxy = new TH1F("dxy","dxy",200,-10,10);
 
-    trackobservedeta = new TH1F("EtaObserved","Eta Observed HSCP",100,-2.5,2.5); 
-    trackobservedphi = new TH1F("PhiObserved","Phi Observed HSCP",100,-3.1415926,3.1415926); 
-    trackobservedbeta = new TH1F("BetaObserved","Beta Observed HSCP",101,0,1.1);                
-    trackobservedp = new TH1F("PObserved","P Observed HSCP",100,0,1500);    
-    trackobservedpt = new TH1F("PtObserved","Pt Observed HSCP",100,0,1500);    
+    trackobservedeta = new TH1F("EtaObserved","Eta",100,-2.5,2.5); 
+    trackobservedphi = new TH1F("PhiObserved","Phi",100,-3.1415926,3.1415926); 
+    trackobservedp = new TH1F("PObserved","P ",100,0,1500);    
+    trackobservedpt = new TH1F("PtObserved","Pt",100,0,1500);    
     std::cout<<"Finishing Begin Job"<<std::endl;
 
 }
@@ -224,7 +222,6 @@ CLSPT::endJob()
   
   trackobservedeta->Write();
   trackobservedphi->Write();
-  trackobservedbeta->Write();
   trackobservedp->Write();
   trackobservedpt->Write();
 
