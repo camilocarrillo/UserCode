@@ -13,7 +13,7 @@
 //
 // Original Author:  Camilo Andres Carrillo Montoya,42 R-021,+41227671624,
 //         Created:  Thu May 17 01:32:34 CEST 2012
-// $Id: CLSPT.cc,v 1.3 2012/05/17 18:54:33 carrillo Exp $
+// $Id: CLSPT.cc,v 1.4 2012/05/17 22:19:47 carrillo Exp $
 //
 //
 
@@ -182,7 +182,7 @@ CLSPT::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
      dxy->Fill(muon->dxy());
      chi2->Fill(muon->chi2()/muon->ndof());
      
-     std::cout<<"\t phi  ="<<phi<<" eta  ="<<eta<<" p = "<<p<<std::endl;
+     std::cout<<"\t phi  ="<<phi<<" eta  ="<<eta<<" p = "<<p<<" pt = "<<pt<<std::endl;
      std::cout<<"\t Muon muon->chi2() = "<<muon->chi2()<<std::endl;
      std::cout<<"\t Muon muon->chi2()/ndof = "<<muon->chi2()/muon->ndof() <<std::endl;
      std::cout<<"\t Cheking chi2/ndof"<<std::endl;
@@ -205,10 +205,9 @@ CLSPT::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
        RPCRecHitCollection::const_iterator recHitC;
        int size = 0;
        int clusterS=0;
-       std::cout<<"\t \t Looping on the rechits of the same roll"<<std::endl;
+       // std::cout<<"\t \t Looping on the rechits of the same roll"<<std::endl;
        for(recHitC = recHitCollection.first; recHitC != recHitCollection.second ; recHitC++) {
 	 clusterS=(*recHitC).clusterSize(); 
-	 RPCDetId rollId = (RPCDetId)(*recHitC).geographicalId();
 	 size++;
        }
        if(size!=1){
