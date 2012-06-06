@@ -13,7 +13,7 @@
 //
 // Original Author:  Camilo Andres Carrillo Montoya,42 R-021,+41227671624,
 //         Created:  Thu May 17 01:32:34 CEST 2012
-// $Id: CLSPT.cc,v 1.5 2012/05/17 22:39:30 carrillo Exp $
+// $Id: CLSPT.cc,v 1.6 2012/05/19 00:19:55 encamach Exp $
 //
 //
 
@@ -135,12 +135,20 @@ class CLSPT : public edm::EDAnalyzer {
   TGraphErrors * meanRB4;
  
 
-
-  TFile * MuFile;
   TTree * MuTree;
-  //double Mu_pt=0;
-  //int nRCP=0;
-  //int clusterS[40];
+  int nRPC;
+  double Mu_pt[50];
+  double Mu_eta[50];
+  double Mu_phi[50];
+  double Mu_P[50];
+  double Mu_dxy[50];
+  double Mu_chi2[50];
+
+  double Mu_layer[50];
+  double Mu_clusterSize[50];
+
+
+
 
 
 };
@@ -157,14 +165,12 @@ class CLSPT : public edm::EDAnalyzer {
 // constructors and destructor
 //
 CLSPT::CLSPT(const edm::ParameterSet& iConfig)
-
 {
    //now do what ever initialization is needed
   m_trackTag = iConfig.getUntrackedParameter<std::string>("tracks");
   rpcRecHitsLabel = iConfig.getParameter<edm::InputTag>("rpcRecHits");
   rootFileName = iConfig.getUntrackedParameter<std::string>("rootFileName");
-  //  Mu_Tree(0); Mu_pt(0);
-  // Mu_pt(0);
+  
 }
 
 
@@ -210,21 +216,26 @@ CLSPT::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
 
    for(muon=alltracks->begin(); muon!=alltracks->end();muon++) {
      counter++;
-     
+
+    
      eta=muon->eta();
      phi=muon->phi();
      p=muon->p();
      pt=muon->pt();
 
-    // Mu_pt=pt;	    
- 
+     //if ( (muon->chi2()/muon->ndof())< 0.9 || (muon->chi2()/muon->ndof())> 1.1) continue; 
+     //if ( pt < 30 || pt > 35 ) continue; 
+
+
+
+
      trackobservedeta->Fill(eta);
      trackobservedphi->Fill(phi);
      trackobservedp->Fill(p);
      trackobservedpt->Fill(pt);
      dxy->Fill(muon->dxy());
      chi2->Fill(muon->chi2()/muon->ndof());
-     
+    
      //std::cout<<"\t phi  ="<<phi<<" eta  ="<<eta<<" p = "<<p<<" pt = "<<pt<<std::endl;
      //std::cout<<"\t Muon muon->chi2() = "<<muon->chi2()<<std::endl;
      //std::cout<<"\t Muon muon->chi2()/ndof = "<<muon->chi2()/muon->ndof() <<std::endl;
@@ -232,75 +243,95 @@ CLSPT::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
 
      int counterhits=0;
      int counterhitsRPC=0;
-     int nRPC=0;     
+     nRPC=0;     
+     int u = 0;
 
      for(trackingRecHit_iterator recHit = muon->recHitsBegin(); recHit != muon->recHitsEnd(); ++recHit)
-     {
-       counterhits++;
-       if ( (*recHit)->geographicalId().det() != DetId::Muon  ) continue; //Is a hit in the Muon System?
-       if ( (*recHit)->geographicalId().subdetId() != MuonSubdetId::RPC ) continue; //Is an RPC Hit?
-       if (!(*recHit)->isValid()) continue; //Is Valid
-       counterhitsRPC++;
-
-       RPCDetId rollId = (RPCDetId)(*recHit)->geographicalId();
-
-       typedef std::pair<RPCRecHitCollection::const_iterator, RPCRecHitCollection::const_iterator> rangeRecHits;
-       rangeRecHits recHitCollection =  rpcHits->get(rollId);
-
-       RPCRecHitCollection::const_iterator recHitC;
-       int size = 0;
-       int clusterS=0;
-       // std::cout<<"\t \t Looping on the rechits of the same roll"<<std::endl;
-       for(recHitC = recHitCollection.first; recHitC != recHitCollection.second ; recHitC++) 
-        {
-	 clusterS=(*recHitC).clusterSize(); 
-	 size++;
-        }
-
-       if(size!=1)
-         {
-	  continue;
-	  std::cout<<"\t \t \t more than one rechit in this roll discarted for filling histograms"<<std::endl;
-         }
-      
-       //std::cout<<" phi "<<phi<<" eta "<<eta<<" p "<<p<<" pt "<<pt<<" chi2 "<<muon->chi2()<<" chi2ndof "<<muon->chi2()/muon->ndof() <<" clusterS "<<clusterS<<" located "<<rollId<<std::endl;
-
-       ///////////////begin loop selection
+       {
+	 counterhits++;
+	 if ( (*recHit)->geographicalId().det() != DetId::Muon  ) continue; //Is a hit in the Muon System?
+	 if ( (*recHit)->geographicalId().subdetId() != MuonSubdetId::RPC ) continue; //Is an RPC Hit?
+	 if (!(*recHit)->isValid()) continue; //Is Valid
+	 counterhitsRPC++;
+	 
+	 RPCDetId rollId = (RPCDetId)(*recHit)->geographicalId();
+	 typedef std::pair<RPCRecHitCollection::const_iterator, RPCRecHitCollection::const_iterator> rangeRecHits;
+	 rangeRecHits recHitCollection =  rpcHits->get(rollId);
+	 
+	 RPCRecHitCollection::const_iterator recHitC;
+	 int size = 0;
+	 int clusterS=0;
+	 // std::cout<<"\t \t Looping on the rechits of the same roll"<<std::endl;
+	 for(recHitC = recHitCollection.first; recHitC != recHitCollection.second ; recHitC++) 
+	   {
+	     clusterS=(*recHitC).clusterSize(); 
+	     size++;
+	   }
+	 
+	 if(size!=1)
+	   //if(size<=1)
+	   {
+	     continue;
+	     std::cout<<"\t \t \t more than one rechit in this roll discarted for filling histograms"<<std::endl;
+	   }
+	 
+	 std::cout<<" phi "<<phi<<" eta "<<eta<<" p "<<p<<" pt "<<pt<<" chi2 "<<muon->chi2()<<" chi2ndof "<<muon->chi2()/muon->ndof() <<" clusterS "<<clusterS<<" located "<<rollId<<std::endl;
+	 
+	 ///////////////begin loop selection
      
-       int layer= 0;
-	  	    
-	  if(rollId.station()==1&&rollId.layer()==1) layer = 1;
-	  else if(rollId.station()==1&&rollId.layer()==2) layer = 2;
-	  else if(rollId.station()==2&&rollId.layer()==1) layer = 3;
-	  else if(rollId.station()==2&&rollId.layer()==2)  layer = 4;
-	  else if(rollId.station()==3) layer = 5;
-	  else if(rollId.station()==4) layer = 6;
+	 //MuTree->Fill();
+	 
+	 int layer= 0;
+	 if(rollId.station()==1&&rollId.layer()==1) {layer = 1 ;}
+	 else if(rollId.station()==1&&rollId.layer()==2) {layer = 2 ; }
+	 else if(rollId.station()==2&&rollId.layer()==1) {layer = 3 ;}
+	 else if(rollId.station()==2&&rollId.layer()==2)  {layer = 4 ;}
+	 else if(rollId.station()==3) {layer = 5; }
+	 else if(rollId.station()==4) {layer = 6; }
+	 	 
+	 if(layer==1) RB1in->Fill(pt,clusterS);
+	 if(layer==2) RB1out->Fill(pt,clusterS);
+	 if(layer==3) RB2in->Fill(pt,clusterS);
+	 if(layer==4) RB2out->Fill(pt,clusterS); 
+	 if(layer==5) RB3->Fill(pt,clusterS);
+	 if(layer==6) RB4->Fill(pt,clusterS);
+	 
+	 clspt->Fill(pt,clusterS);
+	 ptAllcls->Fill(pt);
 
-	    
-          if(layer==1) RB1in->Fill(pt,clusterS);
-	  if(layer==2) RB1out->Fill(pt,clusterS);
-          if(layer==3) RB2in->Fill(pt,clusterS);
-	  if(layer==4) RB2out->Fill(pt,clusterS); 
-          if(layer==5) RB3->Fill(pt,clusterS);
-          if(layer==6) RB4->Fill(pt,clusterS);
+	 Mu_pt[u]=pt;
+	 Mu_eta[u]=eta;
+	 Mu_P[u]=p;
+	 Mu_phi[u]=phi;
+	 Mu_dxy[u] = muon->dxy();
+	 Mu_chi2[u]= muon->chi2()/muon->ndof();
+  
+	 Mu_layer[u]=layer;
+	 Mu_clusterSize[u]=clusterS;
 
-          clspt->Fill(pt,clusterS);
-          ptAllcls->Fill(pt);
-       //std::cout<<"\t Cheking chi2/ndof"<<std::endl;
- 
-        //std::cout<<"\t \t \t The cluster Size for this hit is : "<<clusterS<<" and it is located in "<<rollId<<std::endl;
-        //std::cout<<"\t \t size "<<size<<std::endl;
-        nRPC++;
-      }
 
-    // std::cout<<"\t \t nRPC "<<nRPC<<std::endl;
-    // std::cout<<"\t \t number of hits in this muon "<<counterhits<<std::endl;
-    // std::cout<<"\t \t number of hits in this muon at RPC "<<counterhitsRPC<<std::endl;
+	 //std::cout<<"\t Cheking chi2/ndof"<<std::endl;
+	 //std::cout<<"\t \t \t The cluster Size for this hit is : "<<clusterS<<" and it is located in "<<rollId<<std::endl;
+	 //std::cout<<"\t \t size "<<size<<std::endl;
+	 ++u;
+	 
+       }
+     
+     nRPC = u;
 
+     if(nRPC>0)
+       {
+	 MuTree->Fill();
+       }
+
+     std::cout<<"\t \t nRPC "<<nRPC<<std::endl;
+     std::cout<<"\t \t number of hits in this muon "<<counterhits<<std::endl;
+     std::cout<<"\t \t number of hits in this muon at RPC "<<counterhitsRPC<<std::endl;
+     
      recHitMultiplicity->Fill(counterhits);
      rpcrecHitMultiplicity->Fill(counterhitsRPC);
      
-   
+     
    }
    
 }
@@ -319,15 +350,15 @@ CLSPT::beginJob()
     recHitMultiplicity = new TH1F("recHitMultiplicity","recHitMultiplicity",101,-0.5,100.5);
     rpcrecHitMultiplicity = new TH1F("RPCrecHitMultiplicity","RPCrecHitMultiplicity",21,-0.5,20.5);
 
-    chi2 = new TH1F("chi2_normalized","chi2_normalized",101,-0.5,100.5);
+    chi2 = new TH1F("chi2_normalized","chi2_normalized",1000,-0.5,100.5);
     dxy = new TH1F("dxy","dxy",200,-10,10);
 
     trackobservedeta = new TH1F("EtaObserved","Eta",100,-2.5,2.5); 
     trackobservedphi = new TH1F("PhiObserved","Phi",100,-3.1415926,3.1415926); 
-    trackobservedp = new TH1F("PObserved","P ",100,0,1500);    
+    trackobservedp = new TH1F("PObserved","P ",1500,0,1500);    
     trackobservedpt = new TH1F("PtObserved","Pt",100,0,100);    
     
-    clspt =  new TH2F("Cluster size Vs pt","clspt",100,0.,100.,10,0.,10.0);  
+    clspt =  new TH2F("ClustersizeVspt","clspt",100,0.,100.,10,0.,10.0);  
     
     RB1in = new TH2F("RB1in","RB1in",100,0.,100.,10,0.,10.0);
     RB1out = new TH2F("RB1out","RB1out",100,0.,100.,10,0.,10.0);
@@ -338,12 +369,26 @@ CLSPT::beginJob()
 
     ptAllcls =  new TH1F("ptAllcls","ptAllcls",100,0.,100.);   
     
-   //std::cout<<"Finishing Begin Job"<<std::endl;
 
-    //MuFile = new TFile("Muon_file","RECREATE");
-    //MuTree = new TTree("Tree","Muons");
-    //MuTree->SetDirectory(MuFile);
-    //MuTree->Branch("Mu_pt",&Mu_pt,"Mu_pt/D");
+    //////
+    MuTree = new TTree("Tree","Muons");
+    MuTree->SetDirectory(theFile);
+    MuTree->Branch("nRPC",&nRPC,"nRPC/I");
+    MuTree->Branch("Mu_eta",&Mu_eta,"Mu_eta[nRPC]/D");
+    MuTree->Branch("Mu_pt",&Mu_pt,"Mu_pt[nRPC]/D");
+    MuTree->Branch("Mu_phi",&Mu_phi,"Mu_phi[nRPC]/D");
+    MuTree->Branch("Mu_P",&Mu_P,"Mu_P[nRPC]/D");
+    MuTree->Branch("Mu_dxy",&Mu_dxy,"Mu_dxy[nRPC]/D");
+    MuTree->Branch("Mu_chi2",&Mu_chi2,"Mu_chi2[nRPC]/D");
+
+
+
+    MuTree->Branch("Mu_layer",&Mu_layer,"Mu_layer[nRPC]/D");
+    MuTree->Branch("Mu_clusterSize",&Mu_clusterSize,"Mu_clusterSize[nRPC]/D");
+
+
+
+   //std::cout<<"Finishing Begin Job"<<std::endl;
 
 }
 
@@ -397,6 +442,7 @@ CLSPT::endJob()
        y[i]=mean;
        ey[i]=error;
        ex[i]=step*0.5;
+       std::cout<<"flag "<<i<<" x= "<<x[i]<<" y= "<<y[i]<<std::endl;   		
 
        //
        float meanRB1in = RB1in->ProjectionY("_py",i,i+1)->GetMean();
@@ -438,7 +484,7 @@ CLSPT::endJob()
        yRB3[i]=meanRB3;
        eyRB3[i]=errorRB3;
        exRB3[i]=step*0.5;
-       //	/
+       //
        float meanRB4 = RB4->ProjectionY("_py",i,i+1)->GetMean();
        float entriesRB4 = RB4->ProjectionY("_py",i,i+1)->GetEntries();
        float errorRB4 = RB4->ProjectionY("_py",i,i+1)->GetRMS()/sqrt(entriesRB4);
@@ -453,30 +499,39 @@ CLSPT::endJob()
 
 
    meanclspt = new TGraphErrors(n,x,y,ex,ey);
-   meanclspt->SetTitle("meanclspt");     
+   meanclspt->SetTitle("meanclspt"); 
+   meanclspt->SetName("meanclspt");   
    meanclspt->Write();
-
 
    meanRB1in = new TGraphErrors(n,xRB1in,yRB1in,exRB1in,eyRB1in);
    meanRB1in->SetTitle("meanRB1in");  
+   meanRB1in->SetName("meanRB1in");
    meanRB1in->Write();
    meanRB1out= new TGraphErrors(n,xRB1out,yRB1out,exRB1out,eyRB1out);
    meanRB1out->SetTitle("meanRB1out");      
+   meanRB1out->SetName("meanRB1out");
    meanRB1out->Write();
    meanRB2in = new TGraphErrors(n,xRB2in,yRB2in,exRB2in,eyRB2in);
    meanRB2in->SetTitle("meanRB2in");      
+   meanRB2in->SetName("meanRB2in");
    meanRB2in->Write();
    meanRB2out = new TGraphErrors(n,xRB2out,yRB2out,exRB2out,eyRB2out);
    meanRB2out->SetTitle("meanRB2out");      
+   meanRB2out->SetName("meanRB2out");
    meanRB2out->Write();
    meanRB3 = new TGraphErrors(n,xRB3,yRB3,exRB3,eyRB3);
    meanRB3->SetTitle("meanRB3");      
+   meanRB3->SetName("meanRB3");
    meanRB3->Write();
    meanRB4 = new TGraphErrors(n,xRB4,yRB4,exRB4,eyRB4);
    meanRB4->SetTitle("meanRB4");     
+   meanRB4->SetName("meanRB4");
    meanRB4->Write();
 
 
+   ///////
+   // MuTree->GetDirectory()->cd();
+   MuTree->Write();  
 
    theFile->Close();
 
