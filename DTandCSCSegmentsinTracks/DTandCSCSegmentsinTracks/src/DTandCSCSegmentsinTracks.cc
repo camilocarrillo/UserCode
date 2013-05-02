@@ -1,18 +1,18 @@
- // -*- C++ -*-
+// -*- C++ -*-
 //
 // Class:      DTandCSCSegmentsinTracks
 // 
 /**\class DTandCSCSegmentsinTracks DTandCSCSegmentsinTracks.cc RecoLocalMuon/RPCRecHit/src/DTandCSCSegmentsinTracks.cc
    
-    Description: [one line class summary]
-   
-   Implementation:
-   [Notes on implementation]
+Description: [one line class summary]
+
+Implementation:
+[Notes on implementation]
 */
 //
 // Original Author:  Juan Pablo Gomez Cardona,42 R-023,+41227662349,
 //         Created:  Thu Jan  19 13:03:28 CEST 2012
-// $Id: DTandCSCSegmentsinTracks.cc,v 1.1 2012/02/15 14:08:21 jgomezca Exp $
+// $Id: DTandCSCSegmentsinTracks.cc,v 1.1.1.1 2012/07/17 01:17:51 jgomezca Exp $
 //
 //
 #include "FWCore/Framework/interface/MakerMacros.h"
@@ -55,9 +55,9 @@ DTandCSCSegmentsinTracks::DTandCSCSegmentsinTracks(const edm::ParameterSet& iCon
   cscSegments=iConfig.getParameter<edm::InputTag>("cscSegments");
   dt4DSegments=iConfig.getParameter<edm::InputTag>("dt4DSegments");
   tracks=iConfig.getParameter<edm::InputTag>("tracks");
-
-
-
+  
+  
+  
   produces<DTRecSegment4DCollection>("SelectedDtSegments");
   produces<CSCSegmentCollection>("SelectedCscSegments");
   
@@ -90,252 +90,123 @@ void DTandCSCSegmentsinTracks::produce(edm::Event& iEvent, const edm::EventSetup
   DTRecSegment4D segmentDTToStore;
   CSCSegment segmentCSCToStore;
   
-  std::vector<int> positionDTSeg;
-  std::vector<int> positionCSCSeg;
   
   std::auto_ptr<DTRecSegment4DCollection> selectedDtSegments(new DTRecSegment4DCollection());
   std::auto_ptr<CSCSegmentCollection> selectedCscSegments(new CSCSegmentCollection());
   
-  DTRecSegment4DCollection::id_iterator chamberId;
-  //std::cout<<"paso1"<<std::endl; 
-  //Loop over the chambers 
-  for (chamberId = all4DSegments->id_begin(); chamberId != all4DSegments->id_end(); ++chamberId)
+  std::vector<CSCDetId> chamberIdCSC;
+  std::vector<DTLayerId> chamberIdDT;
+  
+  
+  
+  //std::cout<<"paso1"<<std::endl;
+  //loop over alltracks	
+  for  (Track=alltracks->begin(); Track!=alltracks->end();   Track++)
     {
-      bool AcceptedDTSegment = false;
-      edm::OwnVector<DTRecSegment4D> DTSegmentsVector;
-      positionDTSeg.clear();
-      //std::cout<<"paso2"<<std::endl; 
-      //loop over alltracks
-      for  (Track=alltracks->begin(); Track!=alltracks->end();   Track++)  {
-	//std::cout<<"paso3"<<std::endl;
-	//Loop over the hits of the track
-	for( unsigned int counter = 0; counter != (*Track).recHitsSize()-1; counter++ )
-	  {
-	    TrackingRecHitRef myRef =(*Track).recHit( counter );
-	    const TrackingRecHit *rechit = myRef.get();
-	    const GeomDet* geomDet = theTrackingGeometry->idToDet( rechit->geographicalId() );
-	    LocalPoint posTrackRecHit = rechit->localPosition();//N
-	    //std::cout<<"paso4"<<std::endl;
-	    //It's a DT Hit
-	    if( geomDet->subDetector() == GeomDetEnumerators::DT )
-	      {
-		//Take the layer associated to this hit
-		DTLayerId myLayer( rechit->geographicalId().rawId() );
-		//std::cout<<"paso5"<<std::endl; 
-		//If the layer of the hit belongs to the chamber of the 4D Segment
-		if( myLayer.wheel() == (*chamberId).wheel() &&  myLayer.station() == (*chamberId).station() && myLayer.sector() == (*chamberId).sector() )
-		  {
-		    int NumberOfDTSegment = 0;
-		    // Get the range for the corresponding ChamberId
-		    DTRecSegment4DCollection::range  range = all4DSegments->get(*chamberId);
-                    int NumberOfSegments = 0;
-                    int NumberOfDTSegmentToStore = 0;  
-		    //std::cout<<"paso6"<<std::endl;
-		    // Loop over the 4Dsegments of this ChamberId
-		    for (segmentDT = range.first; segmentDT!=range.second; ++segmentDT) 
-		      {
-			//By default the chamber associated to the segment is new  
-			bool isNewSegment = true;
-			//std::cout<<"paso7"<<std::endl;
-			//Loop over 4Dsegments already included in the vector of segments 
-			for( std::vector<int>::iterator positionItSeg = positionDTSeg.begin();
-			     positionItSeg != positionDTSeg.end(); positionItSeg++ )
-			  {
-			    //std::cout<<"Number of DT: "<<NumberOfDTSegment<<" , Number of the DTAccepted: "<<(*positionItSeg)<<std::endl;
-			    //If this segment has been used before isNewChamber = false
-			    if( NumberOfDTSegment == *positionItSeg ) 
-			      {
-				isNewSegment = false;
-			      }
-			  }//Loop over 4Dsegments already included in the vector of segments 
-			//std::cout<<"paso8"<<std::endl;
-			//If the segment is new
-			if( isNewSegment )
-			  {
-			    vector <const TrackingRecHit*> segments2D = (&(*segmentDT))->recHits();
-			    // container for 4D segment recHits
-			    vector <const TrackingRecHit*> dtRecHits;
-			    //std::cout<<"paso9"<<std::endl;
-			    // Loop over the 2DSegments of this 4DSegment
-			    for(vector<const TrackingRecHit*>::const_iterator segm2D = segments2D.begin(); segm2D != segments2D.end(); segm2D++)
-			      {                          
-				vector <const TrackingRecHit*> rHits1D = (*segm2D)->recHits();
-				//std::cout<<"paso10"<<std::endl;
-				//loop over recHits of this 2DSegment
-				for (int hit=0; hit<int(rHits1D.size()); hit++)
-				  {
-				    dtRecHits.push_back(rHits1D[hit]);
-				  }//loop over recHits of this 2DSegment
-			      }//Loop over the 2DSegments of this 4DSegment
-			    //now for each 4Dsegment we have a vector of RecHit
-			    //we loop over the recHit checking if there's the recHit of the track
-			    //std::cout<<"paso11"<<std::endl;
-			    int NumberOfEqualRecHits=0; 
-			    //loop over 4Dsegment recHits vector
-			    for (unsigned int hit = 0; hit < dtRecHits.size(); hit++)
-			      {                  
-				LocalPoint posSegDTRecHit = (*dtRecHits[hit]).localPosition();
-				double rDT=sqrt(pow((posSegDTRecHit.x()-posTrackRecHit.x()),2) +pow((posSegDTRecHit.y()-posTrackRecHit.y()),2) + pow((posSegDTRecHit.z()-posTrackRecHit.z()),2));                          
-				if (rDT<0.0001)
-				  {
-				    NumberOfEqualRecHits++;  
-				  }
-			      }//loop over 4Dsegment recHits vector
-			    //Common rechits?
-                            if (0 < NumberOfEqualRecHits)
-			      {      
-				NumberOfSegments++;
-                                segmentDTToStore = *segmentDT;
-                                NumberOfDTSegmentToStore = NumberOfDTSegment;                                
-			      }//Common rechits?			
-			  }//If the segment is new
-			//std::cout<<"paso13"<<std::endl;
-			//std::cout<<" Seg: "<<NumberOfDTSegment<<std::endl;
-			//std::cout<<"achamber id: "<<(*chamberId)<<std::endl;
-			NumberOfDTSegment++;
-		      }// Loop over the 4Dsegments of this ChamberId
-		    //Is just one segment?
-		    if (NumberOfSegments == 1)
-                      {
-                        //push position of the segment and tracking rechit
-			//std::cout<<" Seg aceptado: "<<NumberOfDTSegmentToStore<<std::endl;
-			AcceptedDTSegment = true;
-			positionDTSeg.push_back( NumberOfDTSegmentToStore );//SolChamb
-			DTSegmentsVector.push_back(segmentDTToStore); 
-                      }//Is just one segment?
-		    //std::cout<<"paso15"<<std::endl;
-		    
-		  }//If the layer of the hit belongs to the chamber of the 4D Segment
-		
-	      }//It's a DT Hit
-	    
-	  }//Loop over the hits of the track    
-      }//Loop over the tracks 
-      if (AcceptedDTSegment){
-	//std::cout<<"paso16"<<std::endl;
-	//std::cout<<"chamber id: "<<(*chamberId)<<std::endl;
-	selectedDtSegments->put(*chamberId, DTSegmentsVector.begin(), DTSegmentsVector.end());
-	//std::cout<<"paso17"<<std::endl;
-      }
-    }//Loop over the chambers
-  
-  
-  
-  
-  CSCSegmentCollection::id_iterator chamberIdCSC;
-  //Loop over the chambers 
-  for (chamberIdCSC = allCSCSegments->id_begin(); chamberIdCSC != allCSCSegments->id_end(); ++chamberIdCSC)
-    {
-      bool AcceptedCSCSegment = false;
-      edm::OwnVector<CSCSegment> CSCSegmentsVector;
-      positionCSCSeg.clear();
-      //std::cout<<"paso2"<<std::endl; 
-      //loop over alltracks
-      for  (Track=alltracks->begin(); Track!=alltracks->end();   Track++)  
+      //std::cout<<"paso2"<<std::endl;
+      //Loop over the trackingRecHits 
+      for(trackingRecHit_iterator recHit = Track->recHitsBegin(); recHit != Track->recHitsEnd(); ++recHit)
 	{
+	  const GeomDet* geomDet = theTrackingGeometry->idToDet( (*recHit)->geographicalId() );
 	  //std::cout<<"paso3"<<std::endl;
-	  //Loop over the hits of the track
-	  for( unsigned int counter = 0; counter != (*Track).recHitsSize()-1; counter++ )
+	  //It's a DTHit                                                                                                                                                                      
+	  if( geomDet->subDetector() == GeomDetEnumerators::DT )
 	    {
-	      TrackingRecHitRef myRef =(*Track).recHit( counter );
-	      const TrackingRecHit *rechit = myRef.get();
-	      const GeomDet* geomDet = theTrackingGeometry->idToDet( rechit->geographicalId() );
-	      LocalPoint posTrackRecHit = rechit->localPosition();//N
+	      edm::OwnVector<DTRecSegment4D> DTSegmentsVector;
+              //Take the layer associated to this hit                                                                                                                                         
+	      DTLayerId myLayer( (*recHit)->geographicalId().rawId() );
+	      DTRecSegment4DCollection::range  range = all4DSegments->get(myLayer);
 	      //std::cout<<"paso4"<<std::endl;
-	      //It's a CSC Hit
-	      if ( geomDet->subDetector() == GeomDetEnumerators::CSC )
+	      // Loop over the 4Dsegments of this *ChamberId=myLayer
+	      int counter=0;	
+	      for (segmentDT = range.first; segmentDT!=range.second; ++segmentDT) 
 		{
-		  //Take the layer associated to this hit
-		  CSCDetId myLayer( rechit->geographicalId().rawId() );
-		  //std::cout<<"paso5"<<std::endl; 
-		  //If the layer of the hit belongs to the chamber of the Segment
-		  if( myLayer.chamberId() == (*chamberIdCSC).chamberId() )
-		    {
-		      int NumberOfCSCSegment = 0;
-		      // Get the range for the corresponding ChamerId                                                                                                           
-		      CSCSegmentCollection::range  range = allCSCSegments->get(*chamberIdCSC);
-		      int NumberOfSegments = 0;
-		      int NumberOfCSCSegmentToStore = 0;  
-		      //std::cout<<"paso6"<<std::endl;
-		      // Loop over the rechits of this ChamberId                                                                                                                
-		      for (segmentCSC = range.first;
-			   segmentCSC!=range.second; ++segmentCSC) {
-			//By default the chamber associated to the segment is new
-			bool isNewSegment = true;
+		  counter++;		  
+		}//Loop over the 4Dsegments of this *ChamberId=myLayer
+	      //if theres is only one segment and the chamber is new, the segment is stored as well as the ChamberId
+	      if (counter==1){
+		//std::cout<<"paso5"<<std::endl;
+		//By default the chamber associated to the segment is new  
+		bool isNewChamber = true;
+		//Loop over DTChambers already used 
+		for( std::vector<DTLayerId>::iterator chamberIdDTIt = chamberIdDT.begin(); chamberIdDTIt != chamberIdDT.end(); chamberIdDTIt++ )
+		  {
+		    //std::cout<<"paso6"<<std::endl;
+		    //If this chamber has been used before isNewChamber = false
+		    if( myLayer.wheel() == (*chamberIdDTIt).wheel() &&  myLayer.station() == (*chamberIdDTIt).station() && myLayer.sector() == (*chamberIdDTIt).sector() ) 
+		      {
 			//std::cout<<"paso7"<<std::endl;
-			//Loop over segments already include in the vector of segments
-			for( std::vector<int>::iterator positionItSeg = positionCSCSeg.begin(); positionItSeg != positionCSCSeg.end(); positionItSeg++ )
-			  {
-			    //std::cout<<"Number of CSC: "<<NumberOfCSCSegment<<" , Number of the CSCAccepted: "<<(*positionItSeg)<<std::endl;
-			    //If this segment has been used before isNewChamber = false
-			    if(NumberOfCSCSegment == *positionItSeg)
-			      {
-				isNewSegment = false;
-			      }
-			  }//Loop over segments already include in the vector of segments		
-			//std::cout<<"paso8"<<std::endl;
-			//If the segment is new
-			if( isNewSegment )
-			  {
-			    
-			    // container for segment recHits
-			    vector <const TrackingRecHit*> rHits = (&(*segmentCSC))->recHits();
-			    //std::cout<<"paso10"<<std::endl;
-			    //we loop over the recHit checking if there's the recHit of the track
-			    int NumberOfEqualRecHits=0; 
-			    //loop over segment recHits vector
-			    for (unsigned int hit = 0; hit < rHits.size(); hit++)
-			      {                  
-				LocalPoint posSegCSCRecHit = (*rHits[hit]).localPosition();
-				double rCSC=sqrt(pow((posSegCSCRecHit.x()-posTrackRecHit.x()),2) +pow((posSegCSCRecHit.y()-posTrackRecHit.y()),2) + pow((posSegCSCRecHit.z()-posTrackRecHit.z()),2));                          
-				if (rCSC<0.0001)
-				  {
-				    NumberOfEqualRecHits++;  
-				  }
-			      }//loop over segment recHits vector
-			    //Common rechits?
-			    if (0 < NumberOfEqualRecHits)
-			      {      
-				NumberOfSegments++;
-				segmentCSCToStore = *segmentCSC;
-				NumberOfCSCSegmentToStore = NumberOfCSCSegment;                                
-			      }//Common rechits?			
-			  }//If the segment is new
-			//std::cout<<"paso13"<<std::endl;
-			//std::cout<<" Seg: "<<NumberOfCSCSegment<<std::endl;
-			//std::cout<<"achamber id: "<<(*chamberIdCSC)<<std::endl;
-			NumberOfCSCSegment++;
-		      }// Loop over the 4Dsegments of this ChamberId
-		      //Is just one segment?
-		      if (NumberOfSegments == 1)
-			{
-			  //push position of the segment and tracking rechit
-			  //std::cout<<" Seg aceptado: "<<NumberOfCSCSegmentToStore<<std::endl;
-			  AcceptedCSCSegment = true;
-			  positionCSCSeg.push_back( NumberOfCSCSegmentToStore );
-			  CSCSegmentsVector.push_back(segmentCSCToStore); 
-			}//Is just one segment?
-		      //std::cout<<"paso15"<<std::endl;
-		      
-		    }//If the layer of the hit belongs to the chamber of the Segment
-		  
-		}//It's a CSC Hit
+			isNewChamber = false;
+		      }
+		  }//Loop over DTChambers already used
+		if (isNewChamber)
+		  {
+		    //std::cout<<"paso8"<<std::endl;
+		    chamberIdDT.push_back(myLayer);
+		    DTSegmentsVector.push_back(*(range.first));
+		    selectedDtSegments->put(myLayer, DTSegmentsVector.begin(), DTSegmentsVector.end());
+		  }
+		//std::cout<<"paso9"<<std::endl;
+              }//if theres is only one segment and the chamber is new, the segment is stored as well as the ChamberId
 	      
-	    }//Loop over the hits of the track    
-	}//Loop over the tracks 
-      if (AcceptedCSCSegment){
-	//std::cout<<"paso16"<<std::endl;
-	//std::cout<<"chamber id: "<<(*chamberIdCSC)<<std::endl;
-	selectedCscSegments->put(*chamberIdCSC, CSCSegmentsVector.begin(), CSCSegmentsVector.end());
-	//std::cout<<"paso17"<<std::endl;
-      }
-    }//Loop over the chambers
-  
-  //std::cout<<"paso201"<<std::endl;
+	    }//It's a DTHit                                                                                                                                                                   
+	  
+	  
+	  
+	  
+	  
+	  
+	  
+	  //std::cout<<"paso3a"<<std::endl;
+          //It's a CSCHit                                                                                                                                                                     
+	  if( geomDet->subDetector() == GeomDetEnumerators::CSC )
+	    {
+	      edm::OwnVector<CSCSegment> CSCSegmentsVector;
+              //Take the layer associated to this hit                                                                                                                                         
+	      CSCDetId myLayer( (*recHit)->geographicalId().rawId() );
+	      CSCSegmentCollection::range  range = allCSCSegments->get(myLayer);
+	      //std::cout<<"paso4a"<<std::endl;
+	      // Loop over the CSCsegments of this *ChamberId=myLayer
+	      int counter=0;	
+	      for (segmentCSC = range.first; segmentCSC!=range.second; ++segmentCSC) 
+		{
+		  counter++;		  
+		}//Loop over the CSCsegments of this *ChamberId=myLayer
+	      //if theres is only one segment and the chamber is new, the segment is stored as well as the ChamberId
+	      if (counter==1){
+		//std::cout<<"paso5a"<<std::endl;
+		//By default the chamber associated to the segment is new  
+		bool isNewChamber = true;
+		//Loop over CSCChambers already used 
+		for( std::vector<CSCDetId>::iterator chamberIdCSCIt = chamberIdCSC.begin(); chamberIdCSCIt != chamberIdCSC.end(); chamberIdCSCIt++ )
+		  {
+		    //std::cout<<"paso6a"<<std::endl;
+		    //If this chamber has been used before isNewChamber = false
+		    if( myLayer.chamberId() == (*chamberIdCSCIt).chamberId() ) 
+		      {
+			//std::cout<<"paso7a"<<std::endl;
+			isNewChamber = false;
+		      }
+		  }//Loop over CSCChambers already used
+		if (isNewChamber)
+		  {
+		    //std::cout<<"paso8a"<<std::endl;
+		    chamberIdCSC.push_back(myLayer);
+		    CSCSegmentsVector.push_back(*(range.first));
+		    selectedCscSegments->put(myLayer, CSCSegmentsVector.begin(), CSCSegmentsVector.end());
+		  }
+		//std::cout<<"paso9a"<<std::endl;
+              }//if theres is only one segment and the chamber is new, the segment is stored as well as the ChamberId
+	      
+	    }//It's a CSCHit
+	}//Loop over the trackingRecHits
+      
+    }//loop over alltracks
   iEvent.put(selectedCscSegments,"SelectedCscSegments");
   iEvent.put(selectedDtSegments,"SelectedDtSegments");
-  //std::cout<<"paso202"<<std::endl;
+  //std::cout<<"paso10"<<std::endl;
 }
+
 
 
 // ------------ method called once each job just before starting event loop  ------------
