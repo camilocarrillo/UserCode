@@ -13,7 +13,7 @@
 //
 // Original Author:  Camilo Andres Carrillo Montoya
 //         Created:  Mon Feb 23 15:41:52 CET 2009
-// $Id: SIMHITANALIZER.cc,v 1.2 2009/07/29 21:38:56 carrillo Exp $
+// $Id: SIMHITANALIZER.cc,v 1.3 2010/06/17 09:16:42 carrillo Exp $
 //
 //
 
@@ -105,17 +105,22 @@
 //
 
 class SIMHITANALIZER : public edm::EDAnalyzer {
-   public:
-      explicit SIMHITANALIZER(const edm::ParameterSet&);
-      ~SIMHITANALIZER();
-      edm::ESHandle <RPCGeometry> rpcGeo;
-      virtual void beginRun(const edm::Run&, const edm::EventSetup&);
-
-   private:
-      virtual void analyze(const edm::Event&, const edm::EventSetup&);
-      virtual void endJob() ;
-
-      // ----------member data ---------------------------
+public:
+  explicit SIMHITANALIZER(const edm::ParameterSet&);
+  ~SIMHITANALIZER();
+  edm::ESHandle <RPCGeometry> rpcGeo;
+  virtual void beginRun(const edm::Run&, const edm::EventSetup&);
+  
+private:
+  virtual void analyze(const edm::Event&, const edm::EventSetup&);
+  virtual void beginJob();
+  virtual void endJob() ;
+  // ----------member data ---------------------------
+  TFile * theFile;
+  TH1F * St1R1;
+  TH1F * St2R1;
+  TH1F * St3R1;
+  TH1F * St4R1;
 };
 
 //
@@ -160,8 +165,8 @@ SIMHITANALIZER::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
    for (std::vector<PSimHit>::const_iterator iHit = theSimHits.begin(); iHit != theSimHits.end(); iHit++){
      
-     if((*iHit).particleType()== -2000015){//Only HSCPs
-       
+     if(abs((*iHit).particleType())== 13){//Only Muons
+      
        DetId theDetUnitId((*iHit).detUnitId());
        
        DetId simdetid= DetId((*iHit).detUnitId());
@@ -171,7 +176,6 @@ SIMHITANALIZER::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 RPCDetId rollId(theDetUnitId);
 	 RPCGeomServ rpcsrv(rollId);
 	 
-	 
 	 //std::cout << " Reading the Roll"<<std::endl;
 	 const RPCRoll* rollasociated = rpcGeo->roll(rollId);
 	 
@@ -179,6 +183,14 @@ SIMHITANALIZER::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 const BoundPlane & RPCSurface = rollasociated->surface(); 
 	 
 	 GlobalPoint SimHitInGlobal = RPCSurface.toGlobal((*iHit).localPosition());
+
+	 if(rollId.region()==0) continue; //skip barrel
+	 if(abs(rollId.ring())!=1) continue; //skip other rings
+	 
+	 if(rollId.station()==1){ St1R1->Fill((*iHit).timeOfFlight()); std::cout<<"Hit in Ring 1 Station 1"<<std::endl;}
+	 if(rollId.station()==2){ St2R1->Fill((*iHit).timeOfFlight()); std::cout<<"Hit in Ring 1 Station 2"<<std::endl;}
+	 if(rollId.station()==3){ St3R1->Fill((*iHit).timeOfFlight()); std::cout<<"Hit in Ring 1 Station 3"<<std::endl;}
+	 if(rollId.station()==4){ St4R1->Fill((*iHit).timeOfFlight()); std::cout<<"Hit in Ring 1 Station 4"<<std::endl;}
 	 
 	 std::cout<<"\t\t We have an RPC Sim Hit! in t="<<(*iHit).timeOfFlight()<<"ns "<<rpcsrv.name()<<" Global postition="<<SimHitInGlobal<<std::endl;
 
@@ -200,7 +212,23 @@ SIMHITANALIZER::beginRun(const edm::Run& run, const edm::EventSetup& iSetup)
 
 // ------------ method called once each job just after ending the event loop  ------------
 void 
+SIMHITANALIZER::beginJob() {
+  theFile = new TFile("GDetector_ToF.root","RECREATE");
+  St1R1 = new TH1F("St1R1","St1R1",500,15,40); 
+  St2R1 = new TH1F("St2R1","St2R1",500,15,40); 
+  St3R1 = new TH1F("St3R1","St3R1",500,15,40); 
+  St4R1 = new TH1F("St4R1","St4R1",500,15,40); 
+}
+
+void 
 SIMHITANALIZER::endJob() {
+  theFile->cd();
+  std::cout<<"saving root files"<<std::endl;
+  St1R1->Write();
+  St2R1->Write();
+  St3R1->Write();
+  St4R1->Write();
+  theFile->Close();
 }
 
 //define this as a plug-in
