@@ -11,8 +11,6 @@
 <use   name="DataFormats/RPCRecHit"/>
 <use   name="DataFormats/TrackCandidate"/>
 <use   name="DataFormats/TrajectorySeed"/>
-<use   name="FWCore/Framework"/>
-<use   name="FWCore/ParameterSet"/>
 <use   name="Geometry/CommonDetUnit"/>
 <use   name="Geometry/RPCGeometry"/>
 <use   name="Geometry/Records"/>
