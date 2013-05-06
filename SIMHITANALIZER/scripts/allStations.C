@@ -49,7 +49,7 @@ void allStations(){
 
   cout<<"getting the file"<<endl;
 
-  TFile * theFile = new TFile("GDetector_ToF.root");  
+  TFile * theFile = new TFile("../GDetector_ToF.root");  
 
   //All Tof
   cout<<"getting the histo"<<endl;
@@ -61,7 +61,12 @@ void allStations(){
   name = "GDetector ToF Station 2 Ring 1(ns)"; title = "St2R1";  TH1F * St2R1 = (TH1F*) (theFile->Get(title.c_str())); Ca0_2->cd(); setHisto(St2R1,title,name,true); 
   name = "GDetector ToF Station 3 Ring 1(ns)"; title = "St3R1";  TH1F * St3R1 = (TH1F*) (theFile->Get(title.c_str())); Ca0_3->cd(); setHisto(St3R1,title,name,true); 
   name = "GDetector ToF Station 4 Ring 1(ns)"; title = "St4R1";  TH1F * St4R1 = (TH1F*) (theFile->Get(title.c_str())); Ca0_4->cd(); setHisto(St4R1,title,name,true); 
- 
+
+  Ca0_1->SetLogy();
+  Ca0_2->SetLogy();
+  Ca0_3->SetLogy();
+  Ca0_4->SetLogy();
+  
   Ca0->SaveAs("ToF.png"); 
   //  exit(0);
   
